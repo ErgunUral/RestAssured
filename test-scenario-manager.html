@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PayTR Test Senaryo Yönetim Sistemi</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        .sidebar {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+        }
+
+        .content-area {
+            background: #ffffff;
+            border-radius: 10px;
+            padding: 25px;
+            border: 1px solid #e9ecef;
+        }
+
+        .nav-tabs {
+            display: flex;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .nav-tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            color: #6c757d;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .nav-tab.active {
+            color: #2c3e50;
+            border-bottom-color: #667eea;
+        }
+
+        .nav-tab:hover {
+            color: #2c3e50;
+            background: #f8f9fa;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .scenario-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .scenario-item {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .scenario-item:hover {
+            border-color: #667eea;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+        }
+
+        .scenario-item.selected {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .scenario-title {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .scenario-meta {
+            font-size: 12px;
+            color: #6c757d;
+        }
+
+        .priority-high {
+            border-left: 4px solid #dc3545;
+        }
+
+        .priority-medium {
+            border-left: 4px solid #ffc107;
+        }
+
+        .priority-low {
+            border-left: 4px solid #28a745;
+        }
+
+        .test-results {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-failed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-running {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.3s ease;
+        }
+
+        .step-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .step-item {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+        }
+
+        .step-number {
+            background: #667eea;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            margin-right: 10px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .close {
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #aaa;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .nav-tabs {
+                flex-wrap: wrap;
+            }
+            
+            .nav-tab {
+                flex: 1;
+                min-width: 120px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧪 PayTR Test Senaryo Yönetim Sistemi</h1>
+            <p>Kapsamlı test senaryosu oluşturma, yönetme ve çalıştırma platformu</p>
+        </div>
+
+        <div class="main-content">
+            <div class="sidebar">
+                <h3>📋 Test Senaryoları</h3>
+                <div class="form-group">
+                    <input type="text" id="searchScenarios" class="form-control" placeholder="Senaryo ara...">
+                </div>
+                <div class="form-group">
+                    <select id="filterCategory" class="form-control">
+                        <option value="">Tüm Kategoriler</option>
+                        <option value="login">Giriş Testleri</option>
+                        <option value="ui">UI Testleri</option>
+                        <option value="api">API Testleri</option>
+                        <option value="security">Güvenlik Testleri</option>
+                        <option value="performance">Performans Testleri</option>
+                    </select>
+                </div>
+                <div id="scenarioList" class="scenario-list">
+                    <!-- Senaryolar buraya dinamik olarak eklenecek -->
+                </div>
+                <div style="margin-top: 20px;">
+                    <button class="btn btn-primary" style="width: 100%; margin-bottom: 10px;" onclick="runSelectedScenarios()">🚀 Seçili Testleri Çalıştır</button>
+                    <button class="btn btn-secondary" style="width: 100%; margin-bottom: 10px;" onclick="exportScenarios()">📤 Senaryoları Dışa Aktar</button>
+                    <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importScenarios(event)">
+                    <button class="btn btn-secondary" style="width: 100%;" onclick="document.getElementById('importFile').click()">📥 Senaryoları İçe Aktar</button>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <div class="nav-tabs">
+                    <button class="nav-tab active" onclick="showTab('create')">➕ Yeni Senaryo</button>
+                    <button class="nav-tab" onclick="showTab('edit')">✏️ Düzenle</button>
+                    <button class="nav-tab" onclick="showTab('run')">▶️ Çalıştır</button>
+                    <button class="nav-tab" onclick="showTab('results')">📊 Sonuçlar</button>
+                </div>
+
+                <!-- Yeni Senaryo Oluşturma -->
+                <div id="createTab" class="tab-content active">
+                    <h3>🆕 Yeni Test Senaryosu Oluştur</h3>
+                    <form id="scenarioForm">
+                        <div class="form-group">
+                            <label for="scenarioName">Senaryo Adı *</label>
+                            <input type="text" id="scenarioName" class="form-control" required placeholder="Örn: Başarılı kullanıcı girişi">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="scenarioDescription">Senaryo Açıklaması</label>
+                            <textarea id="scenarioDescription" class="form-control" rows="3" placeholder="Bu senaryonun amacını ve kapsamını açıklayın..."></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="scenarioCategory">Kategori *</label>
+                            <select id="scenarioCategory" class="form-control" required>
+                                <option value="">Kategori seçin</option>
+                                <option value="login">Giriş Testleri</option>
+                                <option value="ui">UI Testleri</option>
+                                <option value="api">API Testleri</option>
+                                <option value="security">Güvenlik Testleri</option>
+                                <option value="performance">Performans Testleri</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="scenarioPriority">Öncelik *</label>
+                            <select id="scenarioPriority" class="form-control" required>
+                                <option value="high">🔴 Yüksek</option>
+                                <option value="medium" selected>🟡 Orta</option>
+                                <option value="low">🟢 Düşük</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Test Adımları *</label>
+                            <div id="stepsContainer">
+                                <div class="step-item">
+                                    <span class="step-number">1</span>
+                                    <input type="text" class="form-control" placeholder="Test adımını açıklayın..." style="flex: 1;">
+                                    <button type="button" class="btn btn-danger" style="margin-left: 10px; padding: 8px 12px;" onclick="removeStep(this)">🗑️</button>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-secondary" onclick="addStep()" style="margin-top: 10px;">➕ Adım Ekle</button>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="expectedResults">Beklenen Sonuçlar *</label>
+                            <textarea id="expectedResults" class="form-control" rows="3" required placeholder="Bu testin başarılı olması için beklenen sonuçları açıklayın..."></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="testData">Test Verileri (JSON formatında)</label>
+                            <textarea id="testData" class="form-control" rows="4" placeholder='{\n  "username": "test@example.com",\n  "password": "testpass123"\n}'></textarea>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">💾 Senaryoyu Kaydet</button>
+                        <button type="button" class="btn btn-secondary" onclick="clearForm()" style="margin-left: 10px;">🔄 Formu Temizle</button>
+                    </form>
+                </div>
+
+                <!-- Senaryo Düzenleme -->
+                <div id="editTab" class="tab-content">
+                    <h3>✏️ Senaryo Düzenle</h3>
+                    <div id="editContent">
+                        <p style="text-align: center; color: #6c757d; margin-top: 50px;">Düzenlemek için sol taraftan bir senaryo seçin</p>
+                    </div>
+                </div>
+
+                <!-- Test Çalıştırma -->
+                <div id="runTab" class="tab-content">
+                    <h3>▶️ Test Çalıştırma</h3>
+                    <div id="runContent">
+                        <div class="form-group">
+                            <label>Çalıştırılacak Senaryolar</label>
+                            <div id="selectedScenarios">
+                                <p style="color: #6c757d;">Henüz senaryo seçilmedi</p>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="testEnvironment">Test Ortamı</label>
+                            <select id="testEnvironment" class="form-control">
+                                <option value="uat">UAT (Test Ortamı)</option>
+                                <option value="staging">Staging</option>
+                                <option value="production">Production</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="takeScreenshots" checked> Otomatik ekran görüntüsü al
+                            </label>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="generateReport" checked> Detaylı rapor oluştur
+                            </label>
+                        </div>
+                        
+                        <button class="btn btn-success" onclick="startTestExecution()" id="startTestBtn">🚀 Testleri Başlat</button>
+                        <button class="btn btn-danger" onclick="stopTestExecution()" id="stopTestBtn" style="display: none; margin-left: 10px;">⏹️ Testleri Durdur</button>
+                        
+                        <div id="testProgress" style="display: none; margin-top: 20px;">
+                            <h4>Test İlerlemesi</h4>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressFill" style="width: 0%;"></div>
+                            </div>
+                            <div id="currentTest" style="margin-top: 10px; font-weight: 600;"></div>
+                            <div id="testLog" style="margin-top: 15px; background: #f8f9fa; padding: 15px; border-radius: 8px; max-height: 300px; overflow-y: auto; font-family: monospace; font-size: 12px;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Test Sonuçları -->
+                <div id="resultsTab" class="tab-content">
+                    <h3>📊 Test Sonuçları</h3>
+                    <div id="resultsContent">
+                        <div class="test-results">
+                            <h4>Son Test Çalıştırması</h4>
+                            <div id="testSummary">
+                                <p style="color: #6c757d;">Henüz test çalıştırılmadı</p>
+                            </div>
+                            <div id="detailedResults"></div>
+                        </div>
+                        
+                        <div style="margin-top: 20px;">
+                            <button class="btn btn-primary" onclick="exportResults()">📤 Sonuçları Dışa Aktar</button>
+                            <button class="btn btn-secondary" onclick="viewScreenshots()" style="margin-left: 10px;">🖼️ Ekran Görüntülerini Görüntüle</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Screenshot Modal -->
+    <div id="screenshotModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('screenshotModal')">&times;</span>
+            <h3>📸 Ekran Görüntüleri</h3>
+            <div id="screenshotGallery"></div>
+        </div>
+    </div>
+
+    <script src="test-scenario-manager.js"></script>
+</body>
+</html>

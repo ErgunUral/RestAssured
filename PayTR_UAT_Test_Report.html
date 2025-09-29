@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang='tr'>
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <title>PayTR UAT Test Raporu</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .container { max-width: 1200px; margin: 0 auto; background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); overflow: hidden; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; }
+        .header h1 { margin: 0; font-size: 2.5em; font-weight: 300; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; font-size: 1.1em; }
+        .summary { display: flex; justify-content: space-around; padding: 30px; background: #f8f9fa; border-bottom: 1px solid #dee2e6; }
+        .summary-item { text-align: center; }
+        .summary-number { font-size: 2.5em; font-weight: bold; margin-bottom: 5px; }
+        .summary-label { color: #6c757d; font-size: 0.9em; text-transform: uppercase; letter-spacing: 1px; }
+        .passed { color: #28a745; }
+        .failed { color: #dc3545; }
+        .total { color: #007bff; }
+        .test-results { padding: 30px; }
+        .test-item { margin-bottom: 25px; border: 1px solid #dee2e6; border-radius: 10px; overflow: hidden; transition: transform 0.2s; }
+        .test-item:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .test-header { padding: 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .test-header.passed { background: linear-gradient(135deg, #d4edda, #c3e6cb); border-left: 5px solid #28a745; }
+        .test-header.failed { background: linear-gradient(135deg, #f8d7da, #f5c6cb); border-left: 5px solid #dc3545; }
+        .test-name { font-weight: bold; font-size: 1.1em; }
+        .test-status { padding: 5px 15px; border-radius: 20px; color: white; font-size: 0.9em; font-weight: bold; }
+        .test-status.passed { background: #28a745; }
+        .test-status.failed { background: #dc3545; }
+        .test-details { padding: 20px; background: #f8f9fa; border-top: 1px solid #dee2e6; display: none; }
+        .test-message { margin-bottom: 15px; line-height: 1.6; }
+        .test-meta { display: flex; justify-content: space-between; font-size: 0.9em; color: #6c757d; margin-bottom: 15px; }
+        .screenshot { max-width: 100%; border-radius: 5px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .footer { background: #343a40; color: white; padding: 20px; text-align: center; }
+        @media (max-width: 768px) { .summary { flex-direction: column; } .summary-item { margin-bottom: 20px; } }
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <div class='header'>
+            <h1>PayTR UAT Test Raporu</h1>
+            <p>Test Tarihi: 10.09.2025 16:06:17</p>
+            <p>Test URL: https://zeus-uat.paytr.com/magaza</p>
+        </div>
+        <div class='summary'>
+            <div class='summary-item'>
+                <div class='summary-number total'>7</div>
+                <div class='summary-label'>Toplam Test</div>
+            </div>
+            <div class='summary-item'>
+                <div class='summary-number passed'>7</div>
+                <div class='summary-label'>Başarılı</div>
+            </div>
+            <div class='summary-item'>
+                <div class='summary-number failed'>0</div>
+                <div class='summary-label'>Başarısız</div>
+            </div>
+        </div>
+        <div class='test-results'>
+            <div class='test-item'>
+                <div class='test-header passed' onclick='toggleDetails(this)'>
+                    <div class='test-name'>UAT Sayfa Yükleme Testi</div>
+                    <div class='test-status passed'>BAŞARILI</div>
+                </div>
+                <div class='test-details'>
+                    <div class='test-meta'>
+                        <span>Süre: 16250ms</span>
+                        <span>Zaman: 2025-09-10 16:05:45</span>
+                    </div>
+                    <div class='test-message'>Sayfa başarıyla yüklendi. Başlık: Kullanıcı Girişi - Mağaza Paneli | PayTR</div>
+                    <img src='test-screenshots/UAT_Sayfa_Y_kleme_Testi_1757509545408.png' alt='Test Screenshot' class='screenshot'>
+                </div>
+            </div>
+            <div class='test-item'>
+                <div class='test-header passed' onclick='toggleDetails(this)'>
+                    <div class='test-name'>Login Sayfa Elementleri Testi</div>
+                    <div class='test-status passed'>BAŞARILI</div>
+                </div>
+                <div class='test-details'>
+                    <div class='test-meta'>
+                        <span>Süre: 7266ms</span>
+                        <span>Zaman: 2025-09-10 16:05:53</span>
+                    </div>
+                    <div class='test-message'>Login elementleri bulundu. Email alanları: 1, Şifre alanları: 1, Giriş butonları: 1</div>
+                    <img src='test-screenshots/Login_Sayfa_Elementleri_Testi_1757509553554.png' alt='Test Screenshot' class='screenshot'>
+                </div>
+            </div>
+            <div class='test-item'>
+                <div class='test-header passed' onclick='toggleDetails(this)'>
+                    <div class='test-name'>Form Validasyon Testi</div>
+                    <div class='test-status passed'>BAŞARILI</div>
+                </div>
+                <div class='test-details'>
+                    <div class='test-meta'>
+                        <span>Süre: 5050ms</span>
+                        <span>Zaman: 2025-09-10 16:05:58</span>
+                    </div>
+                    <div class='test-message'>Zorunlu alanlar: true, Validasyon mesajları: true, Form validasyonu: true</div>
+                    <img src='test-screenshots/Form_Validasyon_Testi_1757509558909.png' alt='Test Screenshot' class='screenshot'>
+                </div>
+            </div>
+            <div class='test-item'>
+                <div class='test-header passed' onclick='toggleDetails(this)'>
+                    <div class='test-name'>Responsive Tasarım Testi</div>
+                    <div class='test-status passed'>BAŞARILI</div>
+                </div>
+                <div class='test-details'>
+                    <div class='test-meta'>
+                        <span>Süre: 8668ms</span>
+                        <span>Zaman: 2025-09-10 16:06:07</span>
+                    </div>
+                    <div class='test-message'>Responsive test sonuçları: 1920x1080: OK, 768x1024: OK, 375x667: OK, </div>
+                    <img src='test-screenshots/Responsive_Tasar_m_Testi_1757509567854.png' alt='Test Screenshot' class='screenshot'>
+                </div>
+            </div>
+            <div class='test-item'>
+                <div class='test-header passed' onclick='toggleDetails(this)'>
+                    <div class='test-name'>QR Kod Bölümü Testi</div>
+                    <div class='test-status passed'>BAŞARILI</div>
+                </div>
+                <div class='test-details'>
+                    <div class='test-meta'>
+                        <span>Süre: 2741ms</span>
+                        <span>Zaman: 2025-09-10 16:06:10</span>
+                    </div>
+                    <div class='test-message'>QR elementleri: 11, QR metni: true, QR resmi: false, Mobil metni: false</div>
+                    <img src='test-screenshots/QR_Kod_B_l_m__Testi_1757509570836.png' alt='Test Screenshot' class='screenshot'>
+                </div>
+            </div>
+            <div class='test-item'>
+                <div class='test-header passed' onclick='toggleDetails(this)'>
+                    <div class='test-name'>Sayfa Performans Testi</div>
+                    <div class='test-status passed'>BAŞARILI</div>
+                </div>
+                <div class='test-details'>
+                    <div class='test-meta'>
+                        <span>Süre: 2163ms</span>
+                        <span>Zaman: 2025-09-10 16:06:13</span>
+                    </div>
+                    <div class='test-message'>Sayfa yükleme: 2131ms, DOM yükleme: 389ms, Tam yükleme: 1695ms</div>
+                    <img src='test-screenshots/Sayfa_Performans_Testi_1757509573217.png' alt='Test Screenshot' class='screenshot'>
+                </div>
+            </div>
+            <div class='test-item'>
+                <div class='test-header passed' onclick='toggleDetails(this)'>
+                    <div class='test-name'>Güvenlik Özellikleri Testi</div>
+                    <div class='test-status passed'>BAŞARILI</div>
+                </div>
+                <div class='test-details'>
+                    <div class='test-meta'>
+                        <span>Süre: 3842ms</span>
+                        <span>Zaman: 2025-09-10 16:06:17</span>
+                    </div>
+                    <div class='test-message'>HTTPS: true, Güvenlik başlıkları: false, Şifre alanı: true, Güvenlik metni: false</div>
+                    <img src='test-screenshots/G_venlik__zellikleri_Testi_1757509577333.png' alt='Test Screenshot' class='screenshot'>
+                </div>
+            </div>
+        </div>
+        <div class='footer'>
+            <p>PayTR UAT Test Automation Framework - Powered by Selenium & TestNG</p>
+        </div>
+    </div>
+    <script>
+        function toggleDetails(header) {
+            const details = header.nextElementSibling;
+            details.style.display = details.style.display === 'block' ? 'none' : 'block';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+<suite name="PayTR Smoke Test Suite" verbose="1" parallel="methods" thread-count="3" time-out="300000">
+    <parameter name="browser" value="chrome"/>
+    <parameter name="headless" value="true"/>
+    
+    <test name="Critical Smoke Tests" time-out="180000">
+        <classes>
+            <class name="com.example.tests.PayTRUIElementsTest">
+                <methods>
+                    <include name="testUATLoginPageAccess"/>
+                    <include name="testLoginFormElements"/>
+                    <include name="testSuccessfulLoginWithRealCredentials"/>
+                    <include name="testFormValidation"/>
+                    <include name="testSecurityFeatures"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+</suite>

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+<suite name="RestAssured Test Suite" time-out="300000">
+    
+    <!-- JSONPlaceholder API Tests -->
+    <test name="JSONPlaceholder API Tests">
+        <classes>
+            <class name="com.example.tests.ApiTest"/>
+            <class name="com.example.tests.UserApiTest"/>
+        </classes>
+    </test>
+    
+    <!-- PayTR Login Tests (Demo Mode) -->
+    <test name="PayTR Login Tests">
+        <parameter name="demo.mode" value="true"/>
+        <classes>
+            <class name="com.example.tests.PayTRLoginTest">
+                <methods>
+                    <include name="testLoginPageAccessibility"/>
+                    <include name="testLoginPageElementsPresence"/>
+                    <include name="testEmptyCredentialsValidation"/>
+                    <include name="testInvalidEmailFormatValidation"/>
+                    <include name="testSQLInjectionPrevention"/>
+                    <include name="testXSSPrevention"/>
+                    <include name="testRateLimitingProtection"/>
+                    <include name="testCSRFProtection"/>
+                    <include name="testSecurityHeaders"/>
+                    <include name="testMobileAppQRCodePresence"/>
+                </methods>
+            </class>
+            <class name="com.example.tests.PayTRFormValidationTest">
+                <methods>
+                    <include name="testFormFieldLengthLimits"/>
+                    <include name="testSpecialCharactersInEmail"/>
+                    <include name="testPasswordComplexityRequirements"/>
+                    <include name="testFormSubmissionWithoutRequiredFields"/>
+                    <include name="testFormSubmissionWithWhitespaceOnly"/>
+                    <include name="testCaseSensitiveEmailValidation"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- PayTR UI Elements Tests -->
+    <test name="PayTR UI Elements Tests">
+        <parameter name="webdriver.timeout" value="10"/>
+        <classes>
+            <class name="com.example.tests.PayTRUIElementsTest"/>
+        </classes>
+    </test>
+    
+</suite>
