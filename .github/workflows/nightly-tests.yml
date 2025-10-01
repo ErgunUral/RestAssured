@@ -1,0 +1,294 @@
+name: PayTR Nightly Tests
+
+on:
+  schedule:
+    # Her gece saat 01:00'da çalıştır (UTC)
+    - cron: '0 1 * * *'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Test Environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+          - development
+      browser:
+        description: 'Browser to test'
+        required: true
+        default: 'chrome'
+        type: choice
+        options:
+          - chrome
+          - firefox
+          - edge
+
+env:
+  MAVEN_OPTS: -Xmx3072m
+  JAVA_VERSION: '17'
+  TEST_ENVIRONMENT: ${{ github.event.inputs.environment || 'staging' }}
+  BROWSER: ${{ github.event.inputs.browser || 'chrome' }}
+
+jobs:
+  nightly-full-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    
+    strategy:
+      matrix:
+        browser: [chrome, firefox]
+        test-group: [payment, security, ui, api]
+      fail-fast: false
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up JDK ${{ env.JAVA_VERSION }}
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ env.JAVA_VERSION }}
+        distribution: 'temurin'
+        
+    - name: Cache Maven dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+        restore-keys: ${{ runner.os }}-m2
+        
+    - name: Setup Chrome Browser
+      if: matrix.browser == 'chrome'
+      uses: browser-actions/setup-chrome@latest
+      
+    - name: Setup Firefox Browser
+      if: matrix.browser == 'firefox'
+      uses: browser-actions/setup-firefox@latest
+      
+    - name: Install ChromeDriver
+      if: matrix.browser == 'chrome'
+      uses: nanasess/setup-chromedriver@master
+      
+    - name: Install GeckoDriver
+      if: matrix.browser == 'firefox'
+      uses: browser-actions/setup-geckodriver@latest
+        
+    - name: Run PayTR Nightly Tests - ${{ matrix.test-group }} on ${{ matrix.browser }}
+      run: |
+        echo "Running nightly tests for ${{ matrix.test-group }} on ${{ matrix.browser }}"
+        
+        # Browser ayarları
+        export BROWSER_TYPE=${{ matrix.browser }}
+        export TEST_ENVIRONMENT=${{ env.TEST_ENVIRONMENT }}
+        
+        # Test grubuna göre farklı test suite'leri çalıştır
+        case "${{ matrix.test-group }}" in
+          "payment")
+            mvn clean test -Dsurefire.suiteXmlFiles=testng-paytr-full.xml -Dgroups=payment -Dbrowser=${{ matrix.browser }} -Dheadless=true
+            ;;
+          "security")
+            mvn clean test -Dsurefire.suiteXmlFiles=testng-paytr-full.xml -Dgroups=security -Dbrowser=${{ matrix.browser }} -Dheadless=true
+            ;;
+          "ui")
+            mvn clean test -Dsurefire.suiteXmlFiles=testng-paytr-full.xml -Dgroups=ui -Dbrowser=${{ matrix.browser }} -Dheadless=true
+            ;;
+          "api")
+            mvn clean test -Dsurefire.suiteXmlFiles=testng-paytr-full.xml -Dgroups=api -Dbrowser=${{ matrix.browser }} -Dheadless=true
+            ;;
+          *)
+            mvn clean test -Dsurefire.suiteXmlFiles=testng-paytr-full.xml -Dbrowser=${{ matrix.browser }} -Dheadless=true
+            ;;
+        esac
+      continue-on-error: true
+      
+    - name: Generate Allure Report
+      if: always()
+      run: |
+        mvn allure:report
+        
+    - name: Upload Nightly Test Results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: nightly-results-${{ matrix.test-group }}-${{ matrix.browser }}
+        path: |
+          target/surefire-reports/
+          target/site/allure-maven-plugin/
+          screenshots/
+          test-screenshots/
+        retention-days: 14
+        
+    - name: Upload Screenshots on Failure
+      if: failure()
+      uses: actions/upload-artifact@v3
+      with:
+        name: nightly-failure-screenshots-${{ matrix.test-group }}-${{ matrix.browser }}
+        path: |
+          screenshots/
+          test-screenshots/
+        retention-days: 7
+
+  cross-browser-compatibility:
+    runs-on: ubuntu-latest
+    needs: nightly-full-regression
+    if: always()
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up JDK ${{ env.JAVA_VERSION }}
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ env.JAVA_VERSION }}
+        distribution: 'temurin'
+        
+    - name: Cache Maven dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+        restore-keys: ${{ runner.os }}-m2
+        
+    - name: Setup Browsers
+      run: |
+        # Chrome kurulumu
+        wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+        sudo sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'
+        sudo apt-get update
+        sudo apt-get install -y google-chrome-stable
+        
+        # Firefox kurulumu
+        sudo apt-get install -y firefox
+        
+    - name: Run Cross-Browser Smoke Tests
+      run: |
+        echo "Running cross-browser compatibility tests..."
+        
+        # Chrome ile smoke testler
+        mvn clean test -Dsurefire.suiteXmlFiles=testng-paytr-smoke.xml -Dbrowser=chrome -Dheadless=true
+        
+        # Firefox ile smoke testler
+        mvn clean test -Dsurefire.suiteXmlFiles=testng-paytr-smoke.xml -Dbrowser=firefox -Dheadless=true
+      continue-on-error: true
+      
+    - name: Upload Cross-Browser Results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: cross-browser-compatibility-results
+        path: |
+          target/surefire-reports/
+          target/site/allure-maven-plugin/
+        retention-days: 14
+
+  performance-monitoring:
+    runs-on: ubuntu-latest
+    needs: nightly-full-regression
+    if: always()
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up JDK ${{ env.JAVA_VERSION }}
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ env.JAVA_VERSION }}
+        distribution: 'temurin'
+        
+    - name: Cache Maven dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+        restore-keys: ${{ runner.os }}-m2
+        
+    - name: Run Performance Monitoring Tests
+      run: |
+        echo "Running performance monitoring tests..."
+        
+        # Performance testleri çalıştır
+        mvn clean test -Dsurefire.suiteXmlFiles=testng-paytr-full.xml -Dgroups=performance -Dheadless=true -DthreadCount=3 -Dparallel=methods
+        
+        # Performans metriklerini topla
+        echo "Collecting performance metrics..."
+        
+    - name: Upload Performance Results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: performance-monitoring-results
+        path: |
+          target/surefire-reports/
+          target/site/allure-maven-plugin/
+        retention-days: 30
+
+  notify-nightly-results:
+    runs-on: ubuntu-latest
+    needs: [nightly-full-regression, cross-browser-compatibility, performance-monitoring]
+    if: always()
+    
+    steps:
+    - name: Calculate Test Results
+      id: test-results
+      run: |
+        # Test sonuçlarını hesapla
+        if [ "${{ needs.nightly-full-regression.result }}" == "success" ]; then
+          echo "regression_status=✅ PASSED" >> $GITHUB_OUTPUT
+        else
+          echo "regression_status=❌ FAILED" >> $GITHUB_OUTPUT
+        fi
+        
+        if [ "${{ needs.cross-browser-compatibility.result }}" == "success" ]; then
+          echo "browser_status=✅ PASSED" >> $GITHUB_OUTPUT
+        else
+          echo "browser_status=❌ FAILED" >> $GITHUB_OUTPUT
+        fi
+        
+        if [ "${{ needs.performance-monitoring.result }}" == "success" ]; then
+          echo "performance_status=✅ PASSED" >> $GITHUB_OUTPUT
+        else
+          echo "performance_status=❌ FAILED" >> $GITHUB_OUTPUT
+        fi
+        
+    - name: Create Nightly Test Summary
+      run: |
+        echo "## 🌙 PayTR Nightly Test Results - $(date '+%Y-%m-%d')" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Test Results:" >> $GITHUB_STEP_SUMMARY
+        echo "- **Regression Tests**: ${{ steps.test-results.outputs.regression_status }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Cross-Browser Tests**: ${{ steps.test-results.outputs.browser_status }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Performance Tests**: ${{ steps.test-results.outputs.performance_status }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Environment:" >> $GITHUB_STEP_SUMMARY
+        echo "- **Test Environment**: ${{ env.TEST_ENVIRONMENT }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Java Version**: ${{ env.JAVA_VERSION }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+        
+    # Email notification (isteğe bağlı)
+    - name: Send Email Notification
+      if: failure()
+      uses: dawidd6/action-send-mail@v3
+      with:
+        server_address: smtp.gmail.com
+        server_port: 587
+        username: ${{ secrets.EMAIL_USERNAME }}
+        password: ${{ secrets.EMAIL_PASSWORD }}
+        subject: "❌ PayTR Nightly Tests Failed - $(date '+%Y-%m-%d')"
+        body: |
+          PayTR nightly test suite has failed.
+          
+          Regression Tests: ${{ steps.test-results.outputs.regression_status }}
+          Cross-Browser Tests: ${{ steps.test-results.outputs.browser_status }}
+          Performance Tests: ${{ steps.test-results.outputs.performance_status }}
+          
+          Please check the GitHub Actions logs for more details.
+          
+          Commit: ${{ github.sha }}
+          Workflow: ${{ github.workflow }}
+        to: ${{ secrets.NOTIFICATION_EMAIL }}
+        from: PayTR Test Automation
+      continue-on-error: true

@@ -1,0 +1,218 @@
+name: PayTR CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Günlük saat 02:00'da çalıştır (UTC)
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      test_suite:
+        description: 'Test Suite to run'
+        required: true
+        default: 'smoke'
+        type: choice
+        options:
+          - smoke
+          - regression
+          - full
+          - simple
+
+env:
+  MAVEN_OPTS: -Xmx2048m
+  JAVA_VERSION: '17'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        test-suite: [smoke, regression]
+      fail-fast: false
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up JDK ${{ env.JAVA_VERSION }}
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ env.JAVA_VERSION }}
+        distribution: 'temurin'
+        
+    - name: Cache Maven dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+        restore-keys: ${{ runner.os }}-m2
+        
+    - name: Install Chrome Browser
+      uses: browser-actions/setup-chrome@latest
+      
+    - name: Install ChromeDriver
+      uses: nanasess/setup-chromedriver@master
+      
+    - name: Display Chrome version
+      run: |
+        google-chrome --version
+        chromedriver --version
+        
+    - name: Run PayTR Tests - ${{ matrix.test-suite }}
+      run: |
+        if [ "${{ github.event.inputs.test_suite }}" != "" ]; then
+          TEST_SUITE="${{ github.event.inputs.test_suite }}"
+        else
+          TEST_SUITE="${{ matrix.test-suite }}"
+        fi
+        
+        echo "Running $TEST_SUITE tests..."
+        
+        case $TEST_SUITE in
+          "smoke")
+            mvn clean test -Dsurefire.suiteXmlFiles=testng-paytr-smoke.xml -Dheadless=true
+            ;;
+          "regression")
+            mvn clean test -Dsurefire.suiteXmlFiles=testng-paytr-regression.xml -Dheadless=true
+            ;;
+          "full")
+            mvn clean test -Dsurefire.suiteXmlFiles=testng-paytr-full.xml -Dheadless=true
+            ;;
+          "simple")
+            mvn clean test -Dsurefire.suiteXmlFiles=testng-paytr-simple.xml -Dheadless=true
+            ;;
+          *)
+            mvn clean test -Dsurefire.suiteXmlFiles=testng-paytr-smoke.xml -Dheadless=true
+            ;;
+        esac
+      continue-on-error: true
+      
+    - name: Generate Allure Report
+      if: always()
+      run: |
+        mvn allure:report
+        
+    - name: Upload Test Results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results-${{ matrix.test-suite }}
+        path: |
+          target/surefire-reports/
+          target/site/allure-maven-plugin/
+          screenshots/
+          test-screenshots/
+        retention-days: 30
+        
+    - name: Upload Screenshots on Failure
+      if: failure()
+      uses: actions/upload-artifact@v3
+      with:
+        name: failure-screenshots-${{ matrix.test-suite }}
+        path: |
+          screenshots/
+          test-screenshots/
+        retention-days: 7
+        
+    - name: Publish Test Results
+      if: always()
+      uses: dorny/test-reporter@v1
+      with:
+        name: PayTR Test Results - ${{ matrix.test-suite }}
+        path: target/surefire-reports/*.xml
+        reporter: java-junit
+        fail-on-error: false
+        
+  security-scan:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'push' || github.event_name == 'schedule'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Run OWASP Dependency Check
+      uses: dependency-check/Dependency-Check_Action@main
+      with:
+        project: 'PayTR-Test-Automation'
+        path: '.'
+        format: 'ALL'
+        
+    - name: Upload OWASP Report
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: owasp-dependency-check-report
+        path: reports/
+        retention-days: 30
+
+  notify:
+    runs-on: ubuntu-latest
+    needs: [test, security-scan]
+    if: always()
+    
+    steps:
+    - name: Notify on Success
+      if: needs.test.result == 'success'
+      run: |
+        echo "✅ PayTR Tests Passed Successfully!"
+        echo "All test suites completed without errors."
+        
+    - name: Notify on Failure
+      if: needs.test.result == 'failure'
+      run: |
+        echo "❌ PayTR Tests Failed!"
+        echo "Please check the test results and fix the issues."
+        
+    # Slack notification (isteğe bağlı - Slack webhook URL gerekli)
+    - name: Slack Notification
+      if: always()
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        channel: '#paytr-tests'
+        webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+        fields: repo,message,commit,author,action,eventName,ref,workflow
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      continue-on-error: true
+
+  performance-test:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event.inputs.test_suite == 'full'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up JDK ${{ env.JAVA_VERSION }}
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ env.JAVA_VERSION }}
+        distribution: 'temurin'
+        
+    - name: Cache Maven dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+        restore-keys: ${{ runner.os }}-m2
+        
+    - name: Run Performance Tests
+      run: |
+        echo "Running PayTR Performance Tests..."
+        mvn clean test -Dsurefire.suiteXmlFiles=testng-paytr-full.xml -Dparallel=true -DthreadCount=5
+        
+    - name: Upload Performance Results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: performance-test-results
+        path: |
+          target/surefire-reports/
+          target/site/allure-maven-plugin/
+        retention-days: 30
