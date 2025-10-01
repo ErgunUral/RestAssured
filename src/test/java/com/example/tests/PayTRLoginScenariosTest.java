@@ -13,7 +13,7 @@ public class PayTRLoginScenariosTest extends BaseTest {
     
     @BeforeClass
     public void setupLoginScenariosTests() {
-        baseURI = "https://zeus-uat.paytr.com";
+        baseURI = "https://testweb.paytr.com";
         basePath = "/magaza";
         logTestInfo("PayTR Login Scenarios Test Suite başlatıldı");
     }

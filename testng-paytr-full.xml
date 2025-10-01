@@ -1,0 +1,104 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+<suite name="PayTR_Full_Test_Suite" verbose="1" parallel="methods" thread-count="3">
+    
+    <!-- Test parametreleri -->
+    <parameter name="browser" value="chrome"/>
+    <parameter name="environment" value="test"/>
+    <parameter name="baseUrl" value="https://testweb.paytr.com"/>
+    <parameter name="headless" value="false"/>
+    <parameter name="timeout" value="30"/>
+    
+    <!-- Test dinleyicileri -->
+    <listeners>
+        <listener class-name="org.testng.reporters.EmailableReporter"/>
+        <listener class-name="org.testng.reporters.JUnitReportReporter"/>
+        <listener class-name="com.example.utils.PayTRTestReporter"/>
+        <listener class-name="com.example.utils.PayTRExtentReporter"/>
+        <listener class-name="com.example.utils.PayTRAllureReporter"/>
+    </listeners>
+    
+    <!-- PayTR Temel İşlevsellik Testleri -->
+    <test name="PayTR_Core_Functionality_Tests" preserve-order="true">
+        <groups>
+            <run>
+                <include name="core"/>
+                <include name="payment"/>
+                <include name="virtualpos"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRPaymentTest"/>
+            <class name="com.example.tests.PayTRVirtualPOSTest"/>
+            <class name="com.example.tests.PayTRCardValidationTest"/>
+            <class name="com.example.tests.PayTRInstallmentTest"/>
+        </classes>
+    </test>
+    
+    <!-- PayTR Güvenlik Testleri -->
+    <test name="PayTR_Security_Tests" preserve-order="true">
+        <groups>
+            <run>
+                <include name="security"/>
+                <include name="ssl"/>
+                <include name="csrf"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRSecurityTest"/>
+        </classes>
+    </test>
+    
+    <!-- PayTR Smoke Testleri -->
+    <test name="PayTR_Smoke_Tests" preserve-order="true">
+        <groups>
+            <run>
+                <include name="smoke"/>
+                <include name="critical"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRSmokeTest"/>
+        </classes>
+    </test>
+    
+    <!-- PayTR API Testleri -->
+    <test name="PayTR_API_Tests" preserve-order="false">
+        <groups>
+            <run>
+                <include name="api"/>
+                <include name="integration"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRAPITest"/>
+        </classes>
+    </test>
+    
+    <!-- PayTR Performans Testleri -->
+    <test name="PayTR_Performance_Tests" preserve-order="false">
+        <groups>
+            <run>
+                <include name="performance"/>
+                <include name="load"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRPerformanceTest"/>
+        </classes>
+    </test>
+    
+    <!-- PayTR Responsive Testleri -->
+    <test name="PayTR_Responsive_Tests" preserve-order="false">
+        <groups>
+            <run>
+                <include name="responsive"/>
+                <include name="mobile"/>
+                <include name="tablet"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRResponsiveTest"/>
+        </classes>
+    </test>
+    
+</suite>

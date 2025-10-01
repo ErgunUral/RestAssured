@@ -9,14 +9,14 @@ import static org.testng.Assert.*;
 
 public class PayTRLoginTest extends BaseTest {
     
-    private String loginUrl = "https://zeus-uat.paytr.com/magaza/kullanici-girisi";
+    private String loginUrl = "https://testweb.paytr.com";
     
     @BeforeClass
     public void setupPayTRTests() {
-        // PayTR özel test konfigürasyonu
-        baseURI = "https://zeus-uat.paytr.com";
-        basePath = "/magaza";
-        logTestInfo("PayTR Mağaza Login Test Suite başlatıldı");
+        // PayTR test ortamı konfigürasyonu
+        baseURI = "https://testweb.paytr.com";
+        basePath = "";
+        logTestInfo("PayTR Test Environment Login Test Suite başlatıldı");
     }
     
     @Test(priority = 1)

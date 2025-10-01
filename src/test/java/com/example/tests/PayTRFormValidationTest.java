@@ -12,7 +12,7 @@ public class PayTRFormValidationTest extends BaseTest {
     
     @BeforeClass
     public void setupFormValidationTests() {
-        baseURI = "https://zeus-uat.paytr.com";
+        baseURI = "https://testweb.paytr.com";
         basePath = "/magaza";
         logTestInfo("PayTR Form Validation Test Suite başlatıldı");
     }

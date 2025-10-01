@@ -13,7 +13,12 @@ import org.openqa.selenium.safari.SafariDriver;
 public class WebDriverSetup {
     private static ThreadLocal<WebDriver> driver = new ThreadLocal<>();
     
-    public static void setupDriver(String browserName) {
+    public static synchronized void setupDriver(String browserName) {
+        // Eğer driver zaten varsa, önce temizle
+        if (driver.get() != null) {
+            quitDriver();
+        }
+        
         switch (browserName.toLowerCase()) {
             case "chrome":
                 WebDriverManager.chromedriver().setup();
@@ -24,9 +29,10 @@ public class WebDriverSetup {
                 chromeOptions.addArguments("--headless");
                 chromeOptions.addArguments("--window-size=1920,1080");
                 chromeOptions.addArguments("--disable-extensions");
-                chromeOptions.addArguments("--disable-images");
-                chromeOptions.addArguments("--disable-plugins");
-                chromeOptions.addArguments("--disable-javascript");
+                chromeOptions.addArguments("--disable-web-security");
+                chromeOptions.addArguments("--allow-running-insecure-content");
+                // JavaScript'i aktif bırak (PayTR için gerekli)
+                // chromeOptions.addArguments("--disable-javascript"); // Kaldırıldı
                 driver.set(new ChromeDriver(chromeOptions));
                 break;
                 
@@ -56,14 +62,25 @@ public class WebDriverSetup {
         }
     }
     
-    public static WebDriver getDriver() {
-        return driver.get();
+    public static synchronized WebDriver getDriver() {
+        WebDriver currentDriver = driver.get();
+        if (currentDriver == null) {
+            // Eğer driver null ise, yeni bir driver oluştur
+            setupDriver("chrome");
+            currentDriver = driver.get();
+        }
+        return currentDriver;
     }
     
-    public static void quitDriver() {
-        if (driver.get() != null) {
-            driver.get().quit();
-            driver.remove();
+    public static synchronized void quitDriver() {
+        try {
+            if (driver.get() != null) {
+                driver.get().quit();
+                driver.remove();
+            }
+        } catch (Exception e) {
+            System.out.println("⚠️ WebDriver kapatma hatası: " + e.getMessage());
+            driver.remove(); // Thread'den kaldır
         }
     }
     

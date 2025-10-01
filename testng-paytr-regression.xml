@@ -1,0 +1,148 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+<suite name="PayTR_Regression_Test_Suite" verbose="1" parallel="classes" thread-count="2">
+    
+    <!-- Test parametreleri -->
+    <parameter name="browser" value="chrome"/>
+    <parameter name="environment" value="test"/>
+    <parameter name="baseUrl" value="https://testweb.paytr.com"/>
+    <parameter name="headless" value="true"/>
+    <parameter name="timeout" value="45"/>
+    <parameter name="retryCount" value="2"/>
+    
+    <!-- Test dinleyicileri -->
+    <listeners>
+        <listener class-name="org.testng.reporters.EmailableReporter"/>
+        <listener class-name="org.testng.reporters.JUnitReportReporter"/>
+        <listener class-name="com.example.utils.PayTRTestReporter"/>
+        <listener class-name="com.example.utils.PayTRExtentReporter"/>
+        <listener class-name="com.example.utils.PayTRAllureReporter"/>
+    </listeners>
+    
+    <!-- Kritik İş Akışları -->
+    <test name="PayTR_Critical_Business_Flows" preserve-order="true">
+        <groups>
+            <run>
+                <include name="critical"/>
+                <include name="regression"/>
+                <include name="e2e"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRSmokeTest">
+                <methods>
+                    <include name="testWebsiteAccessibility"/>
+                    <include name="testPaymentPageBasicFunctionality"/>
+                    <include name="testVirtualPOSBasicFunctionality"/>
+                    <include name="testEndToEndFlow"/>
+                </methods>
+            </class>
+            <class name="com.example.tests.PayTRPaymentTest"/>
+            <class name="com.example.tests.PayTRVirtualPOSTest"/>
+        </classes>
+    </test>
+    
+    <!-- Ödeme İşlemleri Regresyon -->
+    <test name="PayTR_Payment_Regression" preserve-order="false">
+        <groups>
+            <run>
+                <include name="payment"/>
+                <include name="regression"/>
+                <include name="card"/>
+                <include name="installment"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRCardValidationTest"/>
+            <class name="com.example.tests.PayTRInstallmentTest"/>
+        </classes>
+    </test>
+    
+    <!-- Güvenlik Regresyon -->
+    <test name="PayTR_Security_Regression" preserve-order="false">
+        <groups>
+            <run>
+                <include name="security"/>
+                <include name="regression"/>
+                <include name="ssl"/>
+                <include name="csrf"/>
+                <include name="xss"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRSecurityTest"/>
+        </classes>
+    </test>
+    
+    <!-- API Regresyon -->
+    <test name="PayTR_API_Regression" preserve-order="false">
+        <groups>
+            <run>
+                <include name="api"/>
+                <include name="regression"/>
+                <include name="integration"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRAPITest"/>
+        </classes>
+    </test>
+    
+    <!-- UI/UX Regresyon -->
+    <test name="PayTR_UI_UX_Regression" preserve-order="false">
+        <groups>
+            <run>
+                <include name="ui"/>
+                <include name="regression"/>
+                <include name="responsive"/>
+                <include name="validation"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRResponsiveTest"/>
+        </classes>
+    </test>
+    
+    <!-- Performans Regresyon -->
+    <test name="PayTR_Performance_Regression" preserve-order="false">
+        <groups>
+            <run>
+                <include name="performance"/>
+                <include name="regression"/>
+                <include name="load"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRPerformanceTest"/>
+        </classes>
+    </test>
+    
+    <!-- Negatif Test Senaryoları -->
+    <test name="PayTR_Negative_Test_Scenarios" preserve-order="false">
+        <groups>
+            <run>
+                <include name="negative"/>
+                <include name="regression"/>
+                <include name="error"/>
+                <include name="boundary"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRNegativeTest"/>
+        </classes>
+    </test>
+    
+    <!-- Çapraz Tarayıcı Testleri -->
+    <test name="PayTR_Cross_Browser_Tests" preserve-order="false">
+        <groups>
+            <run>
+                <include name="crossbrowser"/>
+                <include name="regression"/>
+                <include name="compatibility"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRCrossBrowserTest"/>
+        </classes>
+    </test>
+    
+</suite>

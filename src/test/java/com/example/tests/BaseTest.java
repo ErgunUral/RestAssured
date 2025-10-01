@@ -12,16 +12,19 @@ public class BaseTest {
     
     protected RequestSpecification requestSpec;
     protected ResponseSpecification responseSpec;
+    protected String baseURI = "https://testweb.paytr.com";
+    protected String basePath = "";
     
     @BeforeClass
     public void setUp() {
-        // Base URI configuration
-        RestAssured.baseURI = "https://jsonplaceholder.typicode.com";
+        // PayTR Test Environment Base URI configuration
+        RestAssured.baseURI = baseURI;
         
-        // Request specification
+        // Request specification for PayTR
         requestSpec = new RequestSpecBuilder()
                 .setContentType(ContentType.JSON)
                 .setAccept(ContentType.JSON)
+                .addHeader("User-Agent", "PayTR-Test-Automation/1.0")
                 .build();
         
         // Response specification
@@ -32,9 +35,12 @@ public class BaseTest {
         // Set default specifications
         RestAssured.requestSpecification = requestSpec;
         RestAssured.responseSpecification = responseSpec;
+        
+        logTestInfo("PayTR Test Environment initialized: " + baseURI);
     }
     
     protected void logTestInfo(String testName) {
         System.out.println("\n=== " + testName + " ===");
+        System.out.println("Test URL: " + baseURI + basePath);
     }
 }

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+
+<suite name="PayTR_Smoke_Test_Suite" verbose="1" parallel="false" thread-count="1">
+    
+    <parameter name="browser" value="chrome"/>
+    <parameter name="environment" value="test"/>
+    <parameter name="baseUrl" value="https://testweb.paytr.com"/>
+    
+    <listeners>
+        <listener class-name="org.testng.reporters.EmailableReporter"/>
+        <listener class-name="org.testng.reporters.JUnitReportReporter"/>
+        <listener class-name="com.example.utils.PayTRTestReporter"/>
+        <listener class-name="com.example.utils.PayTRExtentReporter"/>
+        <listener class-name="com.example.utils.PayTRAllureReporter"/>
+    </listeners>
+    
+    <!-- PayTR Smoke Tests - Kritik İşlevler -->
+    <test name="PayTR_Critical_Smoke_Tests" preserve-order="true">
+        <groups>
+            <run>
+                <include name="smoke"/>
+                <include name="critical"/>
+            </run>
+        </groups>
+        
+        <classes>
+            <class name="com.example.tests.PayTRSmokeTest">
+                <methods>
+                    <include name="smokeTest_PayTRWebsiteAccessibility"/>
+                    <include name="smokeTest_PaymentPageBasicFunctionality"/>
+                    <include name="smokeTest_VirtualPOSBasicFunctionality"/>
+                    <include name="smokeTest_BasicSecurityFeatures"/>
+                    <include name="smokeTest_EndToEndFlow"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- PayTR Extended Smoke Tests - Ek Kontroller -->
+    <test name="PayTR_Extended_Smoke_Tests" preserve-order="true">
+        <groups>
+            <run>
+                <include name="smoke"/>
+            </run>
+        </groups>
+        
+        <classes>
+            <class name="com.example.tests.PayTRSmokeTest">
+                <methods>
+                    <include name="smokeTest_PaymentFormValidation"/>
+                    <include name="smokeTest_ResponsiveDesign"/>
+                    <include name="smokeTest_BasicPerformance"/>
+                    <include name="smokeTest_BasicAPIConnectivity"/>
+                    <include name="smokeTest_OverallSystemHealth"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+</suite>
