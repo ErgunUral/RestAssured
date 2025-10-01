@@ -3,6 +3,7 @@
 <suite name="PayTR Smoke Test Suite" verbose="1" parallel="methods" thread-count="3" time-out="300000">
     <parameter name="browser" value="chrome"/>
     <parameter name="headless" value="true"/>
+    <parameter name="baseUrl" value="https://zeus-uat.paytr.com"/>
     
     <test name="Critical Smoke Tests" time-out="180000">
         <classes>

@@ -54,7 +54,7 @@ public class PayTRUATTest extends BaseTest {
     
     @BeforeClass
     public void setupUATTests() {
-        baseURI = "https://testweb.paytr.com";
+        baseURI = "https://zeus-uat.paytr.com";
         basePath = "/magaza";
         
         // Create screenshot directory

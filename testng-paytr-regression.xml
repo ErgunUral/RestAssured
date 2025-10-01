@@ -4,7 +4,7 @@
     <!-- Test parametreleri -->
     <parameter name="browser" value="chrome"/>
     <parameter name="environment" value="test"/>
-    <parameter name="baseUrl" value="https://testweb.paytr.com"/>
+    <parameter name="baseUrl" value="https://zeus-uat.paytr.com"/>
     <parameter name="headless" value="true"/>
     <parameter name="timeout" value="45"/>
     <parameter name="retryCount" value="2"/>

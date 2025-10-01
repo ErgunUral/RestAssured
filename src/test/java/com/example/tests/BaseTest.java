@@ -12,7 +12,7 @@ public class BaseTest {
     
     protected RequestSpecification requestSpec;
     protected ResponseSpecification responseSpec;
-    protected String baseURI = "https://testweb.paytr.com";
+    protected String baseURI = "https://zeus-uat.paytr.com";
     protected String basePath = "";
     
     @BeforeClass

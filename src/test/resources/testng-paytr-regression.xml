@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+<suite name="PayTR Regression Test Suite" verbose="1" parallel="methods" thread-count="2" time-out="600000">
+    <parameter name="browser" value="chrome"/>
+    <parameter name="headless" value="true"/>
+    <parameter name="environment" value="test"/>
+    
+    <!-- Payment Process Regression Tests -->
+    <test name="Payment Process Regression Tests" time-out="300000">
+        <groups>
+            <run>
+                <include name="payment"/>
+                <include name="regression"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRPaymentProcessTest"/>
+            <class name="com.example.tests.PayTRVirtualPOSTest"/>
+            <class name="com.example.tests.PayTRInstallmentTest"/>
+        </classes>
+    </test>
+    
+    <!-- UI Elements Regression Tests -->
+    <test name="UI Elements Regression Tests" time-out="300000">
+        <groups>
+            <run>
+                <include name="ui"/>
+                <include name="regression"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRUIElementsTest"/>
+        </classes>
+    </test>
+    
+    <!-- Security Regression Tests -->
+    <test name="Security Regression Tests" time-out="300000">
+        <groups>
+            <run>
+                <include name="security"/>
+                <include name="regression"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRCardValidationTest"/>
+        </classes>
+    </test>
+    
+    <!-- API Regression Tests -->
+    <test name="API Regression Tests" time-out="300000">
+        <groups>
+            <run>
+                <include name="api"/>
+                <include name="regression"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.ApiTest"/>
+            <class name="com.example.tests.UserApiTest"/>
+        </classes>
+    </test>
+    
+    <!-- UAT Regression Tests -->
+    <test name="UAT Regression Tests" time-out="300000">
+        <groups>
+            <run>
+                <include name="uat"/>
+                <include name="regression"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRUATTest"/>
+        </classes>
+    </test>
+</suite>

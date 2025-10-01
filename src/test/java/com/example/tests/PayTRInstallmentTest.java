@@ -27,7 +27,7 @@ public class PayTRInstallmentTest extends BaseTest {
     
     @BeforeClass
     public void setupInstallmentTests() {
-        baseURI = "https://testweb.paytr.com";
+        baseURI = "https://zeus-uat.paytr.com";
         basePath = "";
         
         // WebDriver setup

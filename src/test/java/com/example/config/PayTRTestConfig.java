@@ -11,9 +11,9 @@ import java.util.Arrays;
  */
 public class PayTRTestConfig {
     
-    // PayTR Test Environment URLs
-    public static final String BASE_URL = "https://testweb.paytr.com";
-    public static final String LOGIN_URL = BASE_URL;
+    // PayTR Zeus UAT Environment URLs
+    public static final String BASE_URL = "https://zeus-uat.paytr.com";
+    public static final String LOGIN_URL = BASE_URL + "/magaza/kullanici-girisi";
     public static final String PAYMENT_URL = BASE_URL;
     public static final String VIRTUAL_POS_URL = BASE_URL;
     public static final String API_BASE_URL = BASE_URL + "/api";

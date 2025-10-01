@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
 <suite name="RestAssured Test Suite" time-out="300000">
+    <parameter name="baseUrl" value="https://zeus-uat.paytr.com"/>
     
     <!-- JSONPlaceholder API Tests -->
     <test name="JSONPlaceholder API Tests">

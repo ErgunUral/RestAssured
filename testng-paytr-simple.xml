@@ -4,7 +4,7 @@
 <suite name="PayTR Simple Test Suite" verbose="1" parallel="none" thread-count="1">
     
     <parameter name="browser" value="chrome"/>
-    <parameter name="baseUrl" value="https://testweb.paytr.com"/>
+    <parameter name="baseUrl" value="https://zeus-uat.paytr.com"/>
     <parameter name="timeout" value="30"/>
     <parameter name="environment" value="test"/>
     

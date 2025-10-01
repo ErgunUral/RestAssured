@@ -27,7 +27,7 @@ public class PayTRPaymentProcessTest extends BaseTest {
     
     @BeforeClass
     public void setupPaymentProcessTests() {
-        baseURI = "https://testweb.paytr.com";
+        baseURI = "https://zeus-uat.paytr.com";
         basePath = "/magaza"; // PayTR test ortamı için doğru path
         
         // WebDriver setup
@@ -54,7 +54,7 @@ public class PayTRPaymentProcessTest extends BaseTest {
             String pageTitle = driver.getTitle();
             String pageSource = driver.getPageSource();
             
-            assertTrue(currentUrl.contains("testweb.paytr.com"), "PayTR test ortamına erişilemedi");
+            assertTrue(currentUrl.contains("zeus-uat.paytr.com"), "PayTR Zeus UAT ortamına erişilemedi");
             assertTrue(pageSource.length() > 0, "Sayfa içeriği yüklenemedi");
             
             // PayTR özel elementlerini ara

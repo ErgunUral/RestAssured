@@ -30,7 +30,7 @@ public class PayTRUIElementsTest extends BaseTest {
     
     @BeforeClass
     public void setupUIElementsTests() {
-        baseURI = "https://testweb.paytr.com";
+        baseURI = "https://zeus-uat.paytr.com";
         basePath = "";
         
         // WebDriver setup
@@ -157,7 +157,7 @@ public class PayTRUIElementsTest extends BaseTest {
             // HTTPS kontrolü
             String currentUrl = driver.getCurrentUrl();
             assertTrue(currentUrl.startsWith("https://"), "Sayfa HTTPS ile yüklenemedi");
-            assertTrue(currentUrl.contains("testweb.paytr.com"), "PayTR test ortamına erişilemedi");
+            assertTrue(currentUrl.contains("zeus-uat.paytr.com"), "PayTR Zeus UAT ortamına erişilemedi");
             
             // Sayfa başlığı kontrolü
             String pageTitle = driver.getTitle();
@@ -176,6 +176,42 @@ public class PayTRUIElementsTest extends BaseTest {
     }
     
     @Test(priority = 2)
+    public void testUATLoginPageAccess() {
+        logTestInfo("Test Zeus UAT Login Page Access");
+        
+        try {
+            // Zeus UAT login sayfasına git
+            driver.get("https://zeus-uat.paytr.com/magaza/kullanici-girisi");
+            
+            // Sayfa yüklenene kadar bekle
+            wait.until(ExpectedConditions.presenceOfElementLocated(By.tagName("body")));
+            
+            // URL kontrolü
+            String currentUrl = driver.getCurrentUrl();
+            assertTrue(currentUrl.contains("zeus-uat.paytr.com"), "Zeus UAT ortamına erişilemedi");
+            assertTrue(currentUrl.contains("kullanici-girisi"), "Login sayfasına yönlendirilemedi");
+            
+            // Sayfa başlığı kontrolü
+            String pageTitle = driver.getTitle();
+            System.out.println("Zeus UAT Login Page Title: " + pageTitle);
+            assertTrue(pageTitle != null && !pageTitle.isEmpty(), "Sayfa başlığı boş");
+            
+            // Login form elementlerini kontrol et
+            boolean hasLoginForm = driver.findElements(By.xpath("//input[@type='email' or @name='email']")).size() > 0 &&
+                                 driver.findElements(By.xpath("//input[@type='password' or @name='password']")).size() > 0;
+            
+            assertTrue(hasLoginForm, "Login form elementleri bulunamadı");
+            
+            System.out.println("Zeus UAT Login page access test completed successfully");
+            System.out.println("Current URL: " + currentUrl);
+            
+        } catch (Exception e) {
+            System.out.println("Zeus UAT Login page access test failed: " + e.getMessage());
+            fail("Zeus UAT login sayfasına erişilemedi: " + e.getMessage());
+        }
+    }
+    
+    @Test(priority = 3)
     public void testPayTRFormElements() {
         logTestInfo("Test PayTR Form Elements");
         
@@ -228,8 +264,8 @@ public class PayTRUIElementsTest extends BaseTest {
         logTestInfo("Test Successful Login With Real Credentials");
         
         try {
-            // PayTR test login sayfasına git
-            driver.get("https://testweb.paytr.com/magaza/kullanici-girisi");
+            // Zeus UAT login sayfasına git
+            driver.get("https://zeus-uat.paytr.com/magaza/kullanici-girisi");
             
             // Form elementlerini bul ve gerçek bilgileri gir
             WebElement storeNumberField = wait.until(ExpectedConditions.presenceOfElementLocated(
@@ -286,8 +322,8 @@ public class PayTRUIElementsTest extends BaseTest {
         logTestInfo("Test Login With Incorrect Credentials");
         
         try {
-            // PayTR test login sayfasına git
-            driver.get("https://testweb.paytr.com/magaza/kullanici-girisi");
+            // Zeus UAT login sayfasına git
+            driver.get("https://zeus-uat.paytr.com/magaza/kullanici-girisi");
             
             // Hatalı bilgilerle giriş dene
             WebElement storeNumberField = wait.until(ExpectedConditions.presenceOfElementLocated(
