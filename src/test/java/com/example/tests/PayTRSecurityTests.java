@@ -1,15 +1,24 @@
 package com.example.tests;
 
-import io.qameta.allure.*;
-import org.testng.annotations.*;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.ui.WebDriverWait;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.JavascriptExecutor;
 import com.example.utils.WebDriverSetup;
 import com.example.utils.SecurityTestUtils;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.support.ui.WebDriverWait;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.Test;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Step;
+import io.qameta.allure.Story;
+import io.qameta.allure.Severity;
+import io.qameta.allure.SeverityLevel;
+import io.qameta.allure.Description;
 import java.time.Duration;
 import java.util.List;
 import static org.testng.Assert.*;
@@ -32,13 +41,53 @@ public class PayTRSecurityTests extends BaseTest {
         baseURI = "https://zeus-uat.paytr.com";
         basePath = "";
         
-        // WebDriver setup
-        WebDriverSetup.setupDriver("chrome");
-        driver = WebDriverSetup.getDriver();
-        wait = new WebDriverWait(driver, Duration.ofSeconds(15));
-        securityUtils = new SecurityTestUtils(driver);
+        try {
+            // WebDriver setup with validation
+            WebDriverSetup.setupDriver("chrome");
+            driver = WebDriverSetup.getDriver();
+            
+            if (driver == null) {
+                throw new RuntimeException("WebDriver başlatılamadı - driver null döndü");
+            }
+            
+            wait = new WebDriverWait(driver, Duration.ofSeconds(15));
+            securityUtils = new SecurityTestUtils(driver);
+            
+            logTestInfo("PayTR Güvenlik Test Suite başlatıldı");
+            System.out.println("✅ WebDriver başarıyla başlatıldı: " + driver.getClass().getSimpleName());
+            
+        } catch (Exception e) {
+            System.out.println("❌ WebDriver setup hatası: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("WebDriver başlatılamadı", e);
+        }
+    }
+    
+    @BeforeMethod
+    public void validateDriverBeforeTest() {
+        if (driver == null) {
+            System.out.println("⚠️ Driver null, yeniden başlatılıyor...");
+            try {
+                WebDriverSetup.setupDriver("chrome");
+                driver = WebDriverSetup.getDriver();
+                wait = new WebDriverWait(driver, Duration.ofSeconds(15));
+                securityUtils = new SecurityTestUtils(driver);
+            } catch (Exception e) {
+                throw new RuntimeException("Driver yeniden başlatılamadı: " + e.getMessage(), e);
+            }
+        }
         
-        logTestInfo("PayTR Güvenlik Test Suite başlatıldı");
+        // Driver responsiveness check
+        try {
+            driver.getCurrentUrl();
+        } catch (Exception e) {
+            System.out.println("⚠️ Driver unresponsive, yeniden başlatılıyor...");
+            WebDriverSetup.quitDriver();
+            WebDriverSetup.setupDriver("chrome");
+            driver = WebDriverSetup.getDriver();
+            wait = new WebDriverWait(driver, Duration.ofSeconds(15));
+            securityUtils = new SecurityTestUtils(driver);
+        }
     }
     
     @AfterClass

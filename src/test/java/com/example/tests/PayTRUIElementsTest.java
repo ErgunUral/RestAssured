@@ -3,6 +3,7 @@ package com.example.tests;
 import io.restassured.response.Response;
 import org.testng.annotations.Test;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.DataProvider;
@@ -48,14 +49,56 @@ public class PayTRUIElementsTest extends BaseTest {
         baseURI = "https://zeus-uat.paytr.com";
         basePath = "";
         
-        // WebDriver setup
-        WebDriverSetup.setupDriver("chrome");
-        driver = WebDriverSetup.getDriver();
-        wait = new WebDriverWait(driver, Duration.ofSeconds(15));
-        actions = new Actions(driver);
-        jsExecutor = (JavascriptExecutor) driver;
+        try {
+            // WebDriver setup with validation
+            WebDriverSetup.setupDriver("chrome");
+            driver = WebDriverSetup.getDriver();
+            
+            if (driver == null) {
+                throw new RuntimeException("WebDriver başlatılamadı - driver null döndü");
+            }
+            
+            wait = new WebDriverWait(driver, Duration.ofSeconds(15));
+            actions = new Actions(driver);
+            jsExecutor = (JavascriptExecutor) driver;
+            
+            logTestInfo("PayTR Test Environment UI Test Suite başlatıldı");
+            System.out.println("✅ WebDriver başarıyla başlatıldı: " + driver.getClass().getSimpleName());
+            
+        } catch (Exception e) {
+            System.out.println("❌ WebDriver setup hatası: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("WebDriver başlatılamadı", e);
+        }
+    }
+    
+    @BeforeMethod
+    public void validateDriverBeforeTest() {
+        if (driver == null) {
+            System.out.println("⚠️ Driver null, yeniden başlatılıyor...");
+            try {
+                WebDriverSetup.setupDriver("chrome");
+                driver = WebDriverSetup.getDriver();
+                wait = new WebDriverWait(driver, Duration.ofSeconds(15));
+                actions = new Actions(driver);
+                jsExecutor = (JavascriptExecutor) driver;
+            } catch (Exception e) {
+                throw new RuntimeException("Driver yeniden başlatılamadı: " + e.getMessage(), e);
+            }
+        }
         
-        logTestInfo("PayTR Test Environment UI Test Suite başlatıldı");
+        // Driver responsiveness check
+        try {
+            driver.getCurrentUrl();
+        } catch (Exception e) {
+            System.out.println("⚠️ Driver unresponsive, yeniden başlatılıyor...");
+            WebDriverSetup.quitDriver();
+            WebDriverSetup.setupDriver("chrome");
+            driver = WebDriverSetup.getDriver();
+            wait = new WebDriverWait(driver, Duration.ofSeconds(15));
+            actions = new Actions(driver);
+            jsExecutor = (JavascriptExecutor) driver;
+        }
     }
     
     @AfterClass
@@ -1028,7 +1071,7 @@ public class PayTRUIElementsTest extends BaseTest {
             
             System.out.println("🔄 Regresyon testi sonuçları:");
             System.out.println("📄 Sayfa başlığı: " + (pageTitle != null && !pageTitle.isEmpty()));
-            System.out.println("🏷️ Logo: " + hasLogo);
+            System.out.println("📷 Logo: " + hasLogo);
             System.out.println("🧭 Navigation: " + hasNavigation);
             System.out.println("🦶 Footer: " + hasFooter);
             System.out.println("📞 İletişim bilgileri: " + hasContactInfo);

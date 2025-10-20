@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
 
-<suite name="PayTR Comprehensive Test Suite" verbose="1" parallel="methods" thread-count="3">
+<suite name="PayTR Comprehensive Test Suite" verbose="1" parallel="false" thread-count="1">
     
     <parameter name="browser" value="chrome"/>
     <parameter name="environment" value="uat"/>
-    <parameter name="timeout" value="30"/>
+    <parameter name="timeout" value="60"/>
     
     <listeners>
         <listener class-name="io.qameta.allure.testng.AllureTestNg"/>

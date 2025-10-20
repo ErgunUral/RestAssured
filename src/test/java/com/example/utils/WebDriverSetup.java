@@ -9,9 +9,11 @@ import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.edge.EdgeDriver;
 import org.openqa.selenium.edge.EdgeOptions;
 import org.openqa.selenium.safari.SafariDriver;
+import java.time.Duration;
 
 public class WebDriverSetup {
     private static ThreadLocal<WebDriver> driver = new ThreadLocal<>();
+    private static final int MAX_RETRY_ATTEMPTS = 3;
     
     public static synchronized void setupDriver(String browserName) {
         System.out.println("🔧 WebDriverSetup.setupDriver çağrıldı: " + browserName);
@@ -21,44 +23,84 @@ public class WebDriverSetup {
             quitDriver();
         }
         
-        switch (browserName.toLowerCase()) {
-            case "chrome":
-                System.out.println("🚀 Chrome driver kuruluyor...");
-                WebDriverManager.chromedriver().setup();
-                ChromeOptions chromeOptions = new ChromeOptions();
-                chromeOptions.addArguments("--headless");
-                chromeOptions.addArguments("--window-size=1920,1080");
-                chromeOptions.addArguments("--disable-gpu");
-                chromeOptions.addArguments("--no-sandbox");
-                chromeOptions.addArguments("--disable-dev-shm-usage");
-                WebDriver chromeDriver = new ChromeDriver(chromeOptions);
-                driver.set(chromeDriver);
-                System.out.println("✅ Chrome driver başarıyla kuruldu");
-                break;
+        int attempts = 0;
+        while (attempts < MAX_RETRY_ATTEMPTS) {
+            try {
+                switch (browserName.toLowerCase()) {
+                    case "chrome":
+                        System.out.println("🚀 Chrome driver kuruluyor... (Deneme: " + (attempts + 1) + ")");
+                        WebDriverManager.chromedriver().setup();
+                        ChromeOptions chromeOptions = new ChromeOptions();
+                        chromeOptions.addArguments("--headless");
+                        chromeOptions.addArguments("--window-size=1920,1080");
+                        chromeOptions.addArguments("--disable-gpu");
+                        chromeOptions.addArguments("--no-sandbox");
+                        chromeOptions.addArguments("--disable-dev-shm-usage");
+                        chromeOptions.addArguments("--disable-extensions");
+                        chromeOptions.addArguments("--disable-web-security");
+                        chromeOptions.addArguments("--allow-running-insecure-content");
+                        chromeOptions.addArguments("--ignore-certificate-errors");
+                        chromeOptions.addArguments("--ignore-ssl-errors");
+                        chromeOptions.addArguments("--remote-debugging-port=0"); // Use random port
+                        
+                        WebDriver chromeDriver = new ChromeDriver(chromeOptions);
+                        chromeDriver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
+                        chromeDriver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(60));
+                        chromeDriver.manage().timeouts().scriptTimeout(Duration.ofSeconds(30));
+                        
+                        driver.set(chromeDriver);
+                        System.out.println("✅ Chrome driver başarıyla kuruldu");
+                        return;
+                        
+                    case "firefox":
+                        WebDriverManager.firefoxdriver().setup();
+                        FirefoxOptions firefoxOptions = new FirefoxOptions();
+                        firefoxOptions.addArguments("--headless");
+                        firefoxOptions.addArguments("--width=1920");
+                        firefoxOptions.addArguments("--height=1080");
+                        
+                        WebDriver firefoxDriver = new FirefoxDriver(firefoxOptions);
+                        firefoxDriver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
+                        firefoxDriver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(60));
+                        
+                        driver.set(firefoxDriver);
+                        break;
+                        
+                    case "edge":
+                        WebDriverManager.edgedriver().setup();
+                        EdgeOptions edgeOptions = new EdgeOptions();
+                        edgeOptions.addArguments("--headless");
+                        edgeOptions.addArguments("--no-sandbox");
+                        edgeOptions.addArguments("--disable-dev-shm-usage");
+                        edgeOptions.addArguments("--window-size=1920,1080");
+                        driver.set(new EdgeDriver(edgeOptions));
+                        break;
+                        
+                    case "safari":
+                        driver.set(new SafariDriver());
+                        break;
+                        
+                    default:
+                        throw new IllegalArgumentException("Browser not supported: " + browserName);
+                }
+                return; // Success, exit retry loop
                 
-            case "firefox":
-                WebDriverManager.firefoxdriver().setup();
-                FirefoxOptions firefoxOptions = new FirefoxOptions();
-                firefoxOptions.addArguments("--width=1920");
-                firefoxOptions.addArguments("--height=1080");
-                driver.set(new FirefoxDriver(firefoxOptions));
-                break;
+            } catch (Exception e) {
+                attempts++;
+                System.out.println("❌ WebDriver kurulum hatası (Deneme " + attempts + "): " + e.getMessage());
                 
-            case "edge":
-                WebDriverManager.edgedriver().setup();
-                EdgeOptions edgeOptions = new EdgeOptions();
-                edgeOptions.addArguments("--no-sandbox");
-                edgeOptions.addArguments("--disable-dev-shm-usage");
-                edgeOptions.addArguments("--window-size=1920,1080");
-                driver.set(new EdgeDriver(edgeOptions));
-                break;
+                if (attempts >= MAX_RETRY_ATTEMPTS) {
+                    throw new RuntimeException("WebDriver kurulumu " + MAX_RETRY_ATTEMPTS + " denemeden sonra başarısız: " + e.getMessage(), e);
+                }
                 
-            case "safari":
-                driver.set(new SafariDriver());
-                break;
-                
-            default:
-                throw new IllegalArgumentException("Browser not supported: " + browserName);
+                // Wait before retry
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException("WebDriver kurulum retry interrupted", ie);
+                }
+            }
         }
     }
     
@@ -68,19 +110,31 @@ public class WebDriverSetup {
         
         if (currentDriver == null) {
             System.out.println("⚠️ Driver null, yeni driver oluşturuluyor...");
-            // Eğer driver null ise, yeni bir driver oluştur
             setupDriver("chrome");
             currentDriver = driver.get();
             System.out.println("🔄 Yeni driver oluşturuldu: " + (currentDriver != null ? "BAŞARILI" : "BAŞARISIZ"));
         }
+        
+        // Verify driver is still responsive
+        try {
+            currentDriver.getCurrentUrl();
+        } catch (Exception e) {
+            System.out.println("⚠️ Driver unresponsive, recreating...");
+            quitDriver();
+            setupDriver("chrome");
+            currentDriver = driver.get();
+        }
+        
         return currentDriver;
     }
     
     public static synchronized void quitDriver() {
         try {
             if (driver.get() != null) {
+                System.out.println("🔄 WebDriver kapatılıyor...");
                 driver.get().quit();
                 driver.remove();
+                System.out.println("✅ WebDriver başarıyla kapatıldı");
             }
         } catch (Exception e) {
             System.out.println("⚠️ WebDriver kapatma hatası: " + e.getMessage());
@@ -89,8 +143,12 @@ public class WebDriverSetup {
     }
     
     public static void closeDriver() {
-        if (driver.get() != null) {
-            driver.get().close();
+        try {
+            if (driver.get() != null) {
+                driver.get().close();
+            }
+        } catch (Exception e) {
+            System.out.println("⚠️ WebDriver close hatası: " + e.getMessage());
         }
     }
 }
