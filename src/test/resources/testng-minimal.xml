@@ -1,23 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
-<suite name="PayTR Minimal Test Suite" verbose="1">
-    <parameter name="environment" value="staging"/>
-    <parameter name="browser" value="chrome"/>
-    <parameter name="headless" value="true"/>
-    
-    <listeners>
-        <listener class-name="io.qameta.allure.testng.AllureTestNg"/>
-        <listener class-name="com.example.listeners.TestListener"/>
-    </listeners>
-    
-    <test name="Basic API Tests" preserve-order="true">
-        <parameter name="testType" value="api"/>
+<suite name="PayTR-Minimal-Test-Suite" verbose="1">
+    <test name="PayTR-Basic-API-Tests">
         <classes>
-            <class name="com.example.tests.PayTRAPITests">
-                <methods>
-                    <include name="testGetPaymentMethods"/>
-                </methods>
-            </class>
+            <class name="tests.PayTRAPITests"/>
         </classes>
     </test>
 </suite>

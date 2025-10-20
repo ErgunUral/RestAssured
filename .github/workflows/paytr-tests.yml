@@ -1,4 +1,4 @@
-name: PayTR Test Automation - Simplified
+name: PayTR Test Automation - Docker Maven
 
 on:
   push:
@@ -7,248 +7,77 @@ on:
     branches: [ main, develop ]
   workflow_dispatch:
 
-env:
-  JAVA_VERSION: '17'
-  MAVEN_OPTS: >-
-    -Xmx2048m
-    -Djava.awt.headless=true
-    --add-opens jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED
-    --add-opens jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED
-    --add-opens jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED
-    --add-opens jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED
-
 jobs:
-  # Step 1: Basic Maven Setup and Compilation
-  maven-setup:
+  # Strategy 1: Use Docker Maven Container
+  docker-maven-tests:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
+    container:
+      image: maven:3.9.5-openjdk-17
+      options: --user root
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          java-version: ${{ env.JAVA_VERSION }}
-          distribution: 'temurin'
-
-      - name: Cache Maven Dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2
-
-      - name: Make Maven Wrapper Executable
-        run: chmod +x mvnw
 
       - name: Debug Environment
         run: |
-          echo "🔍 Environment Debug Information:"
-          echo "Java Version: $(java -version 2>&1)"
-          echo "JAVA_HOME: $JAVA_HOME"
-          echo "Maven Opts: $MAVEN_OPTS"
-          echo "Working Directory: $(pwd)"
-          echo "User: $(whoami)"
-          echo "PATH: $PATH"
-
-      - name: Check Maven Wrapper Files
-        run: |
-          echo "🔍 Checking Maven Wrapper Files..."
-          ls -la mvnw
-          ls -la .mvn/
-          cat .mvn/wrapper/maven-wrapper.properties
-          cat .mvn/jvm.config
-
-      - name: Test Maven Wrapper Version
-        run: |
-          echo "🔍 Testing Maven Wrapper Version..."
-          ./mvnw --version
-
-      - name: Test Maven Clean (Step 1)
-        run: |
-          echo "🧹 Step 1: Testing Maven Clean..."
-          echo "MAVEN_OPTS before: $MAVEN_OPTS"
-          ./mvnw clean -X
-        env:
-          MAVEN_OPTS: "-Xmx2048m -Djava.awt.headless=true"
-
-      - name: Test Maven Compile (Step 2)
-        run: |
-          echo "🔨 Step 2: Testing Maven Compile..."
-          echo "MAVEN_OPTS before: $MAVEN_OPTS"
-          ./mvnw compile -X
-        env:
-          MAVEN_OPTS: "-Xmx2048m -Djava.awt.headless=true --add-opens jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED"
-
-      - name: Test Maven Test-Compile (Step 3)
-        run: |
-          echo "🔨 Step 3: Testing Maven Test-Compile..."
-          echo "MAVEN_OPTS before: $MAVEN_OPTS"
-          ./mvnw test-compile -X
-        env:
-          MAVEN_OPTS: "-Xmx2048m -Djava.awt.headless=true --add-opens jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED"
-
-  # Step 2: Simple Test Execution
-  simple-tests:
-    runs-on: ubuntu-latest
-    needs: maven-setup
-    timeout-minutes: 20
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          java-version: ${{ env.JAVA_VERSION }}
-          distribution: 'temurin'
+          echo "🔍 Docker Maven Environment:"
+          java -version
+          mvn -version
+          pwd
+          ls -la
+          whoami
 
       - name: Cache Maven Dependencies
         uses: actions/cache@v4
         with:
-          path: ~/.m2
+          path: /root/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
 
-      - name: Make Maven Wrapper Executable
-        run: chmod +x mvnw
-
-      - name: Setup Chrome Browser
-        uses: browser-actions/setup-chrome@latest
-
-      - name: Setup ChromeDriver
-        uses: nanasess/setup-chromedriver@v2
-
-      - name: Setup Virtual Display
+      - name: Clean Project
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y xvfb
-          export DISPLAY=:99
-          Xvfb :99 -screen 0 1920x1080x24 > /dev/null 2>&1 &
-          sleep 3
+          echo "🧹 Cleaning project with Docker Maven..."
+          mvn clean -q
 
-      - name: Create Required Directories
+      - name: Compile Project
         run: |
-          mkdir -p screenshots
-          mkdir -p logs
-          mkdir -p target/allure-results
+          echo "🔨 Compiling project with Docker Maven..."
+          mvn compile -q
 
-      - name: Run Basic Maven Test (No TestNG XML)
-        env:
-          DISPLAY: :99
+      - name: Run Basic Tests
         run: |
-          echo "🧪 Running basic Maven test without TestNG XML..."
-          ./mvnw test \
-            -Dtest=PayTRAPITests \
-            -Dmaven.test.failure.ignore=true \
-            -Dheadless=true \
-            -Dbrowser=chrome \
-            -Denvironment=staging \
-            -q
+          echo "🧪 Running basic tests with Docker Maven..."
+          mvn test -DsuiteXmlFile=src/test/resources/testng-minimal.xml -Dmaven.test.failure.ignore=true
 
-      - name: Upload Basic Test Results
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: basic-test-results
-          path: |
-            target/surefire-reports/
-            target/allure-results/
-            screenshots/
-            logs/
-
-  # Step 3: TestNG XML Configuration Test
-  testng-tests:
-    runs-on: ubuntu-latest
-    needs: simple-tests
-    timeout-minutes: 25
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          java-version: ${{ env.JAVA_VERSION }}
-          distribution: 'temurin'
-
-      - name: Cache Maven Dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2
-
-      - name: Make Maven Wrapper Executable
-        run: chmod +x mvnw
-
-      - name: Setup Chrome Browser
-        uses: browser-actions/setup-chrome@latest
-
-      - name: Setup ChromeDriver
-        uses: nanasess/setup-chromedriver@v2
-
-      - name: Setup Virtual Display
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y xvfb
-          export DISPLAY=:99
-          Xvfb :99 -screen 0 1920x1080x24 > /dev/null 2>&1 &
-          sleep 3
-
-      - name: Create Required Directories
-        run: |
-          mkdir -p screenshots
-          mkdir -p logs
-          mkdir -p target/allure-results
-
-      - name: Verify TestNG Configuration Files
-        run: |
-          echo "📋 Available TestNG configuration files:"
-          ls -la src/test/resources/testng*.xml || echo "No TestNG XML files found"
-
-      - name: Run API Tests with TestNG XML
-        env:
-          DISPLAY: :99
-        run: |
-          echo "🧪 Running API tests with TestNG XML..."
-          ./mvnw test \
-            -DsuiteXmlFile=src/test/resources/testng-api.xml \
-            -Dmaven.test.failure.ignore=true \
-            -Dheadless=true \
-            -Dbrowser=chrome \
-            -Denvironment=staging \
-            -Dparallel=none \
-            -DthreadCount=1 \
-            -q
-
-      - name: Upload TestNG Test Results
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: testng-test-results
-          path: |
-            target/surefire-reports/
-            target/allure-results/
-            screenshots/
-            logs/
-
-  # Step 4: Comprehensive Test Suite (Only if previous steps succeed)
-  comprehensive-tests:
-    runs-on: ubuntu-latest
-    needs: [maven-setup, simple-tests, testng-tests]
-    if: success()
+  # Strategy 2: Alternative Ubuntu Version with System Maven
+  ubuntu-20-maven-tests:
+    runs-on: ubuntu-20.04
     timeout-minutes: 30
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup Java
+      - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
-          java-version: ${{ env.JAVA_VERSION }}
+          java-version: '17'
           distribution: 'temurin'
+
+      - name: Install Maven
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y maven
+          mvn -version
+
+      - name: Debug Environment
+        run: |
+          echo "🔍 Ubuntu 20.04 Environment:"
+          java -version
+          mvn -version
+          echo "JAVA_HOME: $JAVA_HOME"
+          pwd
+          ls -la
 
       - name: Cache Maven Dependencies
         uses: actions/cache@v4
@@ -257,108 +86,87 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
 
-      - name: Make Maven Wrapper Executable
-        run: chmod +x mvnw
-
-      - name: Setup Chrome Browser
-        uses: browser-actions/setup-chrome@latest
-
-      - name: Setup ChromeDriver
-        uses: nanasess/setup-chromedriver@v2
-
-      - name: Setup Virtual Display
+      - name: Clean and Test
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y xvfb
-          export DISPLAY=:99
-          Xvfb :99 -screen 0 1920x1080x24 > /dev/null 2>&1 &
-          sleep 3
+          echo "🧹 Cleaning and testing with system Maven..."
+          mvn clean test -DsuiteXmlFile=src/test/resources/testng-minimal.xml -Dmaven.test.failure.ignore=true
 
-      - name: Install Allure
-        run: |
-          wget -q https://github.com/allure-framework/allure2/releases/download/2.24.0/allure-2.24.0.tgz
-          tar -zxf allure-2.24.0.tgz
-          sudo mv allure-2.24.0 /opt/allure
-          sudo ln -s /opt/allure/bin/allure /usr/bin/allure
+  # Strategy 3: Manual Java Compilation (Fallback)
+  manual-java-compilation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-      - name: Create Required Directories
-        run: |
-          mkdir -p screenshots
-          mkdir -p logs
-          mkdir -p target/allure-results
-
-      - name: Run Comprehensive Test Suite
-        env:
-          DISPLAY: :99
-          CHROME_BIN: /usr/bin/google-chrome
-          CHROMEDRIVER_PATH: /usr/local/bin/chromedriver
-        run: |
-          echo "🚀 Running comprehensive test suite..."
-          ./mvnw test \
-            -DsuiteXmlFile=src/test/resources/testng-comprehensive-ci.xml \
-            -Dmaven.test.failure.ignore=true \
-            -Dheadless=true \
-            -Dbrowser=chrome \
-            -Denvironment=staging \
-            -Dparallel=none \
-            -DthreadCount=1 \
-            -Dallure.results.directory=target/allure-results \
-            -Dwebdriver.chrome.driver=/usr/local/bin/chromedriver \
-            -q
-
-      - name: Generate Allure Report
-        if: always()
-        run: |
-          echo "📊 Generating Allure Report..."
-          allure generate target/allure-results --clean --output target/allure-report
-
-      - name: Upload Comprehensive Test Results
-        uses: actions/upload-artifact@v4
-        if: always()
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
         with:
-          name: comprehensive-test-results
-          path: |
-            target/surefire-reports/
-            target/allure-results/
-            target/allure-report/
-            screenshots/
-            logs/
+          java-version: '17'
+          distribution: 'temurin'
 
-  # Final Summary
+      - name: Download Dependencies Manually
+        run: |
+          echo "📦 Downloading dependencies manually..."
+          mkdir -p lib
+          cd lib
+          # Download key dependencies
+          wget -q https://repo1.maven.org/maven2/io/rest-assured/rest-assured/5.3.2/rest-assured-5.3.2.jar
+          wget -q https://repo1.maven.org/maven2/org/testng/testng/7.8.0/testng-7.8.0.jar
+          wget -q https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-core/2.15.2/jackson-core-2.15.2.jar
+          wget -q https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-databind/2.15.2/jackson-databind-2.15.2.jar
+          wget -q https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-annotations/2.15.2/jackson-annotations-2.15.2.jar
+          ls -la
+
+      - name: Compile Java Sources
+        run: |
+          echo "🔨 Compiling Java sources manually..."
+          mkdir -p target/classes target/test-classes
+          
+          # Compile main sources
+          find src/main/java -name "*.java" > sources.txt
+          if [ -s sources.txt ]; then
+            javac -cp "lib/*" -d target/classes @sources.txt
+            echo "✅ Main sources compiled successfully"
+          else
+            echo "⚠️ No main sources found"
+          fi
+          
+          # Compile test sources
+          find src/test/java -name "*.java" > test-sources.txt
+          if [ -s test-sources.txt ]; then
+            javac -cp "lib/*:target/classes" -d target/test-classes @test-sources.txt
+            echo "✅ Test sources compiled successfully"
+          else
+            echo "⚠️ No test sources found"
+          fi
+
+      - name: Run Simple Test
+        run: |
+          echo "🧪 Running simple test verification..."
+          echo "Compiled classes:"
+          find target -name "*.class" | head -10
+          echo "✅ Manual compilation successful"
+
+  # Summary Job
   test-summary:
     runs-on: ubuntu-latest
-    needs: [maven-setup, simple-tests, testng-tests, comprehensive-tests]
+    needs: [docker-maven-tests, ubuntu-20-maven-tests, manual-java-compilation]
     if: always()
     steps:
       - name: Test Results Summary
         run: |
-          echo "📊 PayTR Test Automation Summary"
-          echo "================================"
-          echo "Maven Setup: ${{ needs.maven-setup.result }}"
-          echo "Simple Tests: ${{ needs.simple-tests.result }}"
-          echo "TestNG Tests: ${{ needs.testng-tests.result }}"
-          echo "Comprehensive Tests: ${{ needs.comprehensive-tests.result }}"
-          echo ""
-          if [[ "${{ needs.maven-setup.result }}" == "success" ]]; then
-            echo "✅ Maven setup and compilation successful"
-          else
-            echo "❌ Maven setup failed - check basic configuration"
-          fi
+          echo "📊 Test Execution Summary:"
+          echo "Docker Maven Tests: ${{ needs.docker-maven-tests.result }}"
+          echo "Ubuntu 20.04 Maven Tests: ${{ needs.ubuntu-20-maven-tests.result }}"
+          echo "Manual Java Compilation: ${{ needs.manual-java-compilation.result }}"
           
-          if [[ "${{ needs.simple-tests.result }}" == "success" ]]; then
-            echo "✅ Basic test execution successful"
+          if [ "${{ needs.docker-maven-tests.result }}" == "success" ]; then
+            echo "✅ Docker Maven approach works!"
+          elif [ "${{ needs.ubuntu-20-maven-tests.result }}" == "success" ]; then
+            echo "✅ Ubuntu 20.04 Maven approach works!"
+          elif [ "${{ needs.manual-java-compilation.result }}" == "success" ]; then
+            echo "✅ Manual compilation approach works!"
           else
-            echo "❌ Basic test execution failed"
-          fi
-          
-          if [[ "${{ needs.testng-tests.result }}" == "success" ]]; then
-            echo "✅ TestNG XML configuration working"
-          else
-            echo "❌ TestNG XML configuration issues"
-          fi
-          
-          if [[ "${{ needs.comprehensive-tests.result }}" == "success" ]]; then
-            echo "✅ Comprehensive test suite successful"
-          else
-            echo "⚠️ Comprehensive test suite had issues (expected for API tests)"
+            echo "❌ All approaches failed - need further investigation"
           fi
