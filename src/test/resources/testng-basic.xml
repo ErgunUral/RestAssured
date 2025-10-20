@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+<suite name="PayTR Basic Test Suite" verbose="1" parallel="none" thread-count="1">
+    <parameter name="environment" value="staging"/>
+    <parameter name="browser" value="chrome"/>
+    <parameter name="headless" value="true"/>
+    
+    <listeners>
+        <listener class-name="com.example.listeners.TestListener"/>
+    </listeners>
+    
+    <test name="Basic Compilation Test" preserve-order="true">
+        <parameter name="testType" value="basic"/>
+        <classes>
+            <class name="com.example.tests.PayTRAPITests">
+                <methods>
+                    <include name="testGetPaymentMethods"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+</suite>

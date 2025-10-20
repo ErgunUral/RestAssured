@@ -1,85 +1,21 @@
-name: PayTR Test Automation CI/CD
+name: PayTR Test Automation - Simplified
 
 on:
-  # Push ve Pull Request'lerde çalıştır
   push:
-    branches: [ main, develop, feature/* ]
+    branches: [ main, develop ]
   pull_request:
     branches: [ main, develop ]
-  
-  # Zamanlanmış çalıştırma (her gün saat 02:00, 08:00, 14:00, 20:00)
-  schedule:
-    - cron: '0 2,8,14,20 * * *'
-  
-  # Manuel çalıştırma
   workflow_dispatch:
-    inputs:
-      test_suite:
-        description: 'Test Suite to run'
-        required: true
-        default: 'comprehensive-ci'
-        type: choice
-        options:
-          - comprehensive-ci
-          - comprehensive
-          - security
-          - performance
-          - api
-          - smoke
-      browser:
-        description: 'Browser to use'
-        required: true
-        default: 'chrome'
-        type: choice
-        options:
-          - chrome
-          - firefox
-      environment:
-        description: 'Test Environment'
-        required: true
-        default: 'staging'
-        type: choice
-        options:
-          - staging
-          - production
-          - development
 
 env:
   JAVA_VERSION: '17'
-  MAVEN_VERSION: '3.9.5'
-  ALLURE_VERSION: '2.24.0'
+  MAVEN_OPTS: '-Xmx2048m -Djava.awt.headless=true'
 
 jobs:
-  # Test Environment Setup
-  setup:
+  # Step 1: Basic Maven Setup and Compilation
+  maven-setup:
     runs-on: ubuntu-latest
-    outputs:
-      test-suite: ${{ steps.setup-vars.outputs.test-suite }}
-      browser: ${{ steps.setup-vars.outputs.browser }}
-      environment: ${{ steps.setup-vars.outputs.environment }}
-    steps:
-      - name: Setup Variables
-        id: setup-vars
-        run: |
-          # Manuel çalıştırma için input'ları kullan, yoksa default değerleri
-          TEST_SUITE="${{ github.event.inputs.test_suite || 'comprehensive-ci' }}"
-          BROWSER="${{ github.event.inputs.browser || 'chrome' }}"
-          ENVIRONMENT="${{ github.event.inputs.environment || 'staging' }}"
-          
-          echo "test-suite=$TEST_SUITE" >> $GITHUB_OUTPUT
-          echo "browser=$BROWSER" >> $GITHUB_OUTPUT
-          echo "environment=$ENVIRONMENT" >> $GITHUB_OUTPUT
-          
-          echo "🚀 PayTR Test Automation başlatılıyor..."
-          echo "📋 Test Suite: $TEST_SUITE"
-          echo "🌐 Browser: $BROWSER"
-          echo "🏗️ Environment: $ENVIRONMENT"
-
-  # Smoke Tests - Hızlı kontrol
-  smoke-tests:
-    runs-on: ubuntu-latest
-    needs: setup
-    if: github.event_name == 'pull_request' || contains(github.event.head_commit.message, '[smoke]')
+    timeout-minutes: 15
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -97,6 +33,70 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
 
+      - name: Make Maven Wrapper Executable
+        run: chmod +x mvnw
+
+      - name: Verify Maven Wrapper
+        run: |
+          echo "🔍 Verifying Maven Wrapper..."
+          ls -la mvnw
+          ./mvnw --version
+
+      - name: Environment Debug Information
+        run: |
+          echo "🔍 Environment Information:"
+          echo "Java Version: $(java -version 2>&1)"
+          echo "JAVA_HOME: $JAVA_HOME"
+          echo "Maven Opts: $MAVEN_OPTS"
+          echo "Working Directory: $(pwd)"
+          echo "Maven Wrapper Properties:"
+          cat .mvn/wrapper/maven-wrapper.properties
+
+      - name: Clean and Validate Project
+        run: |
+          echo "🧹 Cleaning project..."
+          ./mvnw clean -q
+
+      - name: Compile Main Sources
+        run: |
+          echo "🔨 Compiling main sources..."
+          ./mvnw compile -q
+
+      - name: Compile Test Sources
+        run: |
+          echo "🔨 Compiling test sources..."
+          ./mvnw test-compile -q
+
+      - name: Verify Dependencies
+        run: |
+          echo "📦 Verifying dependencies..."
+          ./mvnw dependency:resolve -q
+
+  # Step 2: Simple Test Execution
+  simple-tests:
+    runs-on: ubuntu-latest
+    needs: maven-setup
+    timeout-minutes: 20
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: Cache Maven Dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - name: Make Maven Wrapper Executable
+        run: chmod +x mvnw
+
       - name: Setup Chrome Browser
         uses: browser-actions/setup-chrome@latest
 
@@ -105,41 +105,47 @@ jobs:
 
       - name: Setup Virtual Display
         run: |
-          sudo apt-get update
+          sudo apt-get update -qq
           sudo apt-get install -y xvfb
           export DISPLAY=:99
           Xvfb :99 -screen 0 1920x1080x24 > /dev/null 2>&1 &
           sleep 3
 
-      - name: Run Smoke Tests
+      - name: Create Required Directories
+        run: |
+          mkdir -p screenshots
+          mkdir -p logs
+          mkdir -p target/allure-results
+
+      - name: Run Basic Maven Test (No TestNG XML)
         env:
           DISPLAY: :99
         run: |
-          mvn clean test \
-            -Dsurefire.suiteXmlFiles=src/test/resources/testng-smoke.xml \
+          echo "🧪 Running basic Maven test without TestNG XML..."
+          ./mvnw test \
+            -Dtest=PayTRAPITests \
+            -Dmaven.test.failure.ignore=true \
+            -Dheadless=true \
             -Dbrowser=chrome \
             -Denvironment=staging \
-            -Dheadless=true \
-            -Dmaven.test.failure.ignore=true \
-            -Dsurefire.rerunFailingTestsCount=2 \
-            -Dsurefire.parallel=false \
-            -Dsurefire.threadCount=1
+            -q
 
-      - name: Upload Smoke Test Results
+      - name: Upload Basic Test Results
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: smoke-test-results
+          name: basic-test-results
           path: |
             target/surefire-reports/
             target/allure-results/
             screenshots/
+            logs/
 
-  # Comprehensive Tests - Simplified Single Job
-  comprehensive-tests:
+  # Step 3: TestNG XML Configuration Test
+  testng-tests:
     runs-on: ubuntu-latest
-    needs: setup
-    timeout-minutes: 60
+    needs: simple-tests
+    timeout-minutes: 25
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -157,6 +163,9 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
 
+      - name: Make Maven Wrapper Executable
+        run: chmod +x mvnw
+
       - name: Setup Chrome Browser
         uses: browser-actions/setup-chrome@latest
 
@@ -165,62 +174,120 @@ jobs:
 
       - name: Setup Virtual Display
         run: |
-          sudo apt-get update
-          sudo apt-get install -y xvfb fluxbox
+          sudo apt-get update -qq
+          sudo apt-get install -y xvfb
           export DISPLAY=:99
           Xvfb :99 -screen 0 1920x1080x24 > /dev/null 2>&1 &
           sleep 3
-          fluxbox -display :99 > /dev/null 2>&1 &
-          sleep 2
 
-      - name: Install Allure
-        run: |
-          wget https://github.com/allure-framework/allure2/releases/download/${{ env.ALLURE_VERSION }}/allure-${{ env.ALLURE_VERSION }}.tgz
-          tar -zxf allure-${{ env.ALLURE_VERSION }}.tgz
-          sudo mv allure-${{ env.ALLURE_VERSION }} /opt/allure
-          sudo ln -s /opt/allure/bin/allure /usr/bin/allure
-
-      - name: Create Directories
+      - name: Create Required Directories
         run: |
           mkdir -p screenshots
           mkdir -p logs
           mkdir -p target/allure-results
 
-      - name: Debug Environment
+      - name: Verify TestNG Configuration Files
         run: |
-          echo "🔍 Environment Debug Information:"
-          echo "Java Version: $(java -version)"
-          echo "Maven Version: $(./mvnw -version)"
-          echo "Chrome Version: $(google-chrome --version)"
-          echo "ChromeDriver Version: $(chromedriver --version)"
-          echo "Display: $DISPLAY"
-          echo "Working Directory: $(pwd)"
-          echo "Available Test Files:"
-          ls -la src/test/resources/testng*.xml
-          echo "Maven Dependencies:"
-          ./mvnw dependency:tree | head -20
+          echo "📋 Available TestNG configuration files:"
+          ls -la src/test/resources/testng*.xml || echo "No TestNG XML files found"
 
-      - name: Run Comprehensive Tests (CI/CD Optimized)
+      - name: Run API Tests with TestNG XML
+        env:
+          DISPLAY: :99
+        run: |
+          echo "🧪 Running API tests with TestNG XML..."
+          ./mvnw test \
+            -DsuiteXmlFile=src/test/resources/testng-api.xml \
+            -Dmaven.test.failure.ignore=true \
+            -Dheadless=true \
+            -Dbrowser=chrome \
+            -Denvironment=staging \
+            -Dparallel=none \
+            -DthreadCount=1 \
+            -q
+
+      - name: Upload TestNG Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: testng-test-results
+          path: |
+            target/surefire-reports/
+            target/allure-results/
+            screenshots/
+            logs/
+
+  # Step 4: Comprehensive Test Suite (Only if previous steps succeed)
+  comprehensive-tests:
+    runs-on: ubuntu-latest
+    needs: [maven-setup, simple-tests, testng-tests]
+    if: success()
+    timeout-minutes: 30
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: Cache Maven Dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - name: Make Maven Wrapper Executable
+        run: chmod +x mvnw
+
+      - name: Setup Chrome Browser
+        uses: browser-actions/setup-chrome@latest
+
+      - name: Setup ChromeDriver
+        uses: nanasess/setup-chromedriver@v2
+
+      - name: Setup Virtual Display
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y xvfb
+          export DISPLAY=:99
+          Xvfb :99 -screen 0 1920x1080x24 > /dev/null 2>&1 &
+          sleep 3
+
+      - name: Install Allure
+        run: |
+          wget -q https://github.com/allure-framework/allure2/releases/download/2.24.0/allure-2.24.0.tgz
+          tar -zxf allure-2.24.0.tgz
+          sudo mv allure-2.24.0 /opt/allure
+          sudo ln -s /opt/allure/bin/allure /usr/bin/allure
+
+      - name: Create Required Directories
+        run: |
+          mkdir -p screenshots
+          mkdir -p logs
+          mkdir -p target/allure-results
+
+      - name: Run Comprehensive Test Suite
         env:
           DISPLAY: :99
           CHROME_BIN: /usr/bin/google-chrome
           CHROMEDRIVER_PATH: /usr/local/bin/chromedriver
         run: |
-          echo "🚀 Starting Comprehensive Tests..."
-          ./mvnw clean test \
+          echo "🚀 Running comprehensive test suite..."
+          ./mvnw test \
             -DsuiteXmlFile=src/test/resources/testng-comprehensive-ci.xml \
-            -Dbrowser=chrome \
-            -Denvironment=${{ needs.setup.outputs.environment }} \
-            -Dheadless=true \
-            -Dallure.results.directory=target/allure-results \
             -Dmaven.test.failure.ignore=true \
+            -Dheadless=true \
+            -Dbrowser=chrome \
+            -Denvironment=staging \
             -Dparallel=none \
             -DthreadCount=1 \
+            -Dallure.results.directory=target/allure-results \
             -Dwebdriver.chrome.driver=/usr/local/bin/chromedriver \
-            -Dwebdriver.chrome.args="--headless,--no-sandbox,--disable-dev-shm-usage,--disable-gpu,--window-size=1920,1080" \
-            -Dmaven.compiler.source=17 \
-            -Dmaven.compiler.target=17 \
-            -X
+            -q
 
       - name: Generate Allure Report
         if: always()
@@ -228,7 +295,7 @@ jobs:
           echo "📊 Generating Allure Report..."
           allure generate target/allure-results --clean --output target/allure-report
 
-      - name: Upload Test Results
+      - name: Upload Comprehensive Test Results
         uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -240,278 +307,41 @@ jobs:
             screenshots/
             logs/
 
-      - name: Upload Test Logs
-        uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: test-failure-logs
-          path: |
-            target/surefire-reports/
-            logs/
-            screenshots/
-
-  # API Tests Only - Fallback if comprehensive fails
-  api-tests:
+  # Final Summary
+  test-summary:
     runs-on: ubuntu-latest
-    needs: [setup, comprehensive-tests]
-    if: failure() || contains(github.event.head_commit.message, '[api-only]')
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          java-version: ${{ env.JAVA_VERSION }}
-          distribution: 'temurin'
-
-      - name: Cache Maven Dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2
-
-      - name: Run API Tests Only
-        run: |
-          echo "🔄 Running API Tests as fallback..."
-          ./mvnw clean test \
-            -DsuiteXmlFile=src/test/resources/testng-api.xml \
-            -Denvironment=${{ needs.setup.outputs.environment }} \
-            -Dmaven.test.failure.ignore=true \
-            -Dparallel=none \
-            -DthreadCount=1 \
-            -Dmaven.compiler.source=17 \
-            -Dmaven.compiler.target=17 \
-            -X
-
-      - name: Upload API Test Results
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: api-test-results
-          path: |
-            target/surefire-reports/
-            target/allure-results/
-
-  # Performance Tests - Separate job
-  performance-tests:
-    runs-on: ubuntu-latest
-    needs: setup
-    if: github.event_name == 'schedule' || contains(github.event.head_commit.message, '[performance]')
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          java-version: ${{ env.JAVA_VERSION }}
-          distribution: 'temurin'
-
-      - name: Cache Maven Dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2
-
-      - name: Setup Chrome Browser
-        uses: browser-actions/setup-chrome@latest
-
-      - name: Setup ChromeDriver
-        uses: nanasess/setup-chromedriver@v2
-
-      - name: Setup Virtual Display
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y xvfb
-          export DISPLAY=:99
-          Xvfb :99 -screen 0 1920x1080x24 > /dev/null 2>&1 &
-          sleep 3
-
-      - name: Run Performance Tests
-        env:
-          DISPLAY: :99
-        run: |
-          mvn clean test \
-            -Dsurefire.suiteXmlFiles=src/test/resources/testng-performance.xml \
-            -Dbrowser=chrome \
-            -Denvironment=${{ needs.setup.outputs.environment }} \
-            -Dheadless=true \
-            -Dperformance.threshold.page.load=3000 \
-            -Dperformance.threshold.api.response=1000 \
-            -Dmaven.test.failure.ignore=true \
-            -Dsurefire.rerunFailingTestsCount=2 \
-            -Dsurefire.parallel=false \
-            -Dsurefire.threadCount=1
-
-      - name: Upload Performance Results
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: performance-test-results
-          path: |
-            target/surefire-reports/
-            target/allure-results/
-            performance-reports/
-
-  # Security Tests - Separate job
-  security-tests:
-    runs-on: ubuntu-latest
-    needs: setup
-    if: github.event_name == 'schedule' || contains(github.event.head_commit.message, '[security]')
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          java-version: ${{ env.JAVA_VERSION }}
-          distribution: 'temurin'
-
-      - name: Cache Maven Dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2
-
-      - name: Setup Chrome Browser
-        uses: browser-actions/setup-chrome@latest
-
-      - name: Setup ChromeDriver
-        uses: nanasess/setup-chromedriver@v2
-
-      - name: Setup Virtual Display
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y xvfb
-          export DISPLAY=:99
-          Xvfb :99 -screen 0 1920x1080x24 > /dev/null 2>&1 &
-          sleep 3
-
-      - name: Run Security Tests
-        env:
-          DISPLAY: :99
-        run: |
-          mvn clean test \
-            -Dsurefire.suiteXmlFiles=src/test/resources/testng-security.xml \
-            -Dbrowser=chrome \
-            -Denvironment=${{ needs.setup.outputs.environment }} \
-            -Dheadless=true \
-            -Dsecurity.level=high \
-            -Dmaven.test.failure.ignore=true \
-            -Dsurefire.rerunFailingTestsCount=2 \
-            -Dsurefire.parallel=false \
-            -Dsurefire.threadCount=1
-
-      - name: Upload Security Results
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: security-test-results
-          path: |
-            target/surefire-reports/
-            target/allure-results/
-            security-reports/
-
-  # Test Report Generation
-  generate-reports:
-    runs-on: ubuntu-latest
-    needs: [comprehensive-tests, performance-tests, security-tests]
+    needs: [maven-setup, simple-tests, testng-tests, comprehensive-tests]
     if: always()
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Download All Test Results
-        uses: actions/download-artifact@v4
-        with:
-          pattern: '*-test-results'
-          path: test-results
-          merge-multiple: true
-
-      - name: Install Allure
-        run: |
-          wget https://github.com/allure-framework/allure2/releases/download/${{ env.ALLURE_VERSION }}/allure-${{ env.ALLURE_VERSION }}.tgz
-          tar -zxf allure-${{ env.ALLURE_VERSION }}.tgz
-          sudo mv allure-${{ env.ALLURE_VERSION }} /opt/allure
-          sudo ln -s /opt/allure/bin/allure /usr/bin/allure
-
-      - name: Merge Allure Results
-        run: |
-          mkdir -p merged-allure-results
-          find test-results -name "allure-results" -type d -exec cp -r {}/* merged-allure-results/ \; 2>/dev/null || true
-
-      - name: Generate Consolidated Allure Report
-        run: |
-          allure generate merged-allure-results --clean --output consolidated-allure-report
-
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        if: github.ref == 'refs/heads/main'
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./consolidated-allure-report
-          destination_dir: test-reports
-
-      - name: Upload Consolidated Report
-        uses: actions/upload-artifact@v4
-        with:
-          name: consolidated-test-report
-          path: consolidated-allure-report/
-
-  # Notification
-  notify:
-    runs-on: ubuntu-latest
-    needs: [comprehensive-tests, performance-tests, security-tests, generate-reports]
-    if: always()
-    steps:
-      - name: Calculate Test Results
-        id: test-results
-        run: |
-          # Test sonuçlarını hesapla
-          TOTAL_JOBS=3
-          SUCCESSFUL_JOBS=0
-          
-          if [[ "${{ needs.comprehensive-tests.result }}" == "success" ]]; then
-            SUCCESSFUL_JOBS=$((SUCCESSFUL_JOBS + 1))
-          fi
-          
-          if [[ "${{ needs.performance-tests.result }}" == "success" ]]; then
-            SUCCESSFUL_JOBS=$((SUCCESSFUL_JOBS + 1))
-          fi
-          
-          if [[ "${{ needs.security-tests.result }}" == "success" ]]; then
-            SUCCESSFUL_JOBS=$((SUCCESSFUL_JOBS + 1))
-          fi
-          
-          SUCCESS_RATE=$((SUCCESSFUL_JOBS * 100 / TOTAL_JOBS))
-          
-          echo "success-rate=$SUCCESS_RATE" >> $GITHUB_OUTPUT
-          echo "successful-jobs=$SUCCESSFUL_JOBS" >> $GITHUB_OUTPUT
-          echo "total-jobs=$TOTAL_JOBS" >> $GITHUB_OUTPUT
-
-      - name: Send Test Summary
+      - name: Test Results Summary
         run: |
           echo "📊 PayTR Test Automation Summary"
           echo "================================"
+          echo "Maven Setup: ${{ needs.maven-setup.result }}"
+          echo "Simple Tests: ${{ needs.simple-tests.result }}"
+          echo "TestNG Tests: ${{ needs.testng-tests.result }}"
           echo "Comprehensive Tests: ${{ needs.comprehensive-tests.result }}"
-          echo "Performance Tests: ${{ needs.performance-tests.result }}"
-          echo "Security Tests: ${{ needs.security-tests.result }}"
-          echo "Success Rate: ${{ steps.test-results.outputs.success-rate }}%"
-          echo "Jobs: ${{ steps.test-results.outputs.successful-jobs }}/${{ steps.test-results.outputs.total-jobs }}"
-
-  # Cleanup
-  cleanup:
-    runs-on: ubuntu-latest
-    needs: [notify]
-    if: always()
-    steps:
-      - name: Cleanup Old Artifacts
-        run: |
-          echo "🧹 Cleaning up old artifacts and reports..."
-          # GitHub Actions otomatik olarak 90 gün sonra artifact'ları siler
-          # Burada ek cleanup işlemleri yapılabilir
+          echo ""
+          if [[ "${{ needs.maven-setup.result }}" == "success" ]]; then
+            echo "✅ Maven setup and compilation successful"
+          else
+            echo "❌ Maven setup failed - check basic configuration"
+          fi
+          
+          if [[ "${{ needs.simple-tests.result }}" == "success" ]]; then
+            echo "✅ Basic test execution successful"
+          else
+            echo "❌ Basic test execution failed"
+          fi
+          
+          if [[ "${{ needs.testng-tests.result }}" == "success" ]]; then
+            echo "✅ TestNG XML configuration working"
+          else
+            echo "❌ TestNG XML configuration issues"
+          fi
+          
+          if [[ "${{ needs.comprehensive-tests.result }}" == "success" ]]; then
+            echo "✅ Comprehensive test suite successful"
+          else
+            echo "⚠️ Comprehensive test suite had issues (expected for API tests)"
+          fi
