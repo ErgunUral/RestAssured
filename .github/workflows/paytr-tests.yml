@@ -45,9 +45,9 @@ on:
           - development
 
 env:
-  JAVA_VERSION: '11'
-  MAVEN_VERSION: '3.8.6'
-  ALLURE_VERSION: '2.20.1'
+  JAVA_VERSION: '17'
+  MAVEN_VERSION: '3.9.5'
+  ALLURE_VERSION: '2.24.0'
 
 jobs:
   # Test Environment Setup
@@ -190,7 +190,7 @@ jobs:
         run: |
           echo "🔍 Environment Debug Information:"
           echo "Java Version: $(java -version)"
-          echo "Maven Version: $(mvn -version)"
+          echo "Maven Version: $(./mvnw -version)"
           echo "Chrome Version: $(google-chrome --version)"
           echo "ChromeDriver Version: $(chromedriver --version)"
           echo "Display: $DISPLAY"
@@ -198,7 +198,7 @@ jobs:
           echo "Available Test Files:"
           ls -la src/test/resources/testng*.xml
           echo "Maven Dependencies:"
-          mvn dependency:tree | head -20
+          ./mvnw dependency:tree | head -20
 
       - name: Run Comprehensive Tests (CI/CD Optimized)
         env:
@@ -207,20 +207,19 @@ jobs:
           CHROMEDRIVER_PATH: /usr/local/bin/chromedriver
         run: |
           echo "🚀 Starting Comprehensive Tests..."
-          mvn clean test \
-            -Dsurefire.suiteXmlFiles=src/test/resources/testng-comprehensive-ci.xml \
+          ./mvnw clean test \
+            -DsuiteXmlFile=src/test/resources/testng-comprehensive-ci.xml \
             -Dbrowser=chrome \
             -Denvironment=${{ needs.setup.outputs.environment }} \
             -Dheadless=true \
             -Dallure.results.directory=target/allure-results \
             -Dmaven.test.failure.ignore=true \
-            -Dsurefire.rerunFailingTestsCount=3 \
-            -Dsurefire.parallel=false \
-            -Dsurefire.threadCount=1 \
-            -Dsurefire.forkCount=1 \
-            -Dsurefire.reuseForks=false \
+            -Dparallel=none \
+            -DthreadCount=1 \
             -Dwebdriver.chrome.driver=/usr/local/bin/chromedriver \
             -Dwebdriver.chrome.args="--headless,--no-sandbox,--disable-dev-shm-usage,--disable-gpu,--window-size=1920,1080" \
+            -Dmaven.compiler.source=17 \
+            -Dmaven.compiler.target=17 \
             -X
 
       - name: Generate Allure Report
@@ -276,13 +275,15 @@ jobs:
       - name: Run API Tests Only
         run: |
           echo "🔄 Running API Tests as fallback..."
-          mvn clean test \
-            -Dsurefire.suiteXmlFiles=src/test/resources/testng-api.xml \
+          ./mvnw clean test \
+            -DsuiteXmlFile=src/test/resources/testng-api.xml \
             -Denvironment=${{ needs.setup.outputs.environment }} \
             -Dmaven.test.failure.ignore=true \
-            -Dsurefire.rerunFailingTestsCount=2 \
-            -Dsurefire.parallel=false \
-            -Dsurefire.threadCount=1
+            -Dparallel=none \
+            -DthreadCount=1 \
+            -Dmaven.compiler.source=17 \
+            -Dmaven.compiler.target=17 \
+            -X
 
       - name: Upload API Test Results
         uses: actions/upload-artifact@v4

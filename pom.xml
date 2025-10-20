@@ -121,8 +121,13 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>3.1.5</version>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
                 <executions>
                     <execution>
+                        <id>repackage</id>
+                        <phase>none</phase>
                         <goals>
                             <goal>repackage</goal>
                         </goals>
@@ -144,7 +149,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.1.2</version>
+                <version>3.2.2</version>
                 <configuration>
                     <suiteXmlFiles>
                         <suiteXmlFile>${suiteXmlFile}</suiteXmlFile>
@@ -153,6 +158,9 @@
                     <forkedProcessTimeoutInSeconds>600</forkedProcessTimeoutInSeconds>
                     <parallel>${parallel}</parallel>
                     <threadCount>${threadCount}</threadCount>
+                    <forkCount>1</forkCount>
+                    <reuseForks>false</reuseForks>
+                    <trimStackTrace>false</trimStackTrace>
                     <systemProperties>
                         <property>
                             <name>browser</name>
@@ -179,7 +187,7 @@
                             <value>${allure.results.directory}</value>
                         </property>
                     </systemProperties>
-                    <argLine>-Xmx2048m</argLine>
+                    <argLine>-Xmx2048m -Djava.awt.headless=true</argLine>
                     <properties>
                         <property>
                             <name>usedefaultlisteners</name>
@@ -197,7 +205,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
-                <version>3.1.2</version>
+                <version>3.2.2</version>
                 <configuration>
                     <includes>
                         <include>**/*IT.java</include>

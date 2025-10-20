@@ -10,7 +10,7 @@
     
     <listeners>
         <listener class-name="io.qameta.allure.testng.AllureTestNg"/>
-        <listener class-name="com.example.listeners.APITestListener"/>
+        <listener class-name="com.example.listeners.TestListener"/>
     </listeners>
     
     <!-- Core API Tests -->

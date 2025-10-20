@@ -21,9 +21,7 @@
     <!-- Listeners for CI/CD -->
     <listeners>
         <listener class-name="io.qameta.allure.testng.AllureTestNg"/>
-        <listener class-name="com.paytr.listeners.TestListener"/>
-        <listener class-name="com.paytr.listeners.RetryListener"/>
-        <listener class-name="com.paytr.listeners.ScreenshotListener"/>
+        <listener class-name="com.example.listeners.TestListener"/>
     </listeners>
     
     <!-- API Tests Only - Most Stable for CI/CD -->
