@@ -29,13 +29,43 @@ public class WebDriverSetup {
                 switch (browserName.toLowerCase()) {
                     case "chrome":
                         System.out.println("🚀 Chrome driver kuruluyor... (Deneme: " + (attempts + 1) + ")");
+                        
+                        // CI/CD environment detection
+                        boolean isCIEnvironment = System.getenv("CI") != null || 
+                                                System.getenv("GITHUB_ACTIONS") != null ||
+                                                System.getProperty("ci.mode") != null;
+                        
+                        if (isCIEnvironment) {
+                            System.out.println("🔧 CI/CD ortamı tespit edildi, özel konfigürasyon uygulanıyor...");
+                        }
+                        
                         WebDriverManager.chromedriver().setup();
                         ChromeOptions chromeOptions = new ChromeOptions();
+                        
+                        // Basic headless configuration
                         chromeOptions.addArguments("--headless");
                         chromeOptions.addArguments("--window-size=1920,1080");
                         chromeOptions.addArguments("--disable-gpu");
                         chromeOptions.addArguments("--no-sandbox");
                         chromeOptions.addArguments("--disable-dev-shm-usage");
+                        
+                        // CI/CD specific optimizations
+                        if (isCIEnvironment) {
+                            chromeOptions.addArguments("--disable-background-timer-throttling");
+                            chromeOptions.addArguments("--disable-backgrounding-occluded-windows");
+                            chromeOptions.addArguments("--disable-renderer-backgrounding");
+                            chromeOptions.addArguments("--disable-features=TranslateUI");
+                            chromeOptions.addArguments("--disable-ipc-flooding-protection");
+                            chromeOptions.addArguments("--disable-background-networking");
+                            chromeOptions.addArguments("--disable-sync");
+                            chromeOptions.addArguments("--disable-default-apps");
+                            chromeOptions.addArguments("--disable-extensions-file-access-check");
+                            chromeOptions.addArguments("--disable-extensions-http-throttling");
+                            chromeOptions.addArguments("--aggressive-cache-discard");
+                            chromeOptions.addArguments("--memory-pressure-off");
+                        }
+                        
+                        // Standard security and stability options
                         chromeOptions.addArguments("--disable-extensions");
                         chromeOptions.addArguments("--disable-web-security");
                         chromeOptions.addArguments("--allow-running-insecure-content");

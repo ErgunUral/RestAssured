@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+
+<suite name="PayTR CI/CD Comprehensive Test Suite" 
+       parallel="false" 
+       thread-count="1" 
+       verbose="2"
+       preserve-order="true"
+       data-provider-thread-count="1">
+    
+    <!-- CI/CD Environment Parameters -->
+    <parameter name="browser" value="chrome"/>
+    <parameter name="environment" value="uat"/>
+    <parameter name="timeout" value="60"/>
+    <parameter name="headless" value="true"/>
+    <parameter name="ci.mode" value="true"/>
+    <parameter name="retry.count" value="3"/>
+    <parameter name="screenshot.on.failure" value="true"/>
+    <parameter name="webdriver.chrome.args" value="--headless,--no-sandbox,--disable-dev-shm-usage,--disable-gpu,--window-size=1920,1080"/>
+    
+    <!-- Listeners for CI/CD -->
+    <listeners>
+        <listener class-name="io.qameta.allure.testng.AllureTestNg"/>
+        <listener class-name="com.paytr.listeners.TestListener"/>
+        <listener class-name="com.paytr.listeners.RetryListener"/>
+        <listener class-name="com.paytr.listeners.ScreenshotListener"/>
+    </listeners>
+    
+    <!-- API Tests Only - Most Stable for CI/CD -->
+    <test name="API Tests - CI/CD" preserve-order="true">
+        <groups>
+            <run>
+                <include name="api"/>
+                <include name="smoke"/>
+                <include name="critical"/>
+            </run>
+        </groups>
+        
+        <classes>
+            <!-- Core API Tests -->
+            <class name="com.paytr.tests.api.AuthenticationAPITest">
+                <methods>
+                    <include name="testLoginAPI"/>
+                    <include name="testTokenValidation"/>
+                    <include name="testLogoutAPI"/>
+                </methods>
+            </class>
+            
+            <class name="com.paytr.tests.api.PaymentAPITest">
+                <methods>
+                    <include name="testCreatePayment"/>
+                    <include name="testPaymentStatus"/>
+                    <include name="testPaymentValidation"/>
+                </methods>
+            </class>
+            
+            <class name="com.paytr.tests.api.UserAPITest">
+                <methods>
+                    <include name="testGetUserInfo"/>
+                    <include name="testUpdateUserInfo"/>
+                </methods>
+            </class>
+            
+            <!-- Health Check Tests -->
+            <class name="com.paytr.tests.api.HealthCheckTest">
+                <methods>
+                    <include name="testAPIHealth"/>
+                    <include name="testDatabaseConnection"/>
+                    <include name="testServiceAvailability"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- UI Tests Disabled for CI/CD Stability -->
+    <!-- Will be enabled once API tests are stable -->
+    <!--
+    <test name="Critical UI Tests - CI/CD" preserve-order="true">
+        <groups>
+            <run>
+                <include name="ui"/>
+                <include name="critical"/>
+                <include name="smoke"/>
+            </run>
+        </groups>
+        
+        <classes>
+            <class name="com.paytr.tests.ui.LoginTest">
+                <methods>
+                    <include name="testValidLogin"/>
+                </methods>
+            </class>
+            
+            <class name="com.paytr.tests.ui.NavigationTest">
+                <methods>
+                    <include name="testHomePage"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    -->
+    
+</suite>

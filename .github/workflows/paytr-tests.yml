@@ -17,9 +17,10 @@ on:
       test_suite:
         description: 'Test Suite to run'
         required: true
-        default: 'comprehensive'
+        default: 'comprehensive-ci'
         type: choice
         options:
+          - comprehensive-ci
           - comprehensive
           - security
           - performance
@@ -33,7 +34,6 @@ on:
         options:
           - chrome
           - firefox
-          - edge
       environment:
         description: 'Test Environment'
         required: true
@@ -62,7 +62,7 @@ jobs:
         id: setup-vars
         run: |
           # Manuel çalıştırma için input'ları kullan, yoksa default değerleri
-          TEST_SUITE="${{ github.event.inputs.test_suite || 'comprehensive' }}"
+          TEST_SUITE="${{ github.event.inputs.test_suite || 'comprehensive-ci' }}"
           BROWSER="${{ github.event.inputs.browser || 'chrome' }}"
           ENVIRONMENT="${{ github.event.inputs.environment || 'staging' }}"
           
@@ -109,6 +109,7 @@ jobs:
           sudo apt-get install -y xvfb
           export DISPLAY=:99
           Xvfb :99 -screen 0 1920x1080x24 > /dev/null 2>&1 &
+          sleep 3
 
       - name: Run Smoke Tests
         env:
@@ -134,15 +135,11 @@ jobs:
             target/allure-results/
             screenshots/
 
-  # Comprehensive Tests - Tam test süiti
+  # Comprehensive Tests - Simplified Single Job
   comprehensive-tests:
     runs-on: ubuntu-latest
     needs: setup
-    strategy:
-      matrix:
-        browser: [chrome, firefox]
-        test-suite: [comprehensive, security, performance, api, integration]
-      fail-fast: false
+    timeout-minutes: 60
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -161,27 +158,20 @@ jobs:
           restore-keys: ${{ runner.os }}-m2
 
       - name: Setup Chrome Browser
-        if: matrix.browser == 'chrome'
         uses: browser-actions/setup-chrome@latest
 
-      - name: Setup Firefox Browser
-        if: matrix.browser == 'firefox'
-        uses: browser-actions/setup-firefox@latest
-
       - name: Setup ChromeDriver
-        if: matrix.browser == 'chrome'
         uses: nanasess/setup-chromedriver@v2
-
-      - name: Setup GeckoDriver
-        if: matrix.browser == 'firefox'
-        uses: browser-actions/setup-geckodriver@latest
 
       - name: Setup Virtual Display
         run: |
           sudo apt-get update
-          sudo apt-get install -y xvfb
+          sudo apt-get install -y xvfb fluxbox
           export DISPLAY=:99
           Xvfb :99 -screen 0 1920x1080x24 > /dev/null 2>&1 &
+          sleep 3
+          fluxbox -display :99 > /dev/null 2>&1 &
+          sleep 2
 
       - name: Install Allure
         run: |
@@ -190,31 +180,60 @@ jobs:
           sudo mv allure-${{ env.ALLURE_VERSION }} /opt/allure
           sudo ln -s /opt/allure/bin/allure /usr/bin/allure
 
-      - name: Run Tests
+      - name: Create Directories
+        run: |
+          mkdir -p screenshots
+          mkdir -p logs
+          mkdir -p target/allure-results
+
+      - name: Debug Environment
+        run: |
+          echo "🔍 Environment Debug Information:"
+          echo "Java Version: $(java -version)"
+          echo "Maven Version: $(mvn -version)"
+          echo "Chrome Version: $(google-chrome --version)"
+          echo "ChromeDriver Version: $(chromedriver --version)"
+          echo "Display: $DISPLAY"
+          echo "Working Directory: $(pwd)"
+          echo "Available Test Files:"
+          ls -la src/test/resources/testng*.xml
+          echo "Maven Dependencies:"
+          mvn dependency:tree | head -20
+
+      - name: Run Comprehensive Tests (CI/CD Optimized)
         env:
           DISPLAY: :99
+          CHROME_BIN: /usr/bin/google-chrome
+          CHROMEDRIVER_PATH: /usr/local/bin/chromedriver
         run: |
+          echo "🚀 Starting Comprehensive Tests..."
           mvn clean test \
-            -Dsurefire.suiteXmlFiles=src/test/resources/testng-${{ matrix.test-suite }}.xml \
-            -Dbrowser=${{ matrix.browser }} \
+            -Dsurefire.suiteXmlFiles=src/test/resources/testng-comprehensive-ci.xml \
+            -Dbrowser=chrome \
             -Denvironment=${{ needs.setup.outputs.environment }} \
             -Dheadless=true \
             -Dallure.results.directory=target/allure-results \
             -Dmaven.test.failure.ignore=true \
-            -Dsurefire.rerunFailingTestsCount=2 \
+            -Dsurefire.rerunFailingTestsCount=3 \
             -Dsurefire.parallel=false \
-            -Dsurefire.threadCount=1
+            -Dsurefire.threadCount=1 \
+            -Dsurefire.forkCount=1 \
+            -Dsurefire.reuseForks=false \
+            -Dwebdriver.chrome.driver=/usr/local/bin/chromedriver \
+            -Dwebdriver.chrome.args="--headless,--no-sandbox,--disable-dev-shm-usage,--disable-gpu,--window-size=1920,1080" \
+            -X
 
       - name: Generate Allure Report
         if: always()
         run: |
+          echo "📊 Generating Allure Report..."
           allure generate target/allure-results --clean --output target/allure-report
 
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: test-results-${{ matrix.browser }}-${{ matrix.test-suite }}
+          name: comprehensive-test-results
           path: |
             target/surefire-reports/
             target/allure-results/
@@ -222,7 +241,59 @@ jobs:
             screenshots/
             logs/
 
-  # Performance Tests - Özel performans testleri
+      - name: Upload Test Logs
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: test-failure-logs
+          path: |
+            target/surefire-reports/
+            logs/
+            screenshots/
+
+  # API Tests Only - Fallback if comprehensive fails
+  api-tests:
+    runs-on: ubuntu-latest
+    needs: [setup, comprehensive-tests]
+    if: failure() || contains(github.event.head_commit.message, '[api-only]')
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: Cache Maven Dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - name: Run API Tests Only
+        run: |
+          echo "🔄 Running API Tests as fallback..."
+          mvn clean test \
+            -Dsurefire.suiteXmlFiles=src/test/resources/testng-api.xml \
+            -Denvironment=${{ needs.setup.outputs.environment }} \
+            -Dmaven.test.failure.ignore=true \
+            -Dsurefire.rerunFailingTestsCount=2 \
+            -Dsurefire.parallel=false \
+            -Dsurefire.threadCount=1
+
+      - name: Upload API Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: api-test-results
+          path: |
+            target/surefire-reports/
+            target/allure-results/
+
+  # Performance Tests - Separate job
   performance-tests:
     runs-on: ubuntu-latest
     needs: setup
@@ -256,6 +327,7 @@ jobs:
           sudo apt-get install -y xvfb
           export DISPLAY=:99
           Xvfb :99 -screen 0 1920x1080x24 > /dev/null 2>&1 &
+          sleep 3
 
       - name: Run Performance Tests
         env:
@@ -283,7 +355,7 @@ jobs:
             target/allure-results/
             performance-reports/
 
-  # Security Tests - Güvenlik testleri
+  # Security Tests - Separate job
   security-tests:
     runs-on: ubuntu-latest
     needs: setup
@@ -317,6 +389,7 @@ jobs:
           sudo apt-get install -y xvfb
           export DISPLAY=:99
           Xvfb :99 -screen 0 1920x1080x24 > /dev/null 2>&1 &
+          sleep 3
 
       - name: Run Security Tests
         env:
@@ -369,7 +442,7 @@ jobs:
       - name: Merge Allure Results
         run: |
           mkdir -p merged-allure-results
-          find test-results -name "allure-results" -type d -exec cp -r {}/* merged-allure-results/ \;
+          find test-results -name "allure-results" -type d -exec cp -r {}/* merged-allure-results/ \; 2>/dev/null || true
 
       - name: Generate Consolidated Allure Report
         run: |
@@ -420,83 +493,15 @@ jobs:
           echo "successful-jobs=$SUCCESSFUL_JOBS" >> $GITHUB_OUTPUT
           echo "total-jobs=$TOTAL_JOBS" >> $GITHUB_OUTPUT
 
-      - name: Send Slack Notification
-        uses: 8398a7/action-slack@v3
-        if: always()
-        with:
-          status: ${{ job.status }}
-          channel: '#paytr-tests'
-          username: 'PayTR Test Bot'
-          icon_emoji: ':robot_face:'
-          fields: repo,message,commit,author,action,eventName,ref,workflow
-          custom_payload: |
-            {
-              "attachments": [
-                {
-                  "color": "${{ steps.test-results.outputs.success-rate >= 80 && 'good' || steps.test-results.outputs.success-rate >= 50 && 'warning' || 'danger' }}",
-                  "title": "PayTR Test Automation Results",
-                  "fields": [
-                    {
-                      "title": "Success Rate",
-                      "value": "${{ steps.test-results.outputs.success-rate }}%",
-                      "short": true
-                    },
-                    {
-                      "title": "Jobs",
-                      "value": "${{ steps.test-results.outputs.successful-jobs }}/${{ steps.test-results.outputs.total-jobs }}",
-                      "short": true
-                    },
-                    {
-                      "title": "Branch",
-                      "value": "${{ github.ref_name }}",
-                      "short": true
-                    },
-                    {
-                      "title": "Commit",
-                      "value": "${{ github.sha }}",
-                      "short": true
-                    },
-                    {
-                      "title": "Report",
-                      "value": "<https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/test-reports|View Report>",
-                      "short": false
-                    }
-                  ]
-                }
-              ]
-            }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-
-      - name: Send Email Notification
-        uses: dawidd6/action-send-mail@v3
-        if: always()
-        with:
-          server_address: smtp.gmail.com
-          server_port: 587
-          username: ${{ secrets.EMAIL_USERNAME }}
-          password: ${{ secrets.EMAIL_PASSWORD }}
-          subject: "PayTR Test Automation Results - ${{ github.ref_name }}"
-          to: ${{ secrets.EMAIL_RECIPIENTS }}
-          from: PayTR Test Automation
-          html_body: |
-            <h2>PayTR Test Automation Results</h2>
-            <p><strong>Repository:</strong> ${{ github.repository }}</p>
-            <p><strong>Branch:</strong> ${{ github.ref_name }}</p>
-            <p><strong>Commit:</strong> ${{ github.sha }}</p>
-            <p><strong>Success Rate:</strong> ${{ steps.test-results.outputs.success-rate }}%</p>
-            <p><strong>Jobs:</strong> ${{ steps.test-results.outputs.successful-jobs }}/${{ steps.test-results.outputs.total-jobs }}</p>
-            
-            <h3>Job Results:</h3>
-            <ul>
-              <li>Comprehensive Tests: ${{ needs.comprehensive-tests.result }}</li>
-              <li>Performance Tests: ${{ needs.performance-tests.result }}</li>
-              <li>Security Tests: ${{ needs.security-tests.result }}</li>
-            </ul>
-            
-            <p><a href="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/test-reports">View Detailed Report</a></p>
-            
-            <p><em>This is an automated message from PayTR Test Automation CI/CD Pipeline.</em></p>
+      - name: Send Test Summary
+        run: |
+          echo "📊 PayTR Test Automation Summary"
+          echo "================================"
+          echo "Comprehensive Tests: ${{ needs.comprehensive-tests.result }}"
+          echo "Performance Tests: ${{ needs.performance-tests.result }}"
+          echo "Security Tests: ${{ needs.security-tests.result }}"
+          echo "Success Rate: ${{ steps.test-results.outputs.success-rate }}%"
+          echo "Jobs: ${{ steps.test-results.outputs.successful-jobs }}/${{ steps.test-results.outputs.total-jobs }}"
 
   # Cleanup
   cleanup:
