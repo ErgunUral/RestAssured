@@ -9,7 +9,13 @@ on:
 
 env:
   JAVA_VERSION: '17'
-  MAVEN_OPTS: '-Xmx2048m -Djava.awt.headless=true --add-opens jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED'
+  MAVEN_OPTS: >-
+    -Xmx2048m
+    -Djava.awt.headless=true
+    --add-opens jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED
+    --add-opens jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED
+    --add-opens jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED
+    --add-opens jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED
 
 jobs:
   # Step 1: Basic Maven Setup and Compilation
@@ -36,41 +42,52 @@ jobs:
       - name: Make Maven Wrapper Executable
         run: chmod +x mvnw
 
-      - name: Verify Maven Wrapper
+      - name: Debug Environment
         run: |
-          echo "🔍 Verifying Maven Wrapper..."
-          ls -la mvnw
-          ./mvnw --version
-
-      - name: Environment Debug Information
-        run: |
-          echo "🔍 Environment Information:"
+          echo "🔍 Environment Debug Information:"
           echo "Java Version: $(java -version 2>&1)"
           echo "JAVA_HOME: $JAVA_HOME"
           echo "Maven Opts: $MAVEN_OPTS"
           echo "Working Directory: $(pwd)"
-          echo "Maven Wrapper Properties:"
+          echo "User: $(whoami)"
+          echo "PATH: $PATH"
+
+      - name: Check Maven Wrapper Files
+        run: |
+          echo "🔍 Checking Maven Wrapper Files..."
+          ls -la mvnw
+          ls -la .mvn/
           cat .mvn/wrapper/maven-wrapper.properties
+          cat .mvn/jvm.config
 
-      - name: Clean and Validate Project
+      - name: Test Maven Wrapper Version
         run: |
-          echo "🧹 Cleaning project..."
-          ./mvnw clean -q
+          echo "🔍 Testing Maven Wrapper Version..."
+          ./mvnw --version
 
-      - name: Compile Main Sources
+      - name: Test Maven Clean (Step 1)
         run: |
-          echo "🔨 Compiling main sources..."
-          ./mvnw compile -q
+          echo "🧹 Step 1: Testing Maven Clean..."
+          echo "MAVEN_OPTS before: $MAVEN_OPTS"
+          ./mvnw clean -X
+        env:
+          MAVEN_OPTS: "-Xmx2048m -Djava.awt.headless=true"
 
-      - name: Compile Test Sources
+      - name: Test Maven Compile (Step 2)
         run: |
-          echo "🔨 Compiling test sources..."
-          ./mvnw test-compile -q
+          echo "🔨 Step 2: Testing Maven Compile..."
+          echo "MAVEN_OPTS before: $MAVEN_OPTS"
+          ./mvnw compile -X
+        env:
+          MAVEN_OPTS: "-Xmx2048m -Djava.awt.headless=true --add-opens jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED"
 
-      - name: Verify Dependencies
+      - name: Test Maven Test-Compile (Step 3)
         run: |
-          echo "📦 Verifying dependencies..."
-          ./mvnw dependency:resolve -q
+          echo "🔨 Step 3: Testing Maven Test-Compile..."
+          echo "MAVEN_OPTS before: $MAVEN_OPTS"
+          ./mvnw test-compile -X
+        env:
+          MAVEN_OPTS: "-Xmx2048m -Djava.awt.headless=true --add-opens jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED"
 
   # Step 2: Simple Test Execution
   simple-tests:
