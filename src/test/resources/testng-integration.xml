@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+
+<suite name="PayTR Integration Test Suite" verbose="1" parallel="classes" thread-count="2">
+    
+    <parameter name="browser" value="chrome"/>
+    <parameter name="environment" value="uat"/>
+    <parameter name="timeout" value="60"/>
+    <parameter name="integration.level" value="full"/>
+    
+    <listeners>
+        <listener class-name="io.qameta.allure.testng.AllureTestNg"/>
+        <listener class-name="com.example.listeners.TestListener"/>
+    </listeners>
+    
+    <!-- Integration Tests -->
+    <test name="PayTR Integration Tests" preserve-order="true">
+        <groups>
+            <run>
+                <include name="integration"/>
+                <include name="end-to-end"/>
+                <include name="workflow"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRIntegrationTests">
+                <methods>
+                    <include name="testCompletePaymentWorkflow"/>
+                    <include name="testUserRegistrationToPayment"/>
+                    <include name="testMultiCurrencyIntegration"/>
+                    <include name="testAPIWebUIIntegration"/>
+                    <include name="testThirdPartyIntegration"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- End-to-End Workflow Tests -->
+    <test name="End-to-End Workflow Tests" preserve-order="true">
+        <groups>
+            <run>
+                <include name="e2e"/>
+                <include name="workflow"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRIntegrationTests">
+                <methods>
+                    <include name="testFullUserJourney"/>
+                    <include name="testMerchantIntegration"/>
+                    <include name="testPaymentGatewayIntegration"/>
+                </methods>
+            </class>
+            <class name="com.example.tests.PayTRAPITests">
+                <methods>
+                    <include name="testAPIIntegrationFlow"/>
+                    <include name="testWebhookIntegration"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- Cross-Platform Integration -->
+    <test name="Cross-Platform Integration Tests" preserve-order="true">
+        <groups>
+            <run>
+                <include name="integration"/>
+                <include name="cross-platform"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRIntegrationTests">
+                <methods>
+                    <include name="testMobileWebIntegration"/>
+                    <include name="testDesktopMobileSync"/>
+                    <include name="testBrowserCompatibility"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- Database Integration Tests -->
+    <test name="Database Integration Tests" preserve-order="true">
+        <groups>
+            <run>
+                <include name="integration"/>
+                <include name="database"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRIntegrationTests">
+                <methods>
+                    <include name="testDatabaseTransactionIntegrity"/>
+                    <include name="testDataConsistencyAcrossServices"/>
+                    <include name="testBackupRestoreIntegration"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+</suite>
