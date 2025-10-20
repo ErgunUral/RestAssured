@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+
+<suite name="PayTR Performance Test Suite" verbose="1" parallel="methods" thread-count="5">
+    
+    <parameter name="browser" value="chrome"/>
+    <parameter name="environment" value="uat"/>
+    <parameter name="timeout" value="60"/>
+    <parameter name="performance.threshold" value="5000"/>
+    <parameter name="load.users" value="10"/>
+    
+    <listeners>
+        <listener class-name="io.qameta.allure.testng.AllureTestNg"/>
+        <listener class-name="com.example.listeners.TestListener"/>
+    </listeners>
+    
+    <!-- Page Load Performance Tests -->
+    <test name="Page Load Performance Tests" preserve-order="true">
+        <groups>
+            <run>
+                <include name="performance"/>
+                <include name="load"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRPerformanceTests">
+                <methods>
+                    <include name="testPageLoadTime"/>
+                </methods>
+            </class>
+            <class name="com.example.tests.PayTRUIElementsTest">
+                <methods>
+                    <include name="testPageLoadPerformance"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- API Performance Tests -->
+    <test name="API Performance Tests" preserve-order="true">
+        <groups>
+            <run>
+                <include name="performance"/>
+                <include name="api"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRPerformanceTests">
+                <methods>
+                    <include name="testAPIResponseTime"/>
+                </methods>
+            </class>
+            <class name="com.example.tests.PayTRAPITests">
+                <methods>
+                    <include name="testPaymentAPIEndpoint"/>
+                    <include name="testAuthenticationAPI"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- Concurrent User Load Tests -->
+    <test name="Concurrent User Load Tests" preserve-order="true">
+        <groups>
+            <run>
+                <include name="performance"/>
+                <include name="concurrent"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRPerformanceTests">
+                <methods>
+                    <include name="testConcurrentUserLoad"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- Memory Usage Tests -->
+    <test name="Memory Usage Tests" preserve-order="true">
+        <groups>
+            <run>
+                <include name="performance"/>
+                <include name="memory"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRPerformanceTests">
+                <methods>
+                    <include name="testMemoryUsage"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- Mobile Performance Tests -->
+    <test name="Mobile Performance Tests" preserve-order="true">
+        <groups>
+            <run>
+                <include name="performance"/>
+                <include name="mobile"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRUsabilityTests">
+                <methods>
+                    <include name="testMobileResponsiveness"/>
+                </methods>
+            </class>
+            <class name="com.example.tests.PayTRUIElementsTest">
+                <methods>
+                    <include name="testMobileResponsiveness"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- Integration Performance Tests -->
+    <test name="Integration Performance Tests" preserve-order="true">
+        <groups>
+            <run>
+                <include name="performance"/>
+                <include name="integration"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRIntegrationTests">
+                <methods>
+                    <include name="testFrontendBackendIntegration"/>
+                    <include name="testThirdPartyServiceIntegration"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+</suite>

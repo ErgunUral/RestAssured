@@ -1,530 +1,622 @@
 package com.example.pages;
 
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.FindBy;
+import org.openqa.selenium.support.PageFactory;
+import org.openqa.selenium.support.ui.WebDriverWait;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
+import org.openqa.selenium.By;
+import org.openqa.selenium.Keys;
+import io.qameta.allure.Step;
+import java.time.Duration;
 import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
 
 /**
  * PayTR Payment Page Object Model
- * PayTR ödeme sayfası için özel metodları içerir
+ * Bu sınıf PayTR ödeme sayfasının elementlerini ve işlemlerini yönetir
  */
-public class PayTRPaymentPage extends PayTRBasePage {
+public class PayTRPaymentPage {
     
-    // Payment form locators
-    private static final By CARD_NUMBER_FIELD = By.xpath(
-        "//input[contains(@name, 'card') or contains(@id, 'card') or " +
-        "contains(@placeholder, 'kart') or contains(@placeholder, 'Card') or " +
-        "contains(@name, 'number') or contains(@id, 'number') or " +
-        "contains(@autocomplete, 'cc-number')]");
+    private WebDriver driver;
+    private WebDriverWait wait;
     
-    private static final By CARD_HOLDER_NAME_FIELD = By.xpath(
-        "//input[contains(@name, 'holder') or contains(@id, 'holder') or " +
-        "contains(@name, 'owner') or contains(@id, 'owner') or " +
-        "contains(@placeholder, 'Ad') or contains(@placeholder, 'Name') or " +
-        "contains(@autocomplete, 'cc-name')]");
+    // Page URL
+    private static final String PAYMENT_URL = "https://www.paytr.com";
     
-    private static final By EXPIRY_MONTH_FIELD = By.xpath(
-        "//input[contains(@name, 'month') or contains(@id, 'month') or " +
-        "contains(@placeholder, 'MM') or contains(@placeholder, 'Ay')] | " +
-        "//select[contains(@name, 'month') or contains(@id, 'month')]");
+    // Payment Form Elements
+    @FindBy(xpath = "//input[@name='card_number' or @id='card_number' or contains(@placeholder, 'Kart') or @type='tel']")
+    private WebElement cardNumberField;
     
-    private static final By EXPIRY_YEAR_FIELD = By.xpath(
-        "//input[contains(@name, 'year') or contains(@id, 'year') or " +
-        "contains(@placeholder, 'YY') or contains(@placeholder, 'Yıl')] | " +
-        "//select[contains(@name, 'year') or contains(@id, 'year')]");
+    @FindBy(xpath = "//input[@name='expiry' or @id='expiry' or contains(@placeholder, 'MM/YY')]")
+    private WebElement expiryDateField;
     
-    private static final By CVV_FIELD = By.xpath(
-        "//input[contains(@name, 'cvv') or contains(@id, 'cvv') or " +
-        "contains(@name, 'cvc') or contains(@id, 'cvc') or " +
-        "contains(@name, 'security') or contains(@id, 'security') or " +
-        "contains(@placeholder, 'CVV') or contains(@placeholder, 'CVC')]");
+    @FindBy(xpath = "//input[@name='cvv' or @id='cvv' or contains(@placeholder, 'CVV')]")
+    private WebElement cvvField;
     
-    private static final By AMOUNT_FIELD = By.xpath(
-        "//input[contains(@name, 'amount') or contains(@id, 'amount') or " +
-        "contains(@name, 'tutar') or contains(@id, 'tutar') or " +
-        "contains(@placeholder, 'tutar') or contains(@placeholder, 'amount')]");
+    @FindBy(xpath = "//input[@name='cardholder' or @id='cardholder' or contains(@placeholder, 'Kart Sahibi')]")
+    private WebElement cardHolderField;
     
-    private static final By CURRENCY_SELECT = By.xpath(
-        "//select[contains(@name, 'currency') or contains(@id, 'currency') or " +
-        "contains(@name, 'para') or contains(@id, 'para')]");
+    @FindBy(xpath = "//input[@name='amount' or @id='amount' or contains(@placeholder, 'Tutar')]")
+    private WebElement amountField;
     
-    private static final By INSTALLMENT_SELECT = By.xpath(
-        "//select[contains(@name, 'taksit') or contains(@id, 'taksit') or " +
-        "contains(@name, 'installment') or contains(@id, 'installment')]");
+    @FindBy(xpath = "//select[@name='currency' or @id='currency']")
+    private WebElement currencySelect;
     
-    private static final By INSTALLMENT_RADIO_BUTTONS = By.xpath(
-        "//input[@type='radio'][contains(@name, 'taksit') or " +
-        "contains(@name, 'installment') or contains(@value, 'taksit')]");
+    @FindBy(xpath = "//button[@type='submit' or contains(@class, 'pay') or contains(text(), 'Öde')]")
+    private WebElement payButton;
     
-    private static final By PAY_BUTTON = By.xpath(
-        "//button[contains(text(), 'Öde') or contains(text(), 'Pay') or " +
-        "contains(text(), 'ödeme') or contains(text(), 'payment') or " +
-        "contains(@value, 'Öde') or contains(@value, 'Pay') or " +
-        "contains(@class, 'pay') or contains(@class, 'ödeme')] | " +
-        "//input[@type='submit'][contains(@value, 'Öde') or contains(@value, 'Pay')]");
+    // Customer Information Elements
+    @FindBy(xpath = "//input[@name='customer_name' or @id='customer_name']")
+    private WebElement customerNameField;
     
-    private static final By PAYMENT_FORM = By.xpath(
-        "//form[contains(@action, 'payment') or contains(@action, 'ödeme') or " +
-        "contains(@class, 'payment') or contains(@class, 'ödeme')]");
+    @FindBy(xpath = "//input[@name='customer_email' or @id='customer_email']")
+    private WebElement customerEmailField;
     
-    private static final By CARD_TYPE_IMAGES = By.xpath(
-        "//img[contains(@src, 'visa') or contains(@src, 'mastercard') or " +
-        "contains(@src, 'amex') or contains(@alt, 'Visa') or " +
-        "contains(@alt, 'MasterCard') or contains(@alt, 'American Express')]");
+    @FindBy(xpath = "//input[@name='customer_phone' or @id='customer_phone']")
+    private WebElement customerPhoneField;
     
-    private static final By SECURE_PAYMENT_INDICATORS = By.xpath(
-        "//*[contains(text(), 'güvenli') or contains(text(), 'secure') or " +
-        "contains(text(), 'SSL') or contains(@class, 'secure') or " +
-        "contains(@class, 'güvenli')]");
+    @FindBy(xpath = "//textarea[@name='customer_address' or @id='customer_address']")
+    private WebElement customerAddressField;
     
-    private static final By PAYMENT_SUCCESS_MESSAGE = By.xpath(
-        "//*[contains(@class, 'success') or contains(@class, 'başarılı')][contains(text(), 'ödeme') or " +
-        "contains(text(), 'payment') or contains(text(), 'başarılı') or contains(text(), 'successful')]");
+    // Payment Method Elements
+    @FindBy(xpath = "//input[@value='credit_card' or @id='credit_card']")
+    private WebElement creditCardOption;
     
-    private static final By PAYMENT_ERROR_MESSAGE = By.xpath(
-        "//*[contains(@class, 'error') or contains(@class, 'hata')][contains(text(), 'ödeme') or " +
-        "contains(text(), 'payment') or contains(text(), 'kart') or contains(text(), 'card')]");
+    @FindBy(xpath = "//input[@value='bank_transfer' or @id='bank_transfer']")
+    private WebElement bankTransferOption;
     
-    private static final By COMMISSION_INFO = By.xpath(
-        "//*[contains(text(), 'komisyon') or contains(text(), 'commission') or " +
-        "contains(text(), 'fee') or contains(text(), '%')]");
+    @FindBy(xpath = "//input[@value='digital_wallet' or @id='digital_wallet']")
+    private WebElement digitalWalletOption;
     
-    private static final By TOTAL_AMOUNT_DISPLAY = By.xpath(
-        "//*[contains(@class, 'total') or contains(@class, 'toplam') or " +
-        "contains(text(), 'Toplam') or contains(text(), 'Total')]");
+    // Security Elements
+    @FindBy(xpath = "//input[@name='_token' or @name='csrf_token']")
+    private WebElement csrfTokenField;
     
+    @FindBy(xpath = "//*[contains(@class, 'ssl') or contains(text(), 'Güvenli')]")
+    private WebElement sslIndicator;
+    
+    @FindBy(xpath = "//*[contains(@class, 'security') or contains(text(), 'Güvenlik')]")
+    private WebElement securityBadge;
+    
+    // Error and Success Messages
+    @FindBy(xpath = "//*[contains(@class, 'error') or contains(@class, 'alert-danger')]")
+    private WebElement errorMessage;
+    
+    @FindBy(xpath = "//*[contains(@class, 'success') or contains(@class, 'alert-success')]")
+    private WebElement successMessage;
+    
+    @FindBy(xpath = "//*[contains(@class, 'warning') or contains(@class, 'alert-warning')]")
+    private WebElement warningMessage;
+    
+    // Loading and Progress Elements
+    @FindBy(xpath = "//*[contains(@class, 'loading') or contains(@class, 'spinner')]")
+    private WebElement loadingIndicator;
+    
+    @FindBy(xpath = "//*[contains(@class, 'progress')]")
+    private WebElement progressBar;
+    
+    // Constructor
     public PayTRPaymentPage(WebDriver driver) {
-        super(driver);
+        this.driver = driver;
+        this.wait = new WebDriverWait(driver, Duration.ofSeconds(15));
+        PageFactory.initElements(driver, this);
     }
     
-    /**
-     * Ödeme sayfasına gider
-     */
-    public void navigateToPaymentPage() {
-        driver.get(BASE_URL);
-        waitForPageLoad();
-        waitForLoadingToDisappear();
+    // Navigation Methods
+    
+    @Step("PayTR ödeme sayfasına git")
+    public PayTRPaymentPage navigateToPaymentPage() {
+        driver.get(PAYMENT_URL);
+        waitForPageToLoad();
+        return this;
     }
     
-    /**
-     * Kart numarasını girer
-     */
-    public void enterCardNumber(String cardNumber) {
-        if (isElementPresent(CARD_NUMBER_FIELD)) {
-            safeSendKeys(CARD_NUMBER_FIELD, cardNumber);
-        } else {
-            // Alternatif locator'lar dene
-            List<WebElement> inputFields = driver.findElements(By.xpath(
-                "//input[@type='text' or @type='tel'][contains(@placeholder, 'kart') or " +
-                "contains(@placeholder, 'card') or contains(@maxlength, '16')]"));
-            if (!inputFields.isEmpty()) {
-                inputFields.get(0).clear();
-                inputFields.get(0).sendKeys(cardNumber);
-            }
-        }
+    @Step("Sayfa yüklenene kadar bekle")
+    public PayTRPaymentPage waitForPageToLoad() {
+        wait.until(ExpectedConditions.presenceOfElementLocated(By.tagName("body")));
+        return this;
     }
     
-    /**
-     * Kart sahibi adını girer
-     */
-    public void enterCardHolderName(String cardHolderName) {
-        if (isElementPresent(CARD_HOLDER_NAME_FIELD)) {
-            safeSendKeys(CARD_HOLDER_NAME_FIELD, cardHolderName);
-        } else {
-            // Alternatif locator dene
-            List<WebElement> nameFields = driver.findElements(By.xpath(
-                "//input[@type='text'][contains(@placeholder, 'ad') or " +
-                "contains(@placeholder, 'name')]"));
-            if (!nameFields.isEmpty()) {
-                nameFields.get(0).clear();
-                nameFields.get(0).sendKeys(cardHolderName);
-            }
+    // Card Information Methods
+    
+    @Step("Kart numarasını gir: {cardNumber}")
+    public PayTRPaymentPage enterCardNumber(String cardNumber) {
+        if (isCardNumberFieldPresent()) {
+            wait.until(ExpectedConditions.elementToBeClickable(cardNumberField));
+            cardNumberField.clear();
+            cardNumberField.sendKeys(cardNumber);
         }
+        return this;
     }
     
-    /**
-     * Son kullanma tarihini girer (ay)
-     */
-    public void enterExpiryMonth(String month) {
-        if (isElementPresent(EXPIRY_MONTH_FIELD)) {
-            WebElement monthElement = driver.findElement(EXPIRY_MONTH_FIELD);
-            if (monthElement.getTagName().equals("select")) {
-                Select monthSelect = new Select(monthElement);
-                monthSelect.selectByValue(month);
-            } else {
-                safeSendKeys(EXPIRY_MONTH_FIELD, month);
-            }
+    @Step("Son kullanma tarihini gir: {expiryDate}")
+    public PayTRPaymentPage enterExpiryDate(String expiryDate) {
+        if (isExpiryDateFieldPresent()) {
+            wait.until(ExpectedConditions.elementToBeClickable(expiryDateField));
+            expiryDateField.clear();
+            expiryDateField.sendKeys(expiryDate);
         }
+        return this;
     }
     
-    /**
-     * Son kullanma tarihini girer (yıl)
-     */
-    public void enterExpiryYear(String year) {
-        if (isElementPresent(EXPIRY_YEAR_FIELD)) {
-            WebElement yearElement = driver.findElement(EXPIRY_YEAR_FIELD);
-            if (yearElement.getTagName().equals("select")) {
-                Select yearSelect = new Select(yearElement);
-                yearSelect.selectByValue(year);
-            } else {
-                safeSendKeys(EXPIRY_YEAR_FIELD, year);
-            }
+    @Step("CVV kodunu gir")
+    public PayTRPaymentPage enterCVV(String cvv) {
+        if (isCvvFieldPresent()) {
+            wait.until(ExpectedConditions.elementToBeClickable(cvvField));
+            cvvField.clear();
+            cvvField.sendKeys(cvv);
         }
+        return this;
     }
     
-    /**
-     * CVV kodunu girer
-     */
-    public void enterCVV(String cvv) {
-        if (isElementPresent(CVV_FIELD)) {
-            safeSendKeys(CVV_FIELD, cvv);
-        } else {
-            // Alternatif locator dene
-            List<WebElement> securityFields = driver.findElements(By.xpath(
-                "//input[@type='password' or @type='text'][contains(@maxlength, '3') or " +
-                "contains(@maxlength, '4')]"));
-            if (!securityFields.isEmpty()) {
-                securityFields.get(0).clear();
-                securityFields.get(0).sendKeys(cvv);
-            }
+    @Step("Kart sahibi adını gir: {cardHolder}")
+    public PayTRPaymentPage enterCardHolder(String cardHolder) {
+        if (isCardHolderFieldPresent()) {
+            wait.until(ExpectedConditions.elementToBeClickable(cardHolderField));
+            cardHolderField.clear();
+            cardHolderField.sendKeys(cardHolder);
         }
+        return this;
     }
     
-    /**
-     * Ödeme tutarını girer
-     */
-    public void enterAmount(String amount) {
-        if (isElementPresent(AMOUNT_FIELD)) {
-            safeSendKeys(AMOUNT_FIELD, amount);
+    // Payment Amount Methods
+    
+    @Step("Ödeme tutarını gir: {amount}")
+    public PayTRPaymentPage enterAmount(String amount) {
+        if (isAmountFieldPresent()) {
+            wait.until(ExpectedConditions.elementToBeClickable(amountField));
+            amountField.clear();
+            amountField.sendKeys(amount);
         }
+        return this;
     }
     
-    /**
-     * Para birimini seçer
-     */
-    public void selectCurrency(String currency) {
-        if (isElementPresent(CURRENCY_SELECT)) {
-            Select currencySelect = new Select(driver.findElement(CURRENCY_SELECT));
-            currencySelect.selectByValue(currency);
+    @Step("Para birimini seç: {currency}")
+    public PayTRPaymentPage selectCurrency(String currency) {
+        if (isCurrencySelectPresent()) {
+            Select currencyDropdown = new Select(currencySelect);
+            currencyDropdown.selectByValue(currency);
         }
+        return this;
     }
     
-    /**
-     * Taksit seçeneğini seçer
-     */
-    public void selectInstallment(String installmentCount) {
-        // Select dropdown ile taksit seçimi
-        if (isElementPresent(INSTALLMENT_SELECT)) {
-            Select installmentSelect = new Select(driver.findElement(INSTALLMENT_SELECT));
-            installmentSelect.selectByValue(installmentCount);
-            return;
+    // Customer Information Methods
+    
+    @Step("Müşteri adını gir: {customerName}")
+    public PayTRPaymentPage enterCustomerName(String customerName) {
+        if (isCustomerNameFieldPresent()) {
+            wait.until(ExpectedConditions.elementToBeClickable(customerNameField));
+            customerNameField.clear();
+            customerNameField.sendKeys(customerName);
         }
-        
-        // Radio button ile taksit seçimi
-        List<WebElement> radioButtons = driver.findElements(INSTALLMENT_RADIO_BUTTONS);
-        for (WebElement radio : radioButtons) {
-            String value = radio.getAttribute("value");
-            if (value.equals(installmentCount)) {
-                radio.click();
-                return;
-            }
-        }
-        
-        // Button ile taksit seçimi
-        List<WebElement> installmentButtons = driver.findElements(By.xpath(
-            "//button[contains(text(), '" + installmentCount + "') or " +
-            "contains(@data-installment, '" + installmentCount + "')]"));
-        if (!installmentButtons.isEmpty()) {
-            installmentButtons.get(0).click();
-        }
+        return this;
     }
     
-    /**
-     * Ödeme butonuna tıklar
-     */
-    public void clickPayButton() {
-        if (isElementPresent(PAY_BUTTON)) {
-            safeClick(PAY_BUTTON);
-        } else {
-            // Alternatif submit yöntemleri
-            List<WebElement> submitButtons = driver.findElements(By.xpath(
-                "//button[@type='submit'] | //input[@type='submit']"));
-            if (!submitButtons.isEmpty()) {
-                submitButtons.get(0).click();
-            } else {
-                // Form submit et
-                if (isElementPresent(PAYMENT_FORM)) {
-                    WebElement form = driver.findElement(PAYMENT_FORM);
-                    form.submit();
-                }
-            }
+    @Step("Müşteri email'ini gir: {customerEmail}")
+    public PayTRPaymentPage enterCustomerEmail(String customerEmail) {
+        if (isCustomerEmailFieldPresent()) {
+            wait.until(ExpectedConditions.elementToBeClickable(customerEmailField));
+            customerEmailField.clear();
+            customerEmailField.sendKeys(customerEmail);
         }
-        waitForLoadingToDisappear();
+        return this;
     }
     
-    /**
-     * Tam ödeme işlemi yapar
-     */
-    public void makePayment(String cardNumber, String cardHolderName, String expiryMonth, 
-                           String expiryYear, String cvv) {
+    @Step("Müşteri telefonunu gir: {customerPhone}")
+    public PayTRPaymentPage enterCustomerPhone(String customerPhone) {
+        if (isCustomerPhoneFieldPresent()) {
+            wait.until(ExpectedConditions.elementToBeClickable(customerPhoneField));
+            customerPhoneField.clear();
+            customerPhoneField.sendKeys(customerPhone);
+        }
+        return this;
+    }
+    
+    @Step("Müşteri adresini gir: {customerAddress}")
+    public PayTRPaymentPage enterCustomerAddress(String customerAddress) {
+        if (isCustomerAddressFieldPresent()) {
+            wait.until(ExpectedConditions.elementToBeClickable(customerAddressField));
+            customerAddressField.clear();
+            customerAddressField.sendKeys(customerAddress);
+        }
+        return this;
+    }
+    
+    // Payment Method Selection
+    
+    @Step("Kredi kartı ödeme yöntemini seç")
+    public PayTRPaymentPage selectCreditCardPayment() {
+        if (isCreditCardOptionPresent()) {
+            creditCardOption.click();
+        }
+        return this;
+    }
+    
+    @Step("Banka havalesi ödeme yöntemini seç")
+    public PayTRPaymentPage selectBankTransferPayment() {
+        if (isBankTransferOptionPresent()) {
+            bankTransferOption.click();
+        }
+        return this;
+    }
+    
+    @Step("Dijital cüzdan ödeme yöntemini seç")
+    public PayTRPaymentPage selectDigitalWalletPayment() {
+        if (isDigitalWalletOptionPresent()) {
+            digitalWalletOption.click();
+        }
+        return this;
+    }
+    
+    // Payment Action
+    
+    @Step("Ödeme butonuna tıkla")
+    public PayTRPaymentPage clickPayButton() {
+        if (isPayButtonPresent()) {
+            wait.until(ExpectedConditions.elementToBeClickable(payButton));
+            payButton.click();
+        }
+        return this;
+    }
+    
+    @Step("Tam ödeme işlemini gerçekleştir")
+    public PayTRPaymentPage performPayment(String cardNumber, String expiryDate, String cvv, 
+                                          String cardHolder, String amount) {
         enterCardNumber(cardNumber);
-        enterCardHolderName(cardHolderName);
-        enterExpiryMonth(expiryMonth);
-        enterExpiryYear(expiryYear);
+        enterExpiryDate(expiryDate);
         enterCVV(cvv);
-        clickPayButton();
-    }
-    
-    /**
-     * Taksitli ödeme işlemi yapar
-     */
-    public void makeInstallmentPayment(String cardNumber, String cardHolderName, String expiryMonth, 
-                                     String expiryYear, String cvv, String installmentCount) {
-        enterCardNumber(cardNumber);
-        enterCardHolderName(cardHolderName);
-        enterExpiryMonth(expiryMonth);
-        enterExpiryYear(expiryYear);
-        enterCVV(cvv);
-        selectInstallment(installmentCount);
-        clickPayButton();
-    }
-    
-    /**
-     * Tutarlı ödeme işlemi yapar
-     */
-    public void makePaymentWithAmount(String amount, String currency, String cardNumber, 
-                                    String cardHolderName, String expiryMonth, String expiryYear, String cvv) {
+        enterCardHolder(cardHolder);
         enterAmount(amount);
-        selectCurrency(currency);
-        enterCardNumber(cardNumber);
-        enterCardHolderName(cardHolderName);
-        enterExpiryMonth(expiryMonth);
-        enterExpiryYear(expiryYear);
-        enterCVV(cvv);
         clickPayButton();
+        return this;
     }
     
-    /**
-     * Ödeme formu görünür mü kontrol eder
-     */
-    public boolean isPaymentFormVisible() {
-        return isElementVisible(PAYMENT_FORM) || 
-               (isElementPresent(CARD_NUMBER_FIELD) && isElementPresent(CVV_FIELD));
-    }
+    // Verification Methods
     
-    /**
-     * Kart numarası alanı görünür mü kontrol eder
-     */
-    public boolean isCardNumberFieldVisible() {
-        return isElementVisible(CARD_NUMBER_FIELD);
-    }
-    
-    /**
-     * CVV alanı görünür mü kontrol eder
-     */
-    public boolean isCVVFieldVisible() {
-        return isElementVisible(CVV_FIELD);
-    }
-    
-    /**
-     * Taksit seçenekleri görünür mü kontrol eder
-     */
-    public boolean areInstallmentOptionsVisible() {
-        return isElementVisible(INSTALLMENT_SELECT) || 
-               !driver.findElements(INSTALLMENT_RADIO_BUTTONS).isEmpty();
-    }
-    
-    /**
-     * Kart türü görselleri görünür mü kontrol eder
-     */
-    public boolean areCardTypeImagesVisible() {
-        return isElementVisible(CARD_TYPE_IMAGES);
-    }
-    
-    /**
-     * Güvenli ödeme göstergeleri görünür mü kontrol eder
-     */
-    public boolean areSecurePaymentIndicatorsVisible() {
-        return isElementVisible(SECURE_PAYMENT_INDICATORS);
-    }
-    
-    /**
-     * Ödeme başarılı mı kontrol eder
-     */
-    public boolean isPaymentSuccessful() {
-        waitFor(3);
-        return isElementVisible(PAYMENT_SUCCESS_MESSAGE) || 
-               getCurrentUrl().contains("success") || 
-               getCurrentUrl().contains("başarılı");
-    }
-    
-    /**
-     * Ödeme hatası var mı kontrol eder
-     */
-    public boolean hasPaymentError() {
-        return isElementVisible(PAYMENT_ERROR_MESSAGE);
-    }
-    
-    /**
-     * Ödeme hata mesajının metnini alır
-     */
-    public String getPaymentErrorMessage() {
-        if (hasPaymentError()) {
-            return getText(PAYMENT_ERROR_MESSAGE);
+    @Step("Kart numarası alanının mevcut olduğunu doğrula")
+    public boolean isCardNumberFieldPresent() {
+        try {
+            return cardNumberField.isDisplayed();
+        } catch (Exception e) {
+            return false;
         }
-        return "";
     }
     
-    /**
-     * Komisyon bilgisi görünür mü kontrol eder
-     */
-    public boolean isCommissionInfoVisible() {
-        return isElementVisible(COMMISSION_INFO);
-    }
-    
-    /**
-     * Toplam tutar görünür mü kontrol eder
-     */
-    public boolean isTotalAmountVisible() {
-        return isElementVisible(TOTAL_AMOUNT_DISPLAY);
-    }
-    
-    /**
-     * Mevcut taksit seçeneklerini alır
-     */
-    public List<String> getAvailableInstallmentOptions() {
-        List<String> options = new java.util.ArrayList<>();
-        
-        if (isElementPresent(INSTALLMENT_SELECT)) {
-            Select installmentSelect = new Select(driver.findElement(INSTALLMENT_SELECT));
-            List<WebElement> optionElements = installmentSelect.getOptions();
-            for (WebElement option : optionElements) {
-                options.add(option.getText());
-            }
-        } else {
-            List<WebElement> radioButtons = driver.findElements(INSTALLMENT_RADIO_BUTTONS);
-            for (WebElement radio : radioButtons) {
-                String value = radio.getAttribute("value");
-                options.add(value);
-            }
+    @Step("Son kullanma tarihi alanının mevcut olduğunu doğrula")
+    public boolean isExpiryDateFieldPresent() {
+        try {
+            return expiryDateField.isDisplayed();
+        } catch (Exception e) {
+            return false;
         }
-        
-        return options;
     }
     
-    /**
-     * Kart numarası alanının maksimum uzunluğunu alır
-     */
-    public String getCardNumberMaxLength() {
-        if (isElementPresent(CARD_NUMBER_FIELD)) {
-            return getAttribute(CARD_NUMBER_FIELD, "maxlength");
+    @Step("CVV alanının mevcut olduğunu doğrula")
+    public boolean isCvvFieldPresent() {
+        try {
+            return cvvField.isDisplayed();
+        } catch (Exception e) {
+            return false;
         }
-        return "";
     }
     
-    /**
-     * CVV alanının maksimum uzunluğunu alır
-     */
-    public String getCVVMaxLength() {
-        if (isElementPresent(CVV_FIELD)) {
-            return getAttribute(CVV_FIELD, "maxlength");
+    @Step("Kart sahibi alanının mevcut olduğunu doğrula")
+    public boolean isCardHolderFieldPresent() {
+        try {
+            return cardHolderField.isDisplayed();
+        } catch (Exception e) {
+            return false;
         }
-        return "";
     }
     
-    /**
-     * Form validasyonu aktif mi kontrol eder
-     */
-    public boolean hasPaymentFormValidation() {
-        boolean hasRequiredFields = false;
-        
-        List<By> requiredFieldLocators = List.of(
-            CARD_NUMBER_FIELD, CARD_HOLDER_NAME_FIELD, EXPIRY_MONTH_FIELD, 
-            EXPIRY_YEAR_FIELD, CVV_FIELD
-        );
-        
-        for (By locator : requiredFieldLocators) {
-            if (isElementPresent(locator)) {
-                String required = getAttribute(locator, "required");
-                if (required != null) {
-                    hasRequiredFields = true;
-                    break;
-                }
-            }
+    @Step("Tutar alanının mevcut olduğunu doğrula")
+    public boolean isAmountFieldPresent() {
+        try {
+            return amountField.isDisplayed();
+        } catch (Exception e) {
+            return false;
         }
-        
-        return hasRequiredFields || hasFormValidation();
     }
     
-    /**
-     * Ödeme form elementlerinin sayısını döndürür
-     */
-    public int getPaymentFormElementCount() {
-        int count = 0;
-        
-        if (isElementPresent(CARD_NUMBER_FIELD)) count++;
-        if (isElementPresent(CARD_HOLDER_NAME_FIELD)) count++;
-        if (isElementPresent(EXPIRY_MONTH_FIELD)) count++;
-        if (isElementPresent(EXPIRY_YEAR_FIELD)) count++;
-        if (isElementPresent(CVV_FIELD)) count++;
-        if (isElementPresent(AMOUNT_FIELD)) count++;
-        if (isElementPresent(CURRENCY_SELECT)) count++;
-        if (isElementPresent(INSTALLMENT_SELECT)) count++;
-        if (isElementPresent(PAY_BUTTON)) count++;
-        
-        return count;
-    }
-    
-    /**
-     * Ödeme butonu görünür mü kontrol eder
-     */
-    public boolean isPayButtonVisible() {
-        return isElementVisible(PAY_BUTTON);
-    }
-    
-    /**
-     * Kart numarası alanının değerini alır
-     */
-    public String getCardNumberValue() {
-        if (isElementPresent(CARD_NUMBER_FIELD)) {
-            return getAttribute(CARD_NUMBER_FIELD, "value");
+    @Step("Para birimi seçiminin mevcut olduğunu doğrula")
+    public boolean isCurrencySelectPresent() {
+        try {
+            return currencySelect.isDisplayed();
+        } catch (Exception e) {
+            return false;
         }
-        return "";
     }
     
-    /**
-     * Güvenli ödeme formu var mı kontrol eder
-     */
-    public boolean hasSecurePaymentForm() {
-        return isSSLActive() && hasCSRFToken() && hasPaymentFormValidation();
+    @Step("Ödeme butonunun mevcut olduğunu doğrula")
+    public boolean isPayButtonPresent() {
+        try {
+            return payButton.isDisplayed();
+        } catch (Exception e) {
+            return false;
+        }
     }
     
-    /**
-     * Kart sahibi adı alanının değerini alır
-     */
+    @Step("Müşteri adı alanının mevcut olduğunu doğrula")
+    public boolean isCustomerNameFieldPresent() {
+        try {
+            return customerNameField.isDisplayed();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    @Step("Müşteri email alanının mevcut olduğunu doğrula")
+    public boolean isCustomerEmailFieldPresent() {
+        try {
+            return customerEmailField.isDisplayed();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    @Step("Müşteri telefon alanının mevcut olduğunu doğrula")
+    public boolean isCustomerPhoneFieldPresent() {
+        try {
+            return customerPhoneField.isDisplayed();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    @Step("Müşteri adres alanının mevcut olduğunu doğrula")
+    public boolean isCustomerAddressFieldPresent() {
+        try {
+            return customerAddressField.isDisplayed();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    @Step("Kredi kartı seçeneğinin mevcut olduğunu doğrula")
+    public boolean isCreditCardOptionPresent() {
+        try {
+            return creditCardOption.isDisplayed();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    @Step("Banka havalesi seçeneğinin mevcut olduğunu doğrula")
+    public boolean isBankTransferOptionPresent() {
+        try {
+            return bankTransferOption.isDisplayed();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    @Step("Dijital cüzdan seçeneğinin mevcut olduğunu doğrula")
+    public boolean isDigitalWalletOptionPresent() {
+        try {
+            return digitalWalletOption.isDisplayed();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    @Step("CSRF token'ının mevcut olduğunu doğrula")
+    public boolean isCSRFTokenPresent() {
+        try {
+            return csrfTokenField.isDisplayed();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    @Step("SSL göstergesinin mevcut olduğunu doğrula")
+    public boolean isSSLIndicatorPresent() {
+        try {
+            return sslIndicator.isDisplayed();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    @Step("Güvenlik rozetinin mevcut olduğunu doğrula")
+    public boolean isSecurityBadgePresent() {
+        try {
+            return securityBadge.isDisplayed();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    @Step("Hata mesajının görünür olduğunu doğrula")
+    public boolean isErrorMessageVisible() {
+        try {
+            return errorMessage.isDisplayed();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    @Step("Başarı mesajının görünür olduğunu doğrula")
+    public boolean isSuccessMessageVisible() {
+        try {
+            return successMessage.isDisplayed();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    @Step("Yükleme göstergesinin görünür olduğunu doğrula")
+    public boolean isLoadingIndicatorVisible() {
+        try {
+            return loadingIndicator.isDisplayed();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    // Getter Methods
+    
+    @Step("Hata mesajı metnini al")
+    public String getErrorMessageText() {
+        try {
+            wait.until(ExpectedConditions.visibilityOf(errorMessage));
+            return errorMessage.getText();
+        } catch (Exception e) {
+            return "";
+        }
+    }
+    
+    @Step("Başarı mesajı metnini al")
+    public String getSuccessMessageText() {
+        try {
+            wait.until(ExpectedConditions.visibilityOf(successMessage));
+            return successMessage.getText();
+        } catch (Exception e) {
+            return "";
+        }
+    }
+    
+    @Step("Uyarı mesajı metnini al")
+    public String getWarningMessageText() {
+        try {
+            wait.until(ExpectedConditions.visibilityOf(warningMessage));
+            return warningMessage.getText();
+        } catch (Exception e) {
+            return "";
+        }
+    }
+    
+    @Step("Sayfa başlığını al")
+    public String getPageTitle() {
+        return driver.getTitle();
+    }
+    
+    @Step("Mevcut URL'yi al")
+    public String getCurrentUrl() {
+        return driver.getCurrentUrl();
+    }
+    
+    // Validation Methods
+    
+    @Step("Ödeme sayfasında olduğunu doğrula")
+    public boolean isOnPaymentPage() {
+        String currentUrl = getCurrentUrl();
+        String pageSource = driver.getPageSource();
+        return currentUrl.contains("paytr.com") && 
+               (pageSource.contains("payment") || 
+                pageSource.contains("ödeme") ||
+                isPayButtonPresent());
+    }
+    
+    @Step("Ödeme formunun tam olduğunu doğrula")
+    public boolean isPaymentFormComplete() {
+        return isCardNumberFieldPresent() && 
+               isExpiryDateFieldPresent() && 
+               isCvvFieldPresent() && 
+               isPayButtonPresent();
+    }
+    
+    @Step("Güvenlik özelliklerinin mevcut olduğunu doğrula")
+    public boolean areSecurityFeaturesPresent() {
+        String currentUrl = getCurrentUrl();
+        boolean isHTTPS = currentUrl.startsWith("https://");
+        return isHTTPS && (isCSRFTokenPresent() || isSSLIndicatorPresent());
+    }
+    
+    @Step("Yükleme tamamlanana kadar bekle")
+    public PayTRPaymentPage waitForLoadingToComplete() {
+        try {
+            wait.until(ExpectedConditions.invisibilityOf(loadingIndicator));
+        } catch (Exception e) {
+            // Loading indicator might not be present
+        }
+        return this;
+    }
+    
+    @Step("Kart sahibi adını gir")
+    public PayTRPaymentPage enterCardHolderName(String cardHolderName) {
+        try {
+            wait.until(ExpectedConditions.elementToBeClickable(cardHolderField));
+            cardHolderField.clear();
+            cardHolderField.sendKeys(cardHolderName);
+        } catch (Exception e) {
+            System.out.println("Kart sahibi alanı bulunamadı: " + e.getMessage());
+        }
+        return this;
+    }
+    
+    @Step("Kart sahibi adını al")
     public String getCardHolderNameValue() {
-        if (isElementPresent(CARD_HOLDER_NAME_FIELD)) {
-            return getAttribute(CARD_HOLDER_NAME_FIELD, "value");
+        try {
+            return cardHolderField.getAttribute("value");
+        } catch (Exception e) {
+            System.out.println("Kart sahibi değeri alınamadı: " + e.getMessage());
+            return "";
         }
-        return "";
     }
     
-    /**
-     * Ödeme sayfasının güvenlik özelliklerini kontrol eder
-     */
-    public Map<String, Boolean> getSecurityFeatures() {
-        Map<String, Boolean> features = new HashMap<>();
-        
-        features.put("SSL", isSSLActive());
-        features.put("CSRF_Token", hasCSRFToken());
-        features.put("Form_Validation", hasPaymentFormValidation());
-        features.put("Secure_Indicators", areSecurePaymentIndicatorsVisible());
-        features.put("Card_Type_Detection", areCardTypeImagesVisible());
-        
-        return features;
+    @Step("Son kullanma ayını gir")
+    public PayTRPaymentPage enterExpiryMonth(String month) {
+        try {
+            // Eğer ayrı ay alanı varsa
+            WebElement monthField = driver.findElement(By.xpath("//input[@name='expiry_month' or @id='expiry_month']"));
+            monthField.clear();
+            monthField.sendKeys(month);
+        } catch (Exception e) {
+            // Birleşik tarih alanına ay ekle
+            try {
+                expiryDateField.clear();
+                expiryDateField.sendKeys(month);
+            } catch (Exception ex) {
+                System.out.println("Son kullanma ayı girilemedi: " + ex.getMessage());
+            }
+        }
+        return this;
+    }
+    
+    @Step("Son kullanma yılını gir")
+    public PayTRPaymentPage enterExpiryYear(String year) {
+        try {
+            // Eğer ayrı yıl alanı varsa
+            WebElement yearField = driver.findElement(By.xpath("//input[@name='expiry_year' or @id='expiry_year']"));
+            yearField.clear();
+            yearField.sendKeys(year);
+        } catch (Exception e) {
+            // Birleşik tarih alanına yıl ekle
+            try {
+                String currentValue = expiryDateField.getAttribute("value");
+                if (currentValue.length() >= 2) {
+                    expiryDateField.clear();
+                    expiryDateField.sendKeys(currentValue.substring(0, 2) + "/" + year);
+                }
+            } catch (Exception ex) {
+                System.out.println("Son kullanma yılı girilemedi: " + ex.getMessage());
+            }
+        }
+        return this;
+    }
+    
+    @Step("Ödeme hatası var mı kontrol et")
+    public boolean hasPaymentError() {
+        try {
+            WebElement errorElement = driver.findElement(By.xpath("//div[contains(@class, 'error') or contains(@class, 'alert-danger')]"));
+            return errorElement.isDisplayed();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    @Step("Güvenli ödeme formu var mı kontrol et")
+    public boolean hasSecurePaymentForm() {
+        try {
+            String currentUrl = getCurrentUrl();
+            boolean isHTTPS = currentUrl.startsWith("https://");
+            boolean hasSSLIndicator = isSSLIndicatorPresent();
+            boolean hasCSRF = isCSRFTokenPresent();
+            return isHTTPS && (hasSSLIndicator || hasCSRF);
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

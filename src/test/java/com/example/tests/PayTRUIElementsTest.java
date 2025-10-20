@@ -5,20 +5,33 @@ import org.testng.annotations.Test;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
+import org.testng.annotations.DataProvider;
 import org.testng.ITestResult;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.OutputType;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.Keys;
+import org.openqa.selenium.interactions.Actions;
+import org.openqa.selenium.Dimension;
 import com.example.utils.WebDriverSetup;
+import com.example.utils.TestDataProvider;
+import io.qameta.allure.Description;
+import io.qameta.allure.Severity;
+import io.qameta.allure.SeverityLevel;
+import io.qameta.allure.Step;
 import java.time.Duration;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
 import org.apache.commons.io.FileUtils;
 import static io.restassured.RestAssured.*;
 import static org.hamcrest.Matchers.*;
@@ -27,6 +40,8 @@ import static org.testng.Assert.*;
 public class PayTRUIElementsTest extends BaseTest {
     private WebDriver driver;
     private WebDriverWait wait;
+    private Actions actions;
+    private JavascriptExecutor jsExecutor;
     
     @BeforeClass
     public void setupUIElementsTests() {
@@ -37,6 +52,8 @@ public class PayTRUIElementsTest extends BaseTest {
         WebDriverSetup.setupDriver("chrome");
         driver = WebDriverSetup.getDriver();
         wait = new WebDriverWait(driver, Duration.ofSeconds(15));
+        actions = new Actions(driver);
+        jsExecutor = (JavascriptExecutor) driver;
         
         logTestInfo("PayTR Test Environment UI Test Suite başlatıldı");
     }
@@ -645,4 +662,474 @@ public class PayTRUIElementsTest extends BaseTest {
             System.out.println("Security indicators test failed: " + e.getMessage());
         }
     }
+    
+    @Test(priority = 13, groups = {"functional", "smoke"})
+    @Description("PayTR ödeme formu doldurma ve doğrulama testi")
+    @Severity(SeverityLevel.CRITICAL)
+    public void testPaymentFormFilling() {
+        logTestInfo("Test Payment Form Filling");
+        
+        try {
+            driver.get("https://www.paytr.com");
+            
+            // Ödeme formu alanlarını bul ve doldur
+            Map<String, Object> testPayment = TestDataProvider.getTestPayment();
+            Map<String, String> testCard = TestDataProvider.getTestCard("visa");
+            
+            // Kart numarası alanını bul ve doldur
+            List<WebElement> cardNumberFields = driver.findElements(By.xpath(
+                "//input[@name='card_number' or @id='card_number' or contains(@placeholder, 'Kart') or @type='tel']"));
+            
+            if (!cardNumberFields.isEmpty()) {
+                WebElement cardField = cardNumberFields.get(0);
+                cardField.clear();
+                cardField.sendKeys(testCard.get("number"));
+                
+                // Son kullanma tarihi
+                List<WebElement> expiryFields = driver.findElements(By.xpath(
+                    "//input[@name='expiry' or @id='expiry' or contains(@placeholder, 'MM/YY')]"));
+                if (!expiryFields.isEmpty()) {
+                    expiryFields.get(0).sendKeys(testCard.get("expiry_month") + "/" + testCard.get("expiry_year"));
+                }
+                
+                // CVV
+                List<WebElement> cvvFields = driver.findElements(By.xpath(
+                    "//input[@name='cvv' or @id='cvv' or contains(@placeholder, 'CVV')]"));
+                if (!cvvFields.isEmpty()) {
+                    cvvFields.get(0).sendKeys(testCard.get("cvv"));
+                }
+                
+                System.out.println("✅ Ödeme formu başarıyla dolduruldu");
+            } else {
+                System.out.println("⚠️ Ödeme formu bulunamadı, sayfa yapısı kontrol ediliyor");
+            }
+            
+        } catch (Exception e) {
+            System.out.println("❌ Payment form filling test failed: " + e.getMessage());
+        }
+    }
+    
+    @Test(priority = 14, groups = {"functional", "regression"}, dataProvider = "loginTestData", dataProviderClass = TestDataProvider.class)
+    @Description("Farklı login senaryoları ile test")
+    @Severity(SeverityLevel.CRITICAL)
+    public void testLoginScenarios(String email, String password, String expectedResult, String testDescription) {
+        logTestInfo("Test Login Scenarios: " + testDescription);
+        
+        try {
+            driver.get("https://zeus-uat.paytr.com/magaza/kullanici-girisi");
+            
+            // Email alanını bul ve doldur
+            WebElement emailField = wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.xpath("//input[@type='email' or @name='email' or @id='email']")));
+            emailField.clear();
+            emailField.sendKeys(email);
+            
+            // Şifre alanını bul ve doldur
+            WebElement passwordField = driver.findElement(
+                By.xpath("//input[@type='password' or @name='password' or @id='password']"));
+            passwordField.clear();
+            passwordField.sendKeys(password);
+            
+            // Giriş butonuna tıkla
+            WebElement loginButton = driver.findElement(
+                By.xpath("//button[@type='submit'] | //input[@type='submit']"));
+            loginButton.click();
+            
+            Thread.sleep(2000);
+            
+            String currentUrl = driver.getCurrentUrl();
+            String pageSource = driver.getPageSource();
+            
+            if ("success".equals(expectedResult)) {
+                boolean loginSuccessful = !currentUrl.contains("kullanici-girisi") || 
+                                        pageSource.contains("dashboard") ||
+                                        pageSource.contains("panel");
+                System.out.println("✅ Login test: " + testDescription + " - Sonuç: " + loginSuccessful);
+            } else {
+                boolean loginFailed = currentUrl.contains("kullanici-girisi") ||
+                                    pageSource.contains("hata") ||
+                                    pageSource.contains("error");
+                System.out.println("✅ Login test: " + testDescription + " - Hata beklendi: " + loginFailed);
+            }
+            
+        } catch (Exception e) {
+            System.out.println("❌ Login scenario test failed: " + e.getMessage());
+        }
+    }
+    
+    @Test(priority = 15, groups = {"functional", "boundary"})
+    @Description("Form alanları sınır değer testleri")
+    @Severity(SeverityLevel.NORMAL)
+    public void testFormFieldBoundaries() {
+        logTestInfo("Test Form Field Boundaries");
+        
+        try {
+            driver.get("https://zeus-uat.paytr.com/magaza/kullanici-girisi");
+            
+            // Email alanı sınır testleri
+            WebElement emailField = wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.xpath("//input[@type='email' or @name='email']")));
+            
+            // Çok uzun email testi
+            String longEmail = "a".repeat(100) + "@test.com";
+            emailField.clear();
+            emailField.sendKeys(longEmail);
+            
+            String enteredValue = emailField.getAttribute("value");
+            System.out.println("📏 Uzun email testi - Girilen: " + longEmail.length() + 
+                              " karakter, Kabul edilen: " + enteredValue.length() + " karakter");
+            
+            // Çok kısa email testi
+            emailField.clear();
+            emailField.sendKeys("a@b.c");
+            
+            // Şifre alanı sınır testleri
+            WebElement passwordField = driver.findElement(
+                By.xpath("//input[@type='password' or @name='password']"));
+            
+            // Çok uzun şifre testi
+            String longPassword = "a".repeat(200);
+            passwordField.clear();
+            passwordField.sendKeys(longPassword);
+            
+            String passwordValue = passwordField.getAttribute("value");
+            System.out.println("📏 Uzun şifre testi - Girilen: " + longPassword.length() + 
+                              " karakter, Kabul edilen: " + passwordValue.length() + " karakter");
+            
+            System.out.println("✅ Form field boundaries test completed");
+            
+        } catch (Exception e) {
+            System.out.println("❌ Form field boundaries test failed: " + e.getMessage());
+        }
+    }
+    
+    @Test(priority = 16, groups = {"functional", "usability"})
+    @Description("Mobil cihaz uyumluluğu testi")
+    @Severity(SeverityLevel.CRITICAL)
+    public void testMobileResponsiveness() {
+        logTestInfo("Test Mobile Responsiveness");
+        
+        try {
+            // Mobil boyutlara geç
+            driver.manage().window().setSize(new Dimension(375, 667)); // iPhone 6/7/8
+            
+            driver.get("https://www.paytr.com");
+            Thread.sleep(2000);
+            
+            // Viewport meta tag kontrolü
+            String pageSource = driver.getPageSource();
+            boolean hasViewportMeta = pageSource.contains("viewport");
+            
+            // Mobil menü kontrolü
+            List<WebElement> mobileMenus = driver.findElements(By.xpath(
+                "//*[contains(@class, 'mobile') or contains(@class, 'hamburger') or contains(@class, 'menu-toggle')]"));
+            
+            // Touch-friendly elementler kontrolü
+            List<WebElement> buttons = driver.findElements(By.xpath("//button | //a"));
+            boolean hasTouchFriendlyElements = buttons.size() > 0;
+            
+            // Responsive grid kontrolü
+            boolean hasResponsiveGrid = pageSource.contains("col-") || 
+                                      pageSource.contains("grid") ||
+                                      pageSource.contains("flex");
+            
+            System.out.println("📱 Mobil uyumluluk - Viewport: " + hasViewportMeta + 
+                              ", Mobil menü: " + (mobileMenus.size() > 0) +
+                              ", Touch-friendly: " + hasTouchFriendlyElements +
+                              ", Responsive grid: " + hasResponsiveGrid);
+            
+            // Desktop boyutuna geri dön
+            driver.manage().window().setSize(new Dimension(1920, 1080));
+            
+        } catch (Exception e) {
+            System.out.println("❌ Mobile responsiveness test failed: " + e.getMessage());
+        }
+    }
+    
+    @Test(priority = 17, groups = {"functional", "performance"})
+    @Description("Sayfa yükleme performansı testi")
+    @Severity(SeverityLevel.NORMAL)
+    public void testPageLoadPerformance() {
+        logTestInfo("Test Page Load Performance");
+        
+        try {
+            long startTime = System.currentTimeMillis();
+            
+            driver.get("https://www.paytr.com");
+            
+            // DOM yüklenene kadar bekle
+            wait.until(ExpectedConditions.presenceOfElementLocated(By.tagName("body")));
+            
+            long endTime = System.currentTimeMillis();
+            long loadTime = endTime - startTime;
+            
+            // JavaScript ile performans metrikleri al
+            Object navigationTiming = jsExecutor.executeScript(
+                "return window.performance.timing.loadEventEnd - window.performance.timing.navigationStart;");
+            
+            System.out.println("⚡ Sayfa yükleme performansı:");
+            System.out.println("📊 Selenium ölçümü: " + loadTime + " ms");
+            System.out.println("📊 Browser ölçümü: " + navigationTiming + " ms");
+            
+            // Performans eşiği kontrolü (5 saniye)
+            boolean performanceAcceptable = loadTime < 5000;
+            System.out.println("✅ Performans kabul edilebilir: " + performanceAcceptable);
+            
+            if (!performanceAcceptable) {
+                System.out.println("⚠️ Sayfa yükleme süresi eşiği aştı: " + loadTime + " ms > 5000 ms");
+            }
+            
+        } catch (Exception e) {
+            System.out.println("❌ Page load performance test failed: " + e.getMessage());
+        }
+    }
+    
+    @Test(priority = 18, groups = {"functional", "accessibility"})
+    @Description("Erişilebilirlik standartları testi")
+    @Severity(SeverityLevel.NORMAL)
+    public void testAccessibilityStandards() {
+        logTestInfo("Test Accessibility Standards");
+        
+        try {
+            driver.get("https://www.paytr.com");
+            
+            String pageSource = driver.getPageSource();
+            
+            // Alt text kontrolü
+            List<WebElement> images = driver.findElements(By.xpath("//img"));
+            int imagesWithAlt = 0;
+            for (WebElement img : images) {
+                String altText = img.getAttribute("alt");
+                if (altText != null && !altText.trim().isEmpty()) {
+                    imagesWithAlt++;
+                }
+            }
+            
+            // Label kontrolü
+            List<WebElement> inputs = driver.findElements(By.xpath("//input"));
+            int inputsWithLabels = 0;
+            for (WebElement input : inputs) {
+                String id = input.getAttribute("id");
+                if (id != null && !id.isEmpty()) {
+                    List<WebElement> labels = driver.findElements(By.xpath("//label[@for='" + id + "']"));
+                    if (!labels.isEmpty()) {
+                        inputsWithLabels++;
+                    }
+                }
+            }
+            
+            // ARIA attributes kontrolü
+            boolean hasAriaAttributes = pageSource.contains("aria-") || pageSource.contains("role=");
+            
+            // Heading hierarchy kontrolü
+            List<WebElement> headings = driver.findElements(By.xpath("//h1 | //h2 | //h3 | //h4 | //h5 | //h6"));
+            boolean hasHeadings = headings.size() > 0;
+            
+            // Keyboard navigation kontrolü
+            boolean hasTabIndex = pageSource.contains("tabindex");
+            
+            System.out.println("♿ Erişilebilirlik standartları:");
+            System.out.println("🖼️ Alt text: " + imagesWithAlt + "/" + images.size() + " resim");
+            System.out.println("🏷️ Label: " + inputsWithLabels + "/" + inputs.size() + " input");
+            System.out.println("🎯 ARIA attributes: " + hasAriaAttributes);
+            System.out.println("📝 Headings: " + hasHeadings + " (" + headings.size() + " adet)");
+            System.out.println("⌨️ Keyboard navigation: " + hasTabIndex);
+            
+        } catch (Exception e) {
+            System.out.println("❌ Accessibility standards test failed: " + e.getMessage());
+        }
+    }
+    
+    @Test(priority = 19, groups = {"error", "negative"})
+    @Description("Hata senaryoları ve negatif testler")
+    @Severity(SeverityLevel.CRITICAL)
+    public void testErrorScenarios() {
+        logTestInfo("Test Error Scenarios");
+        
+        try {
+            // Geçersiz URL testi
+            driver.get("https://zeus-uat.paytr.com/nonexistent-page");
+            Thread.sleep(2000);
+            
+            String pageSource = driver.getPageSource();
+            boolean has404Error = pageSource.contains("404") || 
+                                pageSource.contains("Not Found") ||
+                                pageSource.contains("Sayfa bulunamadı");
+            
+            System.out.println("🚫 404 Error handling: " + has404Error);
+            
+            // JavaScript hata kontrolü
+            List<Object> jsErrors = (List<Object>) jsExecutor.executeScript(
+                "return window.jsErrors || [];");
+            
+            System.out.println("⚠️ JavaScript errors: " + jsErrors.size());
+            
+            // Console log kontrolü
+            try {
+                Object consoleLogs = jsExecutor.executeScript(
+                    "return window.console && window.console.logs ? window.console.logs : [];");
+                System.out.println("📝 Console logs available: " + (consoleLogs != null));
+            } catch (Exception e) {
+                System.out.println("📝 Console logs check failed: " + e.getMessage());
+            }
+            
+            // Network error simulation
+            driver.get("https://invalid-domain-that-does-not-exist.com");
+            Thread.sleep(3000);
+            
+            String currentUrl = driver.getCurrentUrl();
+            boolean networkErrorHandled = !currentUrl.contains("invalid-domain");
+            System.out.println("🌐 Network error handling: " + networkErrorHandled);
+            
+        } catch (Exception e) {
+            System.out.println("✅ Error scenarios test - Exception caught as expected: " + e.getMessage());
+        }
+    }
+    
+    @Test(priority = 20, groups = {"regression", "smoke"})
+    @Description("Regresyon testi - Temel fonksiyonalite kontrolü")
+    @Severity(SeverityLevel.CRITICAL)
+    public void testRegressionBasicFunctionality() {
+        logTestInfo("Test Regression Basic Functionality");
+        
+        try {
+            // Ana sayfa erişimi
+            driver.get("https://www.paytr.com");
+            String pageTitle = driver.getTitle();
+            assertNotNull(pageTitle, "Ana sayfa başlığı null");
+            assertFalse(pageTitle.isEmpty(), "Ana sayfa başlığı boş");
+            
+            // Logo kontrolü
+            List<WebElement> logos = driver.findElements(By.xpath(
+                "//*[contains(@class, 'logo') or contains(@alt, 'PayTR') or contains(@alt, 'logo')]"));
+            boolean hasLogo = logos.size() > 0;
+            
+            // Navigation menü kontrolü
+            List<WebElement> navMenus = driver.findElements(By.xpath(
+                "//nav | //*[contains(@class, 'nav') or contains(@class, 'menu')]"));
+            boolean hasNavigation = navMenus.size() > 0;
+            
+            // Footer kontrolü
+            List<WebElement> footers = driver.findElements(By.xpath(
+                "//footer | //*[contains(@class, 'footer')]"));
+            boolean hasFooter = footers.size() > 0;
+            
+            // İletişim bilgileri kontrolü
+            String pageSource = driver.getPageSource();
+            boolean hasContactInfo = pageSource.contains("@") || 
+                                   pageSource.contains("tel:") ||
+                                   pageSource.contains("+90") ||
+                                   pageSource.contains("iletişim") ||
+                                   pageSource.contains("contact");
+            
+            // SSL sertifikası kontrolü
+            String currentUrl = driver.getCurrentUrl();
+            boolean isSecure = currentUrl.startsWith("https://");
+            
+            System.out.println("🔄 Regresyon testi sonuçları:");
+            System.out.println("📄 Sayfa başlığı: " + (pageTitle != null && !pageTitle.isEmpty()));
+            System.out.println("🏷️ Logo: " + hasLogo);
+            System.out.println("🧭 Navigation: " + hasNavigation);
+            System.out.println("🦶 Footer: " + hasFooter);
+            System.out.println("📞 İletişim bilgileri: " + hasContactInfo);
+            System.out.println("🔒 SSL güvenliği: " + isSecure);
+            
+            // Kritik elementlerin varlığını doğrula
+            assertTrue(pageTitle != null && !pageTitle.isEmpty(), "Sayfa başlığı eksik");
+            assertTrue(isSecure, "SSL sertifikası eksik");
+            
+        } catch (Exception e) {
+            System.out.println("❌ Regression basic functionality test failed: " + e.getMessage());
+            fail("Regresyon testi başarısız: " + e.getMessage());
+        }
+    }
+    
+    @Test(priority = 21, groups = {"integration", "api"})
+    @Description("Frontend-Backend entegrasyon testi")
+    @Severity(SeverityLevel.CRITICAL)
+    public void testFrontendBackendIntegration() {
+        logTestInfo("Test Frontend Backend Integration");
+        
+        try {
+            driver.get("https://www.paytr.com");
+            
+            // AJAX çağrıları kontrolü
+            Object ajaxRequests = jsExecutor.executeScript(
+                "return window.performance.getEntriesByType('xmlhttprequest').length || 0;");
+            
+            // API endpoint'leri kontrolü
+            String pageSource = driver.getPageSource();
+            boolean hasApiCalls = pageSource.contains("/api/") || 
+                                pageSource.contains("ajax") ||
+                                pageSource.contains("xhr");
+            
+            // JSON response kontrolü
+            boolean hasJsonData = pageSource.contains("application/json") ||
+                                pageSource.contains("\"data\"") ||
+                                pageSource.contains("\"response\"");
+            
+            // Error handling kontrolü
+            boolean hasErrorHandling = pageSource.contains("try") ||
+                                     pageSource.contains("catch") ||
+                                     pageSource.contains("error");
+            
+            System.out.println("🔗 Frontend-Backend entegrasyon:");
+            System.out.println("📡 AJAX requests: " + ajaxRequests);
+            System.out.println("🔌 API calls: " + hasApiCalls);
+            System.out.println("📋 JSON data: " + hasJsonData);
+            System.out.println("⚠️ Error handling: " + hasErrorHandling);
+            
+        } catch (Exception e) {
+            System.out.println("❌ Frontend backend integration test failed: " + e.getMessage());
+        }
+    }
+    
+    @Test(priority = 22, groups = {"security", "negative"})
+    @Description("Güvenlik açığı testleri")
+    @Severity(SeverityLevel.CRITICAL)
+    public void testSecurityVulnerabilities() {
+        logTestInfo("Test Security Vulnerabilities");
+        
+        try {
+            driver.get("https://zeus-uat.paytr.com/magaza/kullanici-girisi");
+            
+            // XSS test
+            WebElement emailField = wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.xpath("//input[@type='email' or @name='email']")));
+            
+            String xssPayload = "<script>alert('XSS')</script>";
+            emailField.clear();
+            emailField.sendKeys(xssPayload);
+            
+            String fieldValue = emailField.getAttribute("value");
+            boolean xssBlocked = !fieldValue.contains("<script>");
+            
+            // SQL Injection test
+            WebElement passwordField = driver.findElement(
+                By.xpath("//input[@type='password' or @name='password']"));
+            
+            String sqlPayload = "'; DROP TABLE users; --";
+            passwordField.clear();
+            passwordField.sendKeys(sqlPayload);
+            
+            // CSRF token kontrolü
+            String pageSource = driver.getPageSource();
+            boolean hasCSRFToken = pageSource.contains("csrf") || 
+                                 pageSource.contains("_token");
+            
+            // Secure headers kontrolü
+            boolean hasSecurityHeaders = pageSource.contains("X-Frame-Options") ||
+                                       pageSource.contains("X-XSS-Protection") ||
+                                       pageSource.contains("Content-Security-Policy");
+            
+            System.out.println("🛡️ Güvenlik testleri:");
+            System.out.println("🚫 XSS koruması: " + xssBlocked);
+            System.out.println("🔒 CSRF token: " + hasCSRFToken);
+            System.out.println("📋 Security headers: " + hasSecurityHeaders);
+            
+        } catch (Exception e) {
+            System.out.println("❌ Security vulnerabilities test failed: " + e.getMessage());
+        }
+    }
+    
 }

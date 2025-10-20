@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+
+<suite name="PayTR Comprehensive Test Suite" verbose="1" parallel="methods" thread-count="3">
+    
+    <parameter name="browser" value="chrome"/>
+    <parameter name="environment" value="uat"/>
+    <parameter name="timeout" value="30"/>
+    
+    <listeners>
+        <listener class-name="io.qameta.allure.testng.AllureTestNg"/>
+        <listener class-name="com.example.listeners.TestListener"/>
+    </listeners>
+    
+    <!-- Smoke Tests - Critical functionality -->
+    <test name="Smoke Tests" preserve-order="true">
+        <groups>
+            <run>
+                <include name="smoke"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRUIElementsTest">
+                <methods>
+                    <include name="testPayTRTestWebPageAccess"/>
+                    <include name="testZeusUATLoginPageAccess"/>
+                    <include name="testPaymentFormFilling"/>
+                    <include name="testRegressionBasicFunctionality"/>
+                </methods>
+            </class>
+            <class name="com.example.tests.PayTRSecurityTests">
+                <methods>
+                    <include name="testSQLInjectionLogin"/>
+                    <include name="testSessionTimeout"/>
+                </methods>
+            </class>
+            <class name="com.example.tests.PayTRAPITests">
+                <methods>
+                    <include name="testPaymentAPIEndpoint"/>
+                    <include name="testAuthenticationAPI"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- Functional Tests -->
+    <test name="Functional Tests" preserve-order="true">
+        <groups>
+            <run>
+                <include name="functional"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRUIElementsTest"/>
+            <class name="com.example.tests.PayTRBoundaryTests"/>
+            <class name="com.example.tests.PayTRUsabilityTests"/>
+        </classes>
+    </test>
+    
+    <!-- Security Tests -->
+    <test name="Security Tests" preserve-order="true">
+        <groups>
+            <run>
+                <include name="security"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRSecurityTests"/>
+            <class name="com.example.tests.PayTRUIElementsTest">
+                <methods>
+                    <include name="testSecurityVulnerabilities"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- Performance Tests -->
+    <test name="Performance Tests" preserve-order="true">
+        <groups>
+            <run>
+                <include name="performance"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRPerformanceTests"/>
+            <class name="com.example.tests.PayTRUIElementsTest">
+                <methods>
+                    <include name="testPageLoadPerformance"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- API Tests -->
+    <test name="API Tests" preserve-order="true">
+        <groups>
+            <run>
+                <include name="api"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRAPITests"/>
+            <class name="com.example.tests.PayTRIntegrationTests">
+                <methods>
+                    <include name="testFrontendBackendIntegration"/>
+                    <include name="testThirdPartyServiceIntegration"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- Integration Tests -->
+    <test name="Integration Tests" preserve-order="true">
+        <groups>
+            <run>
+                <include name="integration"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRIntegrationTests"/>
+            <class name="com.example.tests.PayTRUIElementsTest">
+                <methods>
+                    <include name="testFrontendBackendIntegration"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- Boundary Tests -->
+    <test name="Boundary Tests" preserve-order="true">
+        <groups>
+            <run>
+                <include name="boundary"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRBoundaryTests"/>
+            <class name="com.example.tests.PayTRUIElementsTest">
+                <methods>
+                    <include name="testFormFieldBoundaries"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- Usability Tests -->
+    <test name="Usability Tests" preserve-order="true">
+        <groups>
+            <run>
+                <include name="usability"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRUsabilityTests"/>
+            <class name="com.example.tests.PayTRUIElementsTest">
+                <methods>
+                    <include name="testMobileResponsiveness"/>
+                    <include name="testAccessibilityStandards"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- Error Handling Tests -->
+    <test name="Error Handling Tests" preserve-order="true">
+        <groups>
+            <run>
+                <include name="error"/>
+                <include name="negative"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRUIElementsTest">
+                <methods>
+                    <include name="testErrorScenarios"/>
+                </methods>
+            </class>
+            <class name="com.example.tests.PayTRAPITests">
+                <methods>
+                    <include name="testAPIErrorHandling"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- Regression Tests -->
+    <test name="Regression Tests" preserve-order="true">
+        <groups>
+            <run>
+                <include name="regression"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRUIElementsTest">
+                <methods>
+                    <include name="testLoginScenarios"/>
+                    <include name="testRegressionBasicFunctionality"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+</suite>

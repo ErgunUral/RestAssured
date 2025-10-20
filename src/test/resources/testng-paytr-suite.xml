@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+
+<suite name="PayTR Test Suite" verbose="1" parallel="none" thread-count="1">
+    
+    <parameter name="browser" value="chrome"/>
+    <parameter name="baseUrl" value="https://zeus-uat.paytr.com"/>
+    <parameter name="timeout" value="30"/>
+    <parameter name="environment" value="test"/>
+    
+    <!-- Test Listeners -->
+    <listeners>
+        <listener class-name="org.testng.reporters.EmailableReporter"/>
+        <listener class-name="org.testng.reporters.JUnitReportReporter"/>
+    </listeners>
+    
+    <!-- Smoke Test Suite - Kritik İşlevsellik -->
+    <test name="PayTR Smoke Tests" preserve-order="true">
+        <parameter name="testType" value="smoke"/>
+        <groups>
+            <run>
+                <include name="smoke"/>
+                <include name="critical"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRSmokeTest">
+                <methods>
+                    <include name="smokeTest_PayTRWebsiteAccessibility"/>
+                    <include name="smokeTest_PaymentPageBasicFunctionality"/>
+                    <include name="smokeTest_BasicVirtualPOSFunctionality"/>
+                    <include name="smokeTest_BasicSecurityFeatures"/>
+                    <include name="smokeTest_PaymentFormValidation"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- Security Test Suite - Güvenlik Testleri -->
+    <test name="PayTR Security Tests" preserve-order="true">
+        <parameter name="testType" value="security"/>
+        <groups>
+            <run>
+                <include name="security"/>
+                <include name="ssl"/>
+                <include name="csrf"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRSecurityTest">
+                <methods>
+                    <include name="testPasswordFieldAutocomplete"/>
+                    <include name="testWeakPasswordWarning"/>
+                    <include name="testSessionSecurity"/>
+                    <include name="testFraudDetection"/>
+                    <include name="testPaymentDataEncryption"/>
+                    <include name="testVirtualPOSSecurity"/>
+                    <include name="testBrowserSecurityFeatures"/>
+                    <include name="testSecurityResponseTime"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- Payment Process Test Suite - Ödeme İşlemleri -->
+    <test name="PayTR Payment Process Tests" preserve-order="true">
+        <parameter name="testType" value="payment"/>
+        <groups>
+            <run>
+                <include name="payment"/>
+                <include name="integration"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRPaymentProcessTest">
+                <methods>
+                    <include name="testPaymentPageInitialization"/>
+                    <include name="testPaymentAmountValidation"/>
+                    <include name="testPaymentMethodSelection"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- Virtual POS Test Suite - Sanal POS Testleri -->
+    <test name="PayTR Virtual POS Tests" preserve-order="true">
+        <parameter name="testType" value="virtualpos"/>
+        <groups>
+            <run>
+                <include name="virtualpos"/>
+                <include name="integration"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRVirtualPOSTest">
+                <methods>
+                    <include name="testVirtualPOSPageAccess"/>
+                    <include name="testPaymentFormElements"/>
+                    <include name="testCardValidation"/>
+                    <include name="testPaymentProcessFlow"/>
+                    <include name="testVirtualPOSSecurityFeatures"/>
+                    <include name="testPaymentErrorHandling"/>
+                    <include name="testPayTRSpecificFeatures"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- Login Test Suite - Giriş Testleri -->
+    <test name="PayTR Login Tests" preserve-order="true">
+        <parameter name="testType" value="login"/>
+        <groups>
+            <run>
+                <include name="login"/>
+                <include name="authentication"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRLoginTest"/>
+            <class name="com.example.tests.PayTRLoginScenariosTest"/>
+        </classes>
+    </test>
+    
+    <!-- Form Validation Test Suite - Form Validasyon Testleri -->
+    <test name="PayTR Form Validation Tests" preserve-order="true">
+        <parameter name="testType" value="validation"/>
+        <groups>
+            <run>
+                <include name="validation"/>
+                <include name="forms"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRFormValidationTest"/>
+            <class name="com.example.tests.PayTRCardValidationTest"/>
+        </classes>
+    </test>
+    
+    <!-- UI Elements Test Suite - UI Element Testleri -->
+    <test name="PayTR UI Elements Tests" preserve-order="true">
+        <parameter name="testType" value="ui"/>
+        <groups>
+            <run>
+                <include name="ui"/>
+                <include name="responsive"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRUIElementsTest"/>
+        </classes>
+    </test>
+    
+    <!-- Installment Test Suite - Taksit Testleri -->
+    <test name="PayTR Installment Tests" preserve-order="true">
+        <parameter name="testType" value="installment"/>
+        <groups>
+            <run>
+                <include name="installment"/>
+                <include name="payment"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRInstallmentTest"/>
+        </classes>
+    </test>
+    
+    <!-- Performance Test Suite - Performans Testleri -->
+    <test name="PayTR Performance Tests" preserve-order="false">
+        <parameter name="testType" value="performance"/>
+        <groups>
+            <run>
+                <include name="performance"/>
+                <include name="load"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRSmokeTest">
+                <methods>
+                    <include name="smokeTest_BasicPerformance"/>
+                    <include name="smokeTest_ResponsiveDesign"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- End-to-End Test Suite - Uçtan Uca Testler -->
+    <test name="PayTR End-to-End Tests" preserve-order="true">
+        <parameter name="testType" value="e2e"/>
+        <groups>
+            <run>
+                <include name="e2e"/>
+                <include name="integration"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRSmokeTest">
+                <methods>
+                    <include name="smokeTest_EndToEndFlow"/>
+                    <include name="smokeTest_OverallSystemHealth"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- Regression Test Suite - Regresyon Testleri -->
+    <test name="PayTR Regression Tests" preserve-order="false">
+        <parameter name="testType" value="regression"/>
+        <groups>
+            <run>
+                <include name="regression"/>
+                <include name="smoke"/>
+                <include name="critical"/>
+            </run>
+        </groups>
+        <packages>
+            <package name="com.example.tests"/>
+        </packages>
+    </test>
+    
+</suite>

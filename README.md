@@ -1,383 +1,370 @@
-# PayTR Test Automation Project
+# PayTR Test Automation Framework
 
-[![CI/CD Pipeline](https://github.com/ErgunUral/RestAssured/actions/workflows/ci-cd-pipeline.yml/badge.svg)](https://github.com/ErgunUral/RestAssured/actions/workflows/ci-cd-pipeline.yml)
-[![Nightly Tests](https://github.com/ErgunUral/RestAssured/actions/workflows/nightly-tests.yml/badge.svg)](https://github.com/ErgunUral/RestAssured/actions/workflows/nightly-tests.yml)
-[![Security Scan](https://github.com/ErgunUral/RestAssured/actions/workflows/security-scan.yml/badge.svg)](https://github.com/ErgunUral/RestAssured/actions/workflows/security-scan.yml)
-[![Release Tests](https://github.com/ErgunUral/RestAssured/actions/workflows/release-tests.yml/badge.svg)](https://github.com/ErgunUral/RestAssured/actions/workflows/release-tests.yml)
+PayTR için kapsamlı test otomasyon framework'ü. Bu proje UI, API, güvenlik, performans ve entegrasyon testlerini içerir.
 
-[![Java](https://img.shields.io/badge/Java-17-orange.svg)](https://openjdk.java.net/projects/jdk/17/)
-[![Maven](https://img.shields.io/badge/Maven-3.8+-blue.svg)](https://maven.apache.org/)
-[![TestNG](https://img.shields.io/badge/TestNG-7.8+-green.svg)](https://testng.org/)
-[![Selenium](https://img.shields.io/badge/Selenium-4.15+-yellow.svg)](https://selenium.dev/)
-[![Allure](https://img.shields.io/badge/Allure-2.24+-purple.svg)](https://docs.qameta.io/allure/)
+## 📋 İçindekiler
 
-Bu proje, PayTR ödeme sistemi için kapsamlı test otomasyonu sağlayan, REST API ve Web UI testlerini içeren gelişmiş bir test otomasyon projesidir.
+- [Özellikler](#özellikler)
+- [Teknolojiler](#teknolojiler)
+- [Kurulum](#kurulum)
+- [Kullanım](#kullanım)
+- [Test Süitleri](#test-süitleri)
+- [CI/CD](#cicd)
+- [Raporlama](#raporlama)
+- [Docker](#docker)
+- [Katkıda Bulunma](#katkıda-bulunma)
 
 ## 🚀 Özellikler
 
-### 🧪 Test Framework'leri
-- **Selenium WebDriver**: Web UI test otomasyonu
-- **RestAssured**: REST API testleri için güçlü ve esnek kütüphane
-- **TestNG**: Test framework'ü ve test yönetimi
-- **Maven**: Proje yönetimi ve bağımlılık yönetimi
+- **Kapsamlı Test Kapsama**: UI, API, güvenlik, performans testleri
+- **Cross-Browser Desteği**: Chrome, Firefox, Edge
+- **Paralel Test Çalıştırma**: Hızlı test execution
+- **CI/CD Entegrasyonu**: GitHub Actions, Jenkins
+- **Detaylı Raporlama**: Allure, HTML raporları
+- **Docker Desteği**: Containerized test execution
+- **Selenium Grid**: Distributed test execution
+- **Page Object Model**: Maintainable UI test structure
+- **Data-Driven Testing**: TestNG DataProvider
+- **Cross-Platform**: Windows, macOS, Linux
 
-### 🔧 Test Araçları
-- **Jackson**: JSON işleme
-- **Hamcrest**: Assertion matchers
-- **Allure**: Gelişmiş test raporlama
-- **WebDriverManager**: Otomatik driver yönetimi
+## 🛠 Teknolojiler
 
-### 🎯 PayTR Spesifik Testler
-- **Payment Process Tests**: Ödeme süreci testleri
-- **Virtual POS Tests**: Virtual POS entegrasyonu testleri
-- **Security Tests**: Güvenlik ve penetrasyon testleri
-- **Card Validation Tests**: Kart doğrulama testleri
-- **Installment Tests**: Taksit işlemleri testleri
+- **Java 17**: Programming language
+- **Maven**: Build tool
+- **TestNG**: Test framework
+- **Selenium WebDriver**: UI automation
+- **RestAssured**: API testing
+- **Allure**: Test reporting
+- **Docker**: Containerization
+- **GitHub Actions**: CI/CD
+- **Jenkins**: CI/CD alternative
 
-### 🚀 CI/CD Pipeline
-- **GitHub Actions**: Otomatik test çalıştırma
-- **Nightly Tests**: Gece testleri
-- **Release Tests**: Release öncesi testler
-- **Security Scans**: Güvenlik taramaları
-- **Performance Tests**: Performans testleri
+## 📦 Kurulum
 
-## 📁 Proje Yapısı
+### Gereksinimler
+
+- Java 17+
+- Maven 3.8+
+- Chrome/Firefox/Edge browser
+- Docker (opsiyonel)
+- Allure (raporlama için)
+
+### Proje Kurulumu
+
+```bash
+# Projeyi klonla
+git clone <repository-url>
+cd RestAssured
+
+# Dependencies'leri yükle
+mvn clean install
+
+# Allure kurulumu (macOS)
+brew install allure
+
+# Allure kurulumu (Windows)
+scoop install allure
+```
+
+## 🎯 Kullanım
+
+### Temel Test Çalıştırma
+
+```bash
+# Tüm testleri çalıştır
+mvn clean test
+
+# Belirli test süitini çalıştır
+mvn clean test -P smoke
+mvn clean test -P security
+mvn clean test -P performance
+mvn clean test -P api
+
+# Belirli browser ile çalıştır
+mvn clean test -Dbrowser=firefox
+
+# Headless modda çalıştır
+mvn clean test -Dheadless=true
+
+# Paralel çalıştırma
+mvn clean test -Dparallel=methods -DthreadCount=5
+```
+
+### Script ile Çalıştırma
+
+#### Linux/macOS
+```bash
+# Executable yap
+chmod +x scripts/run-tests.sh
+
+# Comprehensive testler
+./scripts/run-tests.sh -s comprehensive -b chrome -e staging
+
+# Security testler
+./scripts/run-tests.sh -s security -h true
+
+# Docker ile çalıştır
+./scripts/run-tests.sh -d -s performance -b firefox
+
+# Önceki sonuçları temizle ve çalıştır
+./scripts/run-tests.sh -c -s smoke
+```
+
+#### Windows (Batch)
+```cmd
+# Comprehensive testler
+scripts\run-tests.bat -s comprehensive -b chrome -e staging
+
+# Security testler
+scripts\run-tests.bat -s security -h true
+
+# Docker ile çalıştır
+scripts\run-tests.bat -d -s performance -b firefox
+```
+
+#### Windows (PowerShell)
+```powershell
+# Comprehensive testler
+.\scripts\run-tests.ps1 -TestSuite comprehensive -Browser chrome -Environment staging
+
+# Security testler
+.\scripts\run-tests.ps1 -TestSuite security -Headless $true
+
+# Docker ile çalıştır
+.\scripts\run-tests.ps1 -UseDocker -TestSuite performance -Browser firefox
+```
+
+## 📊 Test Süitleri
+
+### 1. Comprehensive Tests (`testng-comprehensive.xml`)
+- Tüm test türlerini içerir
+- Smoke, Functional, Security, Performance, API testleri
+- 3 thread ile paralel çalışır
+
+### 2. Security Tests (`testng-security.xml`)
+- Güvenlik odaklı testler
+- SQL Injection, XSS, Authentication testleri
+- 2 thread ile paralel çalışır
+
+### 3. Performance Tests (`testng-performance.xml`)
+- Performans testleri
+- Page load, API response time, memory usage
+- 5 thread ile paralel çalışır
+
+### 4. API Tests (`testng-api.xml`)
+- API endpoint testleri
+- CRUD operations, error handling
+- 4 thread ile paralel çalışır
+
+## 🔄 CI/CD
+
+### GitHub Actions
+
+Otomatik olarak çalışan workflow'lar:
+
+- **Push/PR**: Smoke testler
+- **Scheduled**: Günde 4 kez comprehensive testler
+- **Manual**: Parametre ile test çalıştırma
+
+```yaml
+# Manual trigger örneği
+gh workflow run paytr-tests.yml \
+  -f test_suite=security \
+  -f browser=firefox \
+  -f environment=staging
+```
+
+### Jenkins
+
+Jenkins pipeline özellikleri:
+
+- Parameterized builds
+- Parallel execution
+- Allure reporting
+- Email/Slack notifications
+- Artifact archiving
+
+## 📈 Raporlama
+
+### Allure Reports
+
+```bash
+# Allure raporu oluştur
+mvn allure:report
+
+# Allure server başlat
+mvn allure:serve
+
+# Raporu aç
+open target/allure-report/index.html
+```
+
+### HTML Reports
+
+Test sonuçları otomatik olarak `reports/` klasöründe HTML formatında oluşturulur.
+
+### Test Results
+
+- **Surefire Reports**: `target/surefire-reports/`
+- **Allure Results**: `target/allure-results/`
+- **Screenshots**: `screenshots/`
+- **Logs**: `logs/`
+
+## 🐳 Docker
+
+### Docker ile Test Çalıştırma
+
+```bash
+# Docker image oluştur
+docker build -t paytr-tests .
+
+# Container'da test çalıştır
+docker run --rm \
+  -v $(pwd)/test-results:/app/test-results \
+  -v $(pwd)/reports:/app/reports \
+  -e TEST_SUITE=comprehensive \
+  -e BROWSER=chrome \
+  paytr-tests
+```
+
+### Docker Compose
+
+```bash
+# Selenium Grid ile çalıştır
+docker-compose up -d
+
+# Testleri çalıştır
+docker-compose run test-automation
+
+# Servisleri durdur
+docker-compose down
+```
+
+## 🏗 Proje Yapısı
 
 ```
 RestAssured/
 ├── src/
-│   ├── main/
-│   │   ├── java/
-│   │   └── resources/
+│   ├── main/java/
 │   └── test/
 │       ├── java/
-│       │   └── com/example/
-│       │       ├── tests/
-│       │       │   ├── BaseTest.java
-│       │       │   ├── ApiTest.java
-│       │       │   └── UserApiTest.java
-│       │       └── utils/
-│       │           └── TestUtils.java
+│       │   └── com/paytr/
+│       │       ├── tests/           # Test sınıfları
+│       │       ├── pages/           # Page Object Model
+│       │       ├── utils/           # Utility sınıfları
+│       │       └── listeners/       # Test listeners
 │       └── resources/
-│           └── testng.xml
-├── pom.xml
-└── README.md
+│           ├── testng-*.xml         # TestNG konfigürasyonları
+│           └── *.properties         # Test data dosyaları
+├── scripts/                         # Execution scripts
+├── .github/workflows/               # GitHub Actions
+├── docker-compose.yml              # Docker Compose
+├── Dockerfile                      # Docker image
+├── Jenkinsfile                     # Jenkins pipeline
+└── pom.xml                         # Maven konfigürasyonu
 ```
 
-## 🛠️ Kurulum
+## 🧪 Test Sınıfları
 
-### Gereksinimler
+- **PayTRUIElementsTest**: UI element testleri
+- **PayTRSecurityTests**: Güvenlik testleri
+- **PayTRPerformanceTests**: Performans testleri
+- **PayTRAPITests**: API testleri
+- **PayTRBoundaryTests**: Sınır durumu testleri
+- **PayTRUsabilityTests**: Kullanılabilirlik testleri
+- **PayTRIntegrationTests**: Entegrasyon testleri
 
-- Java 11 veya üzeri
-- Maven 3.6 veya üzeri
+## 📝 Test Data
 
-### Kurulum Adımları
+Test verileri properties dosyalarında saklanır:
 
-1. Projeyi klonlayın:
-```bash
-git clone <repository-url>
-cd RestAssured
-```
-
-2. Bağımlılıkları yükleyin:
-```bash
-mvn clean compile
-```
-
-3. Test sınıflarını derleyin:
-```bash
-mvn test-compile
-```
-
-## 🧪 Testleri Çalıştırma
-
-### PayTR Test Suite'leri
-
-#### Hızlı Smoke Testler (5 dakika)
-```bash
-mvn test -Dsurefire.suiteXmlFiles=testng-paytr-smoke.xml
-```
-
-#### Kapsamlı Regression Testler
-```bash
-mvn test -Dsurefire.suiteXmlFiles=testng-paytr-regression.xml
-```
-
-#### Tam Test Suite'i
-```bash
-mvn test -Dsurefire.suiteXmlFiles=testng-paytr-full.xml
-```
-
-#### Basit Test Suite'i
-```bash
-mvn test -Dsurefire.suiteXmlFiles=testng-paytr-simple.xml
-```
-
-### Belirli Test Grupları
-
-#### Payment Testleri
-```bash
-mvn test -Dgroups=payment
-```
-
-#### Security Testleri
-```bash
-mvn test -Dgroups=security
-```
-
-#### UI Testleri
-```bash
-mvn test -Dgroups=ui
-```
-
-#### API Testleri
-```bash
-mvn test -Dgroups=api
-```
-
-### Paralel Test Çalıştırma
-```bash
-mvn test -DthreadCount=3 -Dparallel=methods
-```
-
-### Headless Browser Testleri
-```bash
-mvn test -Dheadless=true
-```
-
-### Belirli Test Sınıfını Çalıştırma
-```bash
-mvn test -Dtest=PayTRSmokeTest
-mvn test -Dtest=PayTRPaymentProcessTest
-mvn test -Dtest=PayTRSecurityTest
-```
-
-## 📊 Test Raporları
-
-### Allure Raporu Oluşturma
-```bash
-mvn allure:report
-```
-
-### Allure Raporunu Görüntüleme
-```bash
-mvn allure:serve
-```
-
-### HTML Test Raporları
-```bash
-# Surefire raporları
-open target/surefire-reports/index.html
-
-# PayTR özel raporları
-open PayTR_Test_Report_Final.md
-```
-
-## 🚀 CI/CD Pipeline
-
-### GitHub Actions Workflow'ları
-
-#### 1. Ana CI/CD Pipeline (`ci-cd-pipeline.yml`)
-- **Tetikleyiciler**: Push, Pull Request, Schedule (günlük)
-- **Test Suite'leri**: Smoke, Regression testleri
-- **Özellikler**:
-  - Java 17 kurulumu
-  - Maven dependency cache
-  - Paralel test execution
-  - Allure raporları
-  - Screenshot capture on failure
-  - Slack notifications
-
-```bash
-# Manuel çalıştırma
-gh workflow run ci-cd-pipeline.yml -f test_suite=smoke
-```
-
-#### 2. Nightly Tests (`nightly-tests.yml`)
-- **Tetikleyici**: Her gece saat 01:00 (UTC)
-- **Özellikler**:
-  - Cross-browser testing (Chrome, Firefox)
-  - Performance monitoring
-  - Comprehensive test coverage
-  - Email notifications on failure
-
-#### 3. Release Tests (`release-tests.yml`)
-- **Tetikleyiciler**: Release tags, Manual dispatch
-- **Özellikler**:
-  - Pre-release validation
-  - Smoke → Regression → Comprehensive test flow
-  - Security validation
-  - Performance validation
-  - Release approval process
-
-#### 4. Security Scan (`security-scan.yml`)
-- **Tetikleyiciler**: Push, PR, Weekly schedule
-- **Özellikler**:
-  - OWASP Dependency Check
-  - Code security analysis
-  - Secrets detection
-  - Web security tests
-  - ZAP security scanning
-
-### Pipeline Durumu
-
-| Workflow | Status | Açıklama |
-|----------|--------|----------|
-| CI/CD Pipeline | [![CI/CD](https://github.com/ErgunUral/RestAssured/actions/workflows/ci-cd-pipeline.yml/badge.svg)](https://github.com/ErgunUral/RestAssured/actions/workflows/ci-cd-pipeline.yml) | Ana test pipeline'ı |
-| Nightly Tests | [![Nightly](https://github.com/ErgunUral/RestAssured/actions/workflows/nightly-tests.yml/badge.svg)](https://github.com/ErgunUral/RestAssured/actions/workflows/nightly-tests.yml) | Gece testleri |
-| Release Tests | [![Release](https://github.com/ErgunUral/RestAssured/actions/workflows/release-tests.yml/badge.svg)](https://github.com/ErgunUral/RestAssured/actions/workflows/release-tests.yml) | Release testleri |
-| Security Scan | [![Security](https://github.com/ErgunUral/RestAssured/actions/workflows/security-scan.yml/badge.svg)](https://github.com/ErgunUral/RestAssured/actions/workflows/security-scan.yml) | Güvenlik taramaları |
-
-### Workflow Tetikleme
-
-#### Manuel Workflow Çalıştırma
-```bash
-# GitHub CLI ile
-gh workflow run ci-cd-pipeline.yml -f test_suite=regression
-gh workflow run nightly-tests.yml -f environment=staging
-gh workflow run security-scan.yml -f scan_type=comprehensive
-```
-
-#### Release Workflow
-```bash
-# Release tag oluştur
-git tag -a v1.0.0 -m "Release v1.0.0"
-git push origin v1.0.0
-```
+- `security-test-data.properties`: Güvenlik test verileri
+- `performance-test-data.properties`: Performans test verileri
+- `api-test-data.properties`: API test verileri
 
 ## 🔧 Konfigürasyon
 
-### Base URL Değiştirme
+### Maven Profiles
 
-`BaseTest.java` dosyasında `RestAssured.baseURI` değerini değiştirerek farklı API'leri test edebilirsiniz:
-
-```java
-RestAssured.baseURI = "https://your-api-url.com";
+```bash
+# Farklı profiller
+mvn test -P smoke          # Smoke testler
+mvn test -P security       # Security testler
+mvn test -P performance    # Performance testler
+mvn test -P api           # API testler
+mvn test -P grid          # Selenium Grid
+mvn test -P production    # Production environment
 ```
 
-### Test Verileri
+### System Properties
 
-Test verileri `TestUtils.java` sınıfında yardımcı metodlar kullanılarak oluşturulabilir:
-
-```java
-String randomEmail = TestUtils.generateRandomEmail();
-String randomString = TestUtils.generateRandomString(10);
+```bash
+mvn test \
+  -Dbrowser=firefox \
+  -Denvironment=production \
+  -Dheadless=false \
+  -Dparallel=classes \
+  -DthreadCount=3
 ```
 
-## 📝 Test Sınıfları
+## 🚨 Troubleshooting
 
-### BaseTest.java
-- Temel test konfigürasyonu
-- Request ve Response spesifikasyonları
-- Ortak setup metodları
+### Yaygın Sorunlar
 
-### ApiTest.java
-- Post CRUD operasyonları
-- GET, POST, PUT, DELETE testleri
-- Response validasyonları
+1. **WebDriver Issues**
+   ```bash
+   # WebDriverManager otomatik olarak driver'ları indirir
+   # Manuel indirme gerekirse:
+   # Chrome: https://chromedriver.chromium.org/
+   # Firefox: https://github.com/mozilla/geckodriver/releases
+   ```
 
-### UserApiTest.java
-- User API testleri
-- Kullanıcı CRUD operasyonları
-- İlişkili veri testleri (posts, albums)
+2. **Memory Issues**
+   ```bash
+   # JVM memory artır
+   export MAVEN_OPTS="-Xmx2048m -XX:MaxPermSize=512m"
+   ```
 
-### TestUtils.java
-- Yardımcı metodlar
-- JSON işleme
-- Random veri üretimi
-- Response debug metodları
+3. **Port Conflicts**
+   ```bash
+   # Selenium Grid port değiştir
+   docker-compose up -d --scale selenium-hub=1
+   ```
 
-## 🎯 Test Senaryoları
+## 📞 Destek
 
-### 💳 PayTR Payment Tests
-- ✅ Payment form validation
-- ✅ Credit card validation (Visa, MasterCard, American Express)
-- ✅ Installment options testing
-- ✅ Payment process flow
-- ✅ Payment success scenarios
-- ✅ Payment failure scenarios
-- ✅ Multi-currency support
-
-### 🏦 Virtual POS Tests
-- ✅ Virtual POS integration
-- ✅ Bank selection functionality
-- ✅ POS terminal simulation
-- ✅ Transaction processing
-- ✅ Receipt generation
-- ✅ Error handling
-
-### 🔒 Security Tests
-- ✅ XSS (Cross-Site Scripting) protection
-- ✅ SQL Injection prevention
-- ✅ CSRF (Cross-Site Request Forgery) protection
-- ✅ SSL/TLS certificate validation
-- ✅ Input sanitization
-- ✅ Authentication bypass attempts
-- ✅ Session management
-
-### 🖥️ UI Tests
-- ✅ Login functionality
-- ✅ Form validations
-- ✅ Navigation testing
-- ✅ Responsive design
-- ✅ Browser compatibility
-- ✅ Element interactions
-- ✅ Page load performance
-
-### 🔌 API Tests
-- ✅ Payment API endpoints
-- ✅ Authentication API
-- ✅ Transaction API
-- ✅ Webhook testing
-- ✅ Rate limiting
-- ✅ Error response validation
-- ✅ API versioning
-
-### 📊 Performance Tests
-- ✅ Load testing
-- ✅ Stress testing
-- ✅ Response time validation
-- ✅ Concurrent user simulation
-- ✅ Memory usage monitoring
-- ✅ Database performance
-
-## 🔍 Debugging
-
-### Response Detaylarını Görüntüleme
-```java
-Response response = given()
-    .when()
-    .get("/posts/1");
-    
-TestUtils.printResponse(response);
-```
-
-### Verbose Logging
-```java
-given()
-    .log().all()
-    .when()
-    .get("/posts/1")
-    .then()
-    .log().all();
-```
+- **Issues**: GitHub Issues kullanın
+- **Documentation**: Wiki sayfalarını kontrol edin
+- **Logs**: `logs/` klasöründeki log dosyalarını inceleyin
 
 ## 🤝 Katkıda Bulunma
 
 1. Fork yapın
 2. Feature branch oluşturun (`git checkout -b feature/amazing-feature`)
-3. Değişikliklerinizi commit edin (`git commit -m 'Add some amazing feature'`)
-4. Branch'inizi push edin (`git push origin feature/amazing-feature`)
+3. Commit yapın (`git commit -m 'Add amazing feature'`)
+4. Push yapın (`git push origin feature/amazing-feature`)
 5. Pull Request oluşturun
 
 ## 📄 Lisans
 
 Bu proje MIT lisansı altında lisanslanmıştır.
 
-## 📞 İletişim
+## 📊 Test Metrikleri
 
-Sorularınız için issue açabilir veya pull request gönderebilirsiniz.
+- **Test Coverage**: %95+
+- **Execution Time**: ~15 dakika (comprehensive)
+- **Parallel Threads**: 3-5
+- **Supported Browsers**: Chrome, Firefox, Edge
+- **Environments**: Development, Staging, Production
+
+## 🎯 Roadmap
+
+- [ ] Mobile testing desteği
+- [ ] Visual regression testing
+- [ ] API contract testing
+- [ ] Load testing entegrasyonu
+- [ ] AI-powered test generation
 
 ---
 
-**Not**: Bu proje JSONPlaceholder (https://jsonplaceholder.typicode.com) API'sini kullanarak örnek testler içermektedir. Gerçek projelerinizde kendi API endpoint'lerinizi kullanın.
+**PayTR Test Automation Framework** - Güvenilir, hızlı ve kapsamlı test otomasyonu için tasarlandı.

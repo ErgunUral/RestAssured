@@ -97,6 +97,22 @@
             <version>2.24.0</version>
             <scope>test</scope>
         </dependency>
+        
+        <!-- JSON Simple -->
+        <dependency>
+            <groupId>com.googlecode.json-simple</groupId>
+            <artifactId>json-simple</artifactId>
+            <version>1.1.1</version>
+            <scope>test</scope>
+        </dependency>
+        
+        <!-- JSON -->
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20231013</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -131,24 +147,72 @@
                 <version>3.1.2</version>
                 <configuration>
                     <suiteXmlFiles>
-                        <suiteXmlFile>src/test/resources/smoke-testng.xml</suiteXmlFile>
+                        <suiteXmlFile>${suiteXmlFile}</suiteXmlFile>
                     </suiteXmlFiles>
                     <testFailureIgnore>true</testFailureIgnore>
-                    <forkedProcessTimeoutInSeconds>300</forkedProcessTimeoutInSeconds>
-                    <parallel>methods</parallel>
-                    <threadCount>3</threadCount>
+                    <forkedProcessTimeoutInSeconds>600</forkedProcessTimeoutInSeconds>
+                    <parallel>${parallel}</parallel>
+                    <threadCount>${threadCount}</threadCount>
                     <systemProperties>
                         <property>
                             <name>browser</name>
-                            <value>chrome</value>
+                            <value>${browser}</value>
+                        </property>
+                        <property>
+                            <name>environment</name>
+                            <value>${environment}</value>
                         </property>
                         <property>
                             <name>headless</name>
-                            <value>true</value>
+                            <value>${headless}</value>
+                        </property>
+                        <property>
+                            <name>selenium.grid.url</name>
+                            <value>${selenium.grid.url}</value>
+                        </property>
+                        <property>
+                            <name>use.grid</name>
+                            <value>${use.grid}</value>
+                        </property>
+                        <property>
+                            <name>allure.results.directory</name>
+                            <value>${allure.results.directory}</value>
                         </property>
                     </systemProperties>
-                    <argLine>-Xmx1024m</argLine>
+                    <argLine>-Xmx2048m</argLine>
+                    <properties>
+                        <property>
+                            <name>usedefaultlisteners</name>
+                            <value>false</value>
+                        </property>
+                        <property>
+                            <name>listener</name>
+                            <value>io.qameta.allure.testng.AllureTestNg,com.example.listeners.TestListener</value>
+                        </property>
+                    </properties>
                 </configuration>
+            </plugin>
+
+            <!-- Maven Failsafe Plugin for integration tests -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>3.1.2</version>
+                <configuration>
+                    <includes>
+                        <include>**/*IT.java</include>
+                        <include>**/*IntegrationTest.java</include>
+                    </includes>
+                    <testFailureIgnore>true</testFailureIgnore>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
 
             <!-- Allure Maven Plugin -->
@@ -156,7 +220,203 @@
                 <groupId>io.qameta.allure</groupId>
                 <artifactId>allure-maven</artifactId>
                 <version>2.12.0</version>
+                <configuration>
+                    <reportVersion>2.24.0</reportVersion>
+                    <resultsDirectory>${project.build.directory}/allure-results</resultsDirectory>
+                    <reportDirectory>${project.build.directory}/allure-report</reportDirectory>
+                </configuration>
+            </plugin>
+
+            <!-- Maven Site Plugin for documentation -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-site-plugin</artifactId>
+                <version>3.12.1</version>
+            </plugin>
+
+            <!-- Maven Project Info Reports Plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-project-info-reports-plugin</artifactId>
+                <version>3.4.5</version>
             </plugin>
         </plugins>
     </build>
+
+    <!-- Maven Profiles for different test configurations -->
+    <profiles>
+        <!-- Default profile -->
+        <profile>
+            <id>default</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <suiteXmlFile>src/test/resources/testng-comprehensive.xml</suiteXmlFile>
+                <browser>chrome</browser>
+                <environment>staging</environment>
+                <headless>true</headless>
+                <parallel>methods</parallel>
+                <threadCount>3</threadCount>
+                <selenium.grid.url></selenium.grid.url>
+                <use.grid>false</use.grid>
+                <allure.results.directory>target/allure-results</allure.results.directory>
+            </properties>
+        </profile>
+
+        <!-- Smoke tests profile -->
+        <profile>
+            <id>smoke</id>
+            <properties>
+                <suiteXmlFile>src/test/resources/testng-comprehensive.xml</suiteXmlFile>
+                <browser>chrome</browser>
+                <environment>staging</environment>
+                <headless>true</headless>
+                <parallel>methods</parallel>
+                <threadCount>2</threadCount>
+                <selenium.grid.url></selenium.grid.url>
+                <use.grid>false</use.grid>
+                <allure.results.directory>target/allure-results</allure.results.directory>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <groups>smoke</groups>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!-- Security tests profile -->
+        <profile>
+            <id>security</id>
+            <properties>
+                <suiteXmlFile>src/test/resources/testng-security.xml</suiteXmlFile>
+                <browser>chrome</browser>
+                <environment>staging</environment>
+                <headless>true</headless>
+                <parallel>classes</parallel>
+                <threadCount>2</threadCount>
+                <selenium.grid.url></selenium.grid.url>
+                <use.grid>false</use.grid>
+                <allure.results.directory>target/allure-results</allure.results.directory>
+            </properties>
+        </profile>
+
+        <!-- Performance tests profile -->
+        <profile>
+            <id>performance</id>
+            <properties>
+                <suiteXmlFile>src/test/resources/testng-performance.xml</suiteXmlFile>
+                <browser>chrome</browser>
+                <environment>staging</environment>
+                <headless>true</headless>
+                <parallel>methods</parallel>
+                <threadCount>5</threadCount>
+                <selenium.grid.url></selenium.grid.url>
+                <use.grid>false</use.grid>
+                <allure.results.directory>target/allure-results</allure.results.directory>
+            </properties>
+        </profile>
+
+        <!-- API tests profile -->
+        <profile>
+            <id>api</id>
+            <properties>
+                <suiteXmlFile>src/test/resources/testng-api.xml</suiteXmlFile>
+                <browser>chrome</browser>
+                <environment>staging</environment>
+                <headless>true</headless>
+                <parallel>methods</parallel>
+                <threadCount>4</threadCount>
+                <selenium.grid.url></selenium.grid.url>
+                <use.grid>false</use.grid>
+                <allure.results.directory>target/allure-results</allure.results.directory>
+            </properties>
+        </profile>
+
+        <!-- Comprehensive tests profile -->
+        <profile>
+            <id>comprehensive</id>
+            <properties>
+                <suiteXmlFile>src/test/resources/testng-comprehensive.xml</suiteXmlFile>
+                <browser>chrome</browser>
+                <environment>staging</environment>
+                <headless>true</headless>
+                <parallel>methods</parallel>
+                <threadCount>3</threadCount>
+                <selenium.grid.url></selenium.grid.url>
+                <use.grid>false</use.grid>
+                <allure.results.directory>target/allure-results</allure.results.directory>
+            </properties>
+        </profile>
+
+        <!-- Grid execution profile -->
+        <profile>
+            <id>grid</id>
+            <properties>
+                <suiteXmlFile>src/test/resources/testng-comprehensive.xml</suiteXmlFile>
+                <browser>chrome</browser>
+                <environment>staging</environment>
+                <headless>true</headless>
+                <parallel>methods</parallel>
+                <threadCount>5</threadCount>
+                <selenium.grid.url>http://localhost:4444/wd/hub</selenium.grid.url>
+                <use.grid>true</use.grid>
+                <allure.results.directory>target/allure-results</allure.results.directory>
+            </properties>
+        </profile>
+
+        <!-- Production environment profile -->
+        <profile>
+            <id>production</id>
+            <properties>
+                <suiteXmlFile>src/test/resources/testng-comprehensive.xml</suiteXmlFile>
+                <browser>chrome</browser>
+                <environment>production</environment>
+                <headless>true</headless>
+                <parallel>methods</parallel>
+                <threadCount>2</threadCount>
+                <selenium.grid.url></selenium.grid.url>
+                <use.grid>false</use.grid>
+                <allure.results.directory>target/allure-results</allure.results.directory>
+            </properties>
+        </profile>
+
+        <!-- Development environment profile -->
+        <profile>
+            <id>development</id>
+            <properties>
+                <suiteXmlFile>src/test/resources/testng-comprehensive.xml</suiteXmlFile>
+                <browser>chrome</browser>
+                <environment>development</environment>
+                <headless>false</headless>
+                <parallel>none</parallel>
+                <threadCount>1</threadCount>
+                <selenium.grid.url></selenium.grid.url>
+                <use.grid>false</use.grid>
+                <allure.results.directory>target/allure-results</allure.results.directory>
+            </properties>
+        </profile>
+    </profiles>
+
+    <!-- Reporting -->
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-report-plugin</artifactId>
+                <version>3.1.2</version>
+            </plugin>
+            <plugin>
+                <groupId>io.qameta.allure</groupId>
+                <artifactId>allure-maven</artifactId>
+                <version>2.12.0</version>
+            </plugin>
+        </plugins>
+    </reporting>
 </project>

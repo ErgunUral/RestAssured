@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+
+<suite name="PayTR Zeus UAT Test Suite" verbose="1" parallel="false" thread-count="1">
+    <parameter name="browser" value="chrome"/>
+    <parameter name="baseUrl" value="https://zeus-uat.paytr.com"/>
+    <parameter name="timeout" value="30"/>
+    <parameter name="environment" value="zeus-uat"/>
+    <parameter name="headless" value="true"/>
+    
+    <listeners>
+        <listener class-name="com.example.utils.PayTRTestListener"/>
+        <listener class-name="com.example.utils.PayTRAllureReporter"/>
+    </listeners>
+    
+    <!-- Zeus UAT Smoke Tests -->
+    <test name="Zeus UAT Smoke Tests" preserve-order="true">
+        <groups>
+            <run>
+                <include name="zeus-uat"/>
+                <include name="smoke"/>
+                <include name="critical"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRZeusUATTest">
+                <methods>
+                    <include name="testZeusUATEnvironmentAccessibility"/>
+                    <include name="testZeusUATLoginPageAccess"/>
+                    <include name="testZeusUATSSLCertificate"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- Zeus UAT Login Tests -->
+    <test name="Zeus UAT Login Tests" preserve-order="true">
+        <groups>
+            <run>
+                <include name="zeus-uat"/>
+                <include name="login"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRUIElementsTest">
+                <methods>
+                    <include name="testUATLoginPageAccess"/>
+                    <include name="testLoginFormElements"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+</suite>

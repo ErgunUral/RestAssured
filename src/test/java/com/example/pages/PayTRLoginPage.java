@@ -1,395 +1,357 @@
 package com.example.pages;
 
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.FindBy;
+import org.openqa.selenium.support.PageFactory;
+import org.openqa.selenium.support.ui.WebDriverWait;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.By;
+import io.qameta.allure.Step;
+import java.time.Duration;
 import java.util.List;
 
 /**
  * PayTR Login Page Object Model
- * PayTR giriş sayfası için özel metodları içerir
+ * Bu sınıf PayTR giriş sayfasının elementlerini ve işlemlerini yönetir
  */
-public class PayTRLoginPage extends PayTRBasePage {
+public class PayTRLoginPage {
     
-    // Login page locators
-    private static final By USERNAME_FIELD = By.xpath(
-        "//input[contains(@name, 'username') or contains(@name, 'email') or " +
-        "contains(@name, 'kullanici') or contains(@id, 'username') or " +
-        "contains(@id, 'email') or contains(@placeholder, 'kullanıcı') or " +
-        "contains(@placeholder, 'email')]");
+    private WebDriver driver;
+    private WebDriverWait wait;
     
-    private static final By PASSWORD_FIELD = By.xpath(
-        "//input[@type='password' or contains(@name, 'password') or " +
-        "contains(@name, 'sifre') or contains(@id, 'password') or " +
-        "contains(@id, 'sifre') or contains(@placeholder, 'şifre') or " +
-        "contains(@placeholder, 'password')]");
+    // Page URL
+    private static final String LOGIN_URL = "https://zeus-uat.paytr.com/magaza/kullanici-girisi";
     
-    private static final By LOGIN_BUTTON = By.xpath(
-        "//button[contains(text(), 'Giriş') or contains(text(), 'Login') or " +
-        "contains(text(), 'giriş') or contains(text(), 'login') or " +
-        "contains(@value, 'Giriş') or contains(@value, 'Login') or " +
-        "contains(@class, 'login') or contains(@class, 'giriş')] | " +
-        "//input[@type='submit'][contains(@value, 'Giriş') or contains(@value, 'Login')]");
+    // Page Elements using @FindBy annotations
+    @FindBy(xpath = "//input[@type='email' or @name='email' or @id='email']")
+    private WebElement emailField;
     
-    private static final By FORGOT_PASSWORD_LINK = By.xpath(
-        "//a[contains(text(), 'Şifremi Unuttum') or contains(text(), 'Forgot Password') or " +
-        "contains(text(), 'şifremi unuttum') or contains(text(), 'forgot password') or " +
-        "contains(@href, 'forgot') or contains(@href, 'sifre')]");
+    @FindBy(xpath = "//input[@type='password' or @name='password' or @id='password']")
+    private WebElement passwordField;
     
-    private static final By REMEMBER_ME_CHECKBOX = By.xpath(
-        "//input[@type='checkbox'][contains(@name, 'remember') or " +
-        "contains(@name, 'hatirla') or contains(@id, 'remember') or " +
-        "contains(@id, 'hatirla')]");
+    @FindBy(xpath = "//button[@type='submit'] | //input[@type='submit']")
+    private WebElement loginButton;
     
-    private static final By CAPTCHA_IMAGE = By.xpath(
-        "//img[contains(@src, 'captcha') or contains(@alt, 'captcha') or " +
-        "contains(@class, 'captcha')]");
+    @FindBy(xpath = "//a[contains(text(), 'Şifremi Unuttum') or contains(text(), 'Forgot Password')]")
+    private WebElement forgotPasswordLink;
     
-    private static final By CAPTCHA_INPUT = By.xpath(
-        "//input[contains(@name, 'captcha') or contains(@id, 'captcha') or " +
-        "contains(@placeholder, 'captcha') or contains(@placeholder, 'güvenlik')]");
+    @FindBy(xpath = "//a[contains(text(), 'Kayıt Ol') or contains(text(), 'Register')]")
+    private WebElement registerLink;
     
-    private static final By LOGIN_FORM = By.xpath(
-        "//form[contains(@action, 'login') or contains(@action, 'giriş') or " +
-        "contains(@class, 'login') or contains(@class, 'giriş')]");
+    @FindBy(xpath = "//*[contains(@class, 'error') or contains(@class, 'alert-danger')]")
+    private WebElement errorMessage;
     
-    private static final By REGISTER_LINK = By.xpath(
-        "//a[contains(text(), 'Kayıt') or contains(text(), 'Register') or " +
-        "contains(text(), 'kayıt') or contains(text(), 'register') or " +
-        "contains(@href, 'register') or contains(@href, 'kayit')]");
+    @FindBy(xpath = "//*[contains(@class, 'success') or contains(@class, 'alert-success')]")
+    private WebElement successMessage;
     
-    private static final By LOGIN_ERROR_MESSAGE = By.xpath(
-        "//*[contains(@class, 'error') or contains(@class, 'hata')][contains(text(), 'giriş') or " +
-        "contains(text(), 'login') or contains(text(), 'kullanıcı') or contains(text(), 'şifre')]");
+    @FindBy(xpath = "//input[@name='remember' or @id='remember']")
+    private WebElement rememberMeCheckbox;
     
-    private static final By INVALID_CREDENTIALS_MESSAGE = By.xpath(
-        "//*[contains(text(), 'geçersiz') or contains(text(), 'invalid') or " +
-        "contains(text(), 'yanlış') or contains(text(), 'wrong') or " +
-        "contains(text(), 'hatalı') or contains(text(), 'incorrect')]");
+    @FindBy(xpath = "//*[contains(@class, 'logo') or contains(@alt, 'PayTR')]")
+    private WebElement logo;
     
+    @FindBy(xpath = "//form")
+    private WebElement loginForm;
+    
+    // Constructor
     public PayTRLoginPage(WebDriver driver) {
-        super(driver);
+        this.driver = driver;
+        this.wait = new WebDriverWait(driver, Duration.ofSeconds(15));
+        PageFactory.initElements(driver, this);
     }
     
-    /**
-     * Login sayfasına gider
-     */
-    public void navigateToLoginPage() {
-        driver.get(BASE_URL);
-        waitForPageLoad();
-        waitForLoadingToDisappear();
+    // Page Actions
+    
+    @Step("PayTR giriş sayfasına git")
+    public PayTRLoginPage navigateToLoginPage() {
+        driver.get(LOGIN_URL);
+        waitForPageToLoad();
+        return this;
     }
     
-    /**
-     * Kullanıcı adı alanına metin girer
-     */
-    public void enterUsername(String username) {
-        if (isElementPresent(USERNAME_FIELD)) {
-            safeSendKeys(USERNAME_FIELD, username);
-        } else {
-            // Alternatif locator'lar dene
-            List<WebElement> inputFields = driver.findElements(By.xpath("//input[@type='text' or @type='email']"));
-            if (!inputFields.isEmpty()) {
-                inputFields.get(0).clear();
-                inputFields.get(0).sendKeys(username);
-            }
-        }
+    @Step("Sayfa yüklenene kadar bekle")
+    public PayTRLoginPage waitForPageToLoad() {
+        wait.until(ExpectedConditions.presenceOfElementLocated(By.tagName("body")));
+        return this;
     }
     
-    /**
-     * Şifre alanına metin girer
-     */
-    public void enterPassword(String password) {
-        if (isElementPresent(PASSWORD_FIELD)) {
-            safeSendKeys(PASSWORD_FIELD, password);
-        } else {
-            // Alternatif locator dene
-            List<WebElement> passwordFields = driver.findElements(By.xpath("//input[@type='password']"));
-            if (!passwordFields.isEmpty()) {
-                passwordFields.get(0).clear();
-                passwordFields.get(0).sendKeys(password);
-            }
-        }
+    @Step("Email alanına '{email}' gir")
+    public PayTRLoginPage enterEmail(String email) {
+        wait.until(ExpectedConditions.elementToBeClickable(emailField));
+        emailField.clear();
+        emailField.sendKeys(email);
+        return this;
     }
     
-    /**
-     * Captcha kodunu girer
-     */
-    public void enterCaptcha(String captcha) {
-        if (isElementPresent(CAPTCHA_INPUT)) {
-            safeSendKeys(CAPTCHA_INPUT, captcha);
-        }
+    @Step("Şifre alanına şifre gir")
+    public PayTRLoginPage enterPassword(String password) {
+        wait.until(ExpectedConditions.elementToBeClickable(passwordField));
+        passwordField.clear();
+        passwordField.sendKeys(password);
+        return this;
     }
     
-    /**
-     * Beni hatırla checkbox'ını işaretler
-     */
-    public void checkRememberMe() {
-        if (isElementPresent(REMEMBER_ME_CHECKBOX)) {
-            WebElement checkbox = driver.findElement(REMEMBER_ME_CHECKBOX);
-            if (!checkbox.isSelected()) {
-                safeClick(REMEMBER_ME_CHECKBOX);
-            }
-        }
+    @Step("Giriş butonuna tıkla")
+    public PayTRLoginPage clickLoginButton() {
+        wait.until(ExpectedConditions.elementToBeClickable(loginButton));
+        loginButton.click();
+        return this;
     }
     
-    /**
-     * Giriş butonuna tıklar
-     */
-    public void clickLoginButton() {
-        if (isElementPresent(LOGIN_BUTTON)) {
-            safeClick(LOGIN_BUTTON);
-        } else {
-            // Alternatif submit yöntemleri
-            List<WebElement> submitButtons = driver.findElements(By.xpath(
-                "//button[@type='submit'] | //input[@type='submit']"));
-            if (!submitButtons.isEmpty()) {
-                submitButtons.get(0).click();
-            } else {
-                // Form submit et
-                if (isElementPresent(LOGIN_FORM)) {
-                    WebElement form = driver.findElement(LOGIN_FORM);
-                    form.submit();
-                }
-            }
-        }
-        waitForLoadingToDisappear();
-    }
-    
-    /**
-     * Şifremi unuttum linkine tıklar
-     */
-    public void clickForgotPasswordLink() {
-        if (isElementPresent(FORGOT_PASSWORD_LINK)) {
-            safeClick(FORGOT_PASSWORD_LINK);
-            waitForPageLoad();
-        }
-    }
-    
-    /**
-     * Kayıt ol linkine tıklar
-     */
-    public void clickRegisterLink() {
-        if (isElementPresent(REGISTER_LINK)) {
-            safeClick(REGISTER_LINK);
-            waitForPageLoad();
-        }
-    }
-    
-    /**
-     * Tam login işlemi yapar
-     */
-    public void login(String username, String password) {
-        enterUsername(username);
+    @Step("'{email}' ve şifre ile giriş yap")
+    public PayTRLoginPage login(String email, String password) {
+        enterEmail(email);
         enterPassword(password);
         clickLoginButton();
+        return this;
     }
     
-    /**
-     * Captcha ile login işlemi yapar
-     */
-    public void loginWithCaptcha(String username, String password, String captcha) {
-        enterUsername(username);
-        enterPassword(password);
-        enterCaptcha(captcha);
-        clickLoginButton();
+    @Step("Beni hatırla checkbox'ını işaretle")
+    public PayTRLoginPage checkRememberMe() {
+        if (isRememberMeCheckboxPresent() && !rememberMeCheckbox.isSelected()) {
+            rememberMeCheckbox.click();
+        }
+        return this;
     }
     
-    /**
-     * Login formu görünür mü kontrol eder
-     */
-    public boolean isLoginFormVisible() {
-        return isElementVisible(LOGIN_FORM) || 
-               (isElementPresent(USERNAME_FIELD) && isElementPresent(PASSWORD_FIELD));
+    @Step("Şifremi unuttum linkine tıkla")
+    public PayTRLoginPage clickForgotPasswordLink() {
+        if (isForgotPasswordLinkPresent()) {
+            forgotPasswordLink.click();
+        }
+        return this;
     }
     
-    /**
-     * Kullanıcı adı alanı görünür mü kontrol eder
-     */
-    public boolean isUsernameFieldVisible() {
-        return isElementVisible(USERNAME_FIELD);
+    @Step("Kayıt ol linkine tıkla")
+    public PayTRLoginPage clickRegisterLink() {
+        if (isRegisterLinkPresent()) {
+            registerLink.click();
+        }
+        return this;
     }
     
-    /**
-     * Şifre alanı görünür mü kontrol eder
-     */
+    // Verification Methods
+    
+    @Step("Email alanının görünür olduğunu doğrula")
+    public boolean isEmailFieldVisible() {
+        try {
+            return emailField.isDisplayed();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    @Step("Şifre alanının görünür olduğunu doğrula")
     public boolean isPasswordFieldVisible() {
-        return isElementVisible(PASSWORD_FIELD);
+        try {
+            return passwordField.isDisplayed();
+        } catch (Exception e) {
+            return false;
+        }
     }
     
-    /**
-     * Giriş butonu görünür mü kontrol eder
-     */
+    @Step("Giriş butonunun görünür olduğunu doğrula")
     public boolean isLoginButtonVisible() {
-        return isElementVisible(LOGIN_BUTTON);
-    }
-    
-    /**
-     * Captcha görünür mü kontrol eder
-     */
-    public boolean isCaptchaVisible() {
-        return isElementVisible(CAPTCHA_IMAGE) && isElementVisible(CAPTCHA_INPUT);
-    }
-    
-    /**
-     * Beni hatırla checkbox'ı görünür mü kontrol eder
-     */
-    public boolean isRememberMeVisible() {
-        return isElementVisible(REMEMBER_ME_CHECKBOX);
-    }
-    
-    /**
-     * Şifremi unuttum linki görünür mü kontrol eder
-     */
-    public boolean isForgotPasswordLinkVisible() {
-        return isElementVisible(FORGOT_PASSWORD_LINK);
-    }
-    
-    /**
-     * Kayıt ol linki görünür mü kontrol eder
-     */
-    public boolean isRegisterLinkVisible() {
-        return isElementVisible(REGISTER_LINK);
-    }
-    
-    /**
-     * Login hata mesajı var mı kontrol eder
-     */
-    public boolean hasLoginError() {
-        return isElementVisible(LOGIN_ERROR_MESSAGE) || isElementVisible(INVALID_CREDENTIALS_MESSAGE);
-    }
-    
-    /**
-     * Login hata mesajının metnini alır
-     */
-    public String getLoginErrorMessage() {
-        if (isElementVisible(LOGIN_ERROR_MESSAGE)) {
-            return getText(LOGIN_ERROR_MESSAGE);
-        } else if (isElementVisible(INVALID_CREDENTIALS_MESSAGE)) {
-            return getText(INVALID_CREDENTIALS_MESSAGE);
+        try {
+            return loginButton.isDisplayed();
+        } catch (Exception e) {
+            return false;
         }
-        return "";
     }
     
-    /**
-     * Login başarılı mı kontrol eder (URL değişimi ile)
-     */
-    public boolean isLoginSuccessful() {
-        waitFor(2);
+    @Step("Hata mesajının görünür olduğunu doğrula")
+    public boolean isErrorMessageVisible() {
+        try {
+            return errorMessage.isDisplayed();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    @Step("Başarı mesajının görünür olduğunu doğrula")
+    public boolean isSuccessMessageVisible() {
+        try {
+            return successMessage.isDisplayed();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    @Step("Beni hatırla checkbox'ının mevcut olduğunu doğrula")
+    public boolean isRememberMeCheckboxPresent() {
+        try {
+            return rememberMeCheckbox.isDisplayed();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    @Step("Şifremi unuttum linkinin mevcut olduğunu doğrula")
+    public boolean isForgotPasswordLinkPresent() {
+        try {
+            return forgotPasswordLink.isDisplayed();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    @Step("Kayıt ol linkinin mevcut olduğunu doğrula")
+    public boolean isRegisterLinkPresent() {
+        try {
+            return registerLink.isDisplayed();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    @Step("Logo'nun görünür olduğunu doğrula")
+    public boolean isLogoVisible() {
+        try {
+            return logo.isDisplayed();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    @Step("Giriş formunun mevcut olduğunu doğrula")
+    public boolean isLoginFormPresent() {
+        try {
+            return loginForm.isDisplayed();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    // Getter Methods
+    
+    @Step("Hata mesajı metnini al")
+    public String getErrorMessageText() {
+        try {
+            wait.until(ExpectedConditions.visibilityOf(errorMessage));
+            return errorMessage.getText();
+        } catch (Exception e) {
+            return "";
+        }
+    }
+    
+    @Step("Başarı mesajı metnini al")
+    public String getSuccessMessageText() {
+        try {
+            wait.until(ExpectedConditions.visibilityOf(successMessage));
+            return successMessage.getText();
+        } catch (Exception e) {
+            return "";
+        }
+    }
+    
+    @Step("Sayfa başlığını al")
+    public String getPageTitle() {
+        return driver.getTitle();
+    }
+    
+    @Step("Mevcut URL'yi al")
+    public String getCurrentUrl() {
+        return driver.getCurrentUrl();
+    }
+    
+    @Step("Email alanının değerini al")
+    public String getEmailFieldValue() {
+        try {
+            return emailField.getAttribute("value");
+        } catch (Exception e) {
+            return "";
+        }
+    }
+    
+    // Validation Methods
+    
+    @Step("Giriş sayfasında olduğunu doğrula")
+    public boolean isOnLoginPage() {
         String currentUrl = getCurrentUrl();
-        return !currentUrl.contains("login") && !currentUrl.contains("giriş") && 
-               !hasLoginError();
+        return currentUrl.contains("kullanici-girisi") || currentUrl.contains("login");
     }
     
-    /**
-     * Kullanıcı adı alanının placeholder metnini alır
-     */
-    public String getUsernamePlaceholder() {
-        if (isElementPresent(USERNAME_FIELD)) {
-            return getAttribute(USERNAME_FIELD, "placeholder");
-        }
-        return "";
+    @Step("Giriş başarılı olduğunu doğrula")
+    public boolean isLoginSuccessful() {
+        String currentUrl = getCurrentUrl();
+        return !currentUrl.contains("kullanici-girisi") && 
+               !currentUrl.contains("login") &&
+               (currentUrl.contains("dashboard") || 
+                currentUrl.contains("panel") ||
+                currentUrl.contains("magaza"));
     }
     
-    /**
-     * Şifre alanının placeholder metnini alır
-     */
-    public String getPasswordPlaceholder() {
-        if (isElementPresent(PASSWORD_FIELD)) {
-            return getAttribute(PASSWORD_FIELD, "placeholder");
-        }
-        return "";
+    @Step("Form alanlarının boş olduğunu doğrula")
+    public boolean areFormFieldsEmpty() {
+        String emailValue = getEmailFieldValue();
+        String passwordValue = passwordField.getAttribute("value");
+        return (emailValue == null || emailValue.isEmpty()) && 
+               (passwordValue == null || passwordValue.isEmpty());
     }
     
-    /**
-     * Login form alanlarının required attribute'unu kontrol eder
-     */
-    public boolean areFieldsRequired() {
-        boolean usernameRequired = false;
-        boolean passwordRequired = false;
-        
-        if (isElementPresent(USERNAME_FIELD)) {
-            String required = getAttribute(USERNAME_FIELD, "required");
-            usernameRequired = required != null;
-        }
-        
-        if (isElementPresent(PASSWORD_FIELD)) {
-            String required = getAttribute(PASSWORD_FIELD, "required");
-            passwordRequired = required != null;
-        }
-        
-        return usernameRequired && passwordRequired;
+    @Step("Tüm gerekli elementlerin mevcut olduğunu doğrula")
+    public boolean areAllRequiredElementsPresent() {
+        return isEmailFieldVisible() && 
+               isPasswordFieldVisible() && 
+               isLoginButtonVisible() && 
+               isLoginFormPresent();
     }
     
-    /**
-     * Login form alanlarının maxlength attribute'unu kontrol eder
-     */
-    public boolean hasFieldLengthLimits() {
-        boolean usernameHasLimit = false;
-        boolean passwordHasLimit = false;
-        
-        if (isElementPresent(USERNAME_FIELD)) {
-            String maxLength = getAttribute(USERNAME_FIELD, "maxlength");
-            usernameHasLimit = maxLength != null && !maxLength.isEmpty();
-        }
-        
-        if (isElementPresent(PASSWORD_FIELD)) {
-            String maxLength = getAttribute(PASSWORD_FIELD, "maxlength");
-            passwordHasLimit = maxLength != null && !maxLength.isEmpty();
-        }
-        
-        return usernameHasLimit || passwordHasLimit;
+    // Utility Methods
+    
+    @Step("Sayfa kaynak kodunu al")
+    public String getPageSource() {
+        return driver.getPageSource();
     }
     
-    /**
-     * Şifre alanının güvenli olup olmadığını kontrol eder
-     */
+    @Step("JavaScript ile element bul")
+    public List<WebElement> findElementsByXPath(String xpath) {
+        return driver.findElements(By.xpath(xpath));
+    }
+    
+    @Step("Sayfanın yüklendiğini bekle")
+    public void waitForPageLoad() {
+        wait.until(ExpectedConditions.presenceOfElementLocated(By.tagName("body")));
+    }
+    
+    @Step("Element görünür olana kadar bekle")
+    public void waitForElementVisible(WebElement element) {
+        wait.until(ExpectedConditions.visibilityOf(element));
+    }
+    
+    @Step("Element tıklanabilir olana kadar bekle")
+    public void waitForElementClickable(WebElement element) {
+        wait.until(ExpectedConditions.elementToBeClickable(element));
+    }
+    
+    @Step("Şifre alanının güvenli olup olmadığını kontrol et")
     public boolean isPasswordFieldSecure() {
-        if (isElementPresent(PASSWORD_FIELD)) {
-            String type = getAttribute(PASSWORD_FIELD, "type");
+        try {
+            String type = passwordField.getAttribute("type");
             return "password".equals(type);
+        } catch (Exception e) {
+            return false;
         }
-        return false;
     }
     
-    /**
-     * Şifre alanının autocomplete özelliğini alır
-     */
+    @Step("Şifre alanının autocomplete özelliğini al")
     public String getPasswordFieldAutocomplete() {
-        if (isElementPresent(PASSWORD_FIELD)) {
-            return getAttribute(PASSWORD_FIELD, "autocomplete");
+        try {
+            return passwordField.getAttribute("autocomplete");
+        } catch (Exception e) {
+            return "";
         }
-        return "";
     }
     
-    /**
-     * Şifre hata mesajı var mı kontrol eder
-     */
+    @Step("Şifre hatası var mı kontrol et")
     public boolean hasPasswordError() {
-        return hasErrorMessage() || hasLoginError();
-    }
-    
-    /**
-     * Login sayfasının güvenlik özelliklerini kontrol eder
-     */
-    public boolean hasSecurityFeatures() {
-        return isSSLActive() && hasCSRFToken() && hasFormValidation();
-    }
-    
-    /**
-     * Login form elementlerinin sayısını döndürür
-     */
-    public int getLoginFormElementCount() {
-        int count = 0;
-        
-        if (isElementPresent(USERNAME_FIELD)) count++;
-        if (isElementPresent(PASSWORD_FIELD)) count++;
-        if (isElementPresent(LOGIN_BUTTON)) count++;
-        if (isElementPresent(CAPTCHA_INPUT)) count++;
-        if (isElementPresent(REMEMBER_ME_CHECKBOX)) count++;
-        if (isElementPresent(FORGOT_PASSWORD_LINK)) count++;
-        if (isElementPresent(REGISTER_LINK)) count++;
-        
-        return count;
+        try {
+            return errorMessage.isDisplayed() && 
+                   errorMessage.getText().toLowerCase().contains("şifre") ||
+                   errorMessage.getText().toLowerCase().contains("password");
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

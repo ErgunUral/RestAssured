@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+
+<suite name="PayTR Security Test Suite" verbose="1" parallel="classes" thread-count="2">
+    
+    <parameter name="browser" value="chrome"/>
+    <parameter name="environment" value="uat"/>
+    <parameter name="timeout" value="45"/>
+    <parameter name="security.level" value="high"/>
+    
+    <listeners>
+        <listener class-name="io.qameta.allure.testng.AllureTestNg"/>
+        <listener class-name="com.example.listeners.SecurityTestListener"/>
+    </listeners>
+    
+    <!-- Critical Security Tests -->
+    <test name="Critical Security Tests" preserve-order="true">
+        <groups>
+            <run>
+                <include name="security"/>
+                <include name="critical"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRSecurityTests">
+                <methods>
+                    <include name="testSQLInjectionLogin"/>
+                    <include name="testSQLInjectionSearch"/>
+                    <include name="testStoredXSS"/>
+                </methods>
+            </class>
+            <class name="com.example.tests.PayTRUIElementsTest">
+                <methods>
+                    <include name="testSecurityVulnerabilities"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- Authentication Security Tests -->
+    <test name="Authentication Security Tests" preserve-order="true">
+        <groups>
+            <run>
+                <include name="security"/>
+                <include name="authentication"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRSecurityTests">
+                <methods>
+                    <include name="testSessionTimeout"/>
+                </methods>
+            </class>
+            <class name="com.example.tests.PayTRUIElementsTest">
+                <methods>
+                    <include name="testLoginScenarios"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- Input Validation Security Tests -->
+    <test name="Input Validation Security Tests" preserve-order="true">
+        <groups>
+            <run>
+                <include name="security"/>
+                <include name="validation"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRBoundaryTests">
+                <methods>
+                    <include name="testMinimumPaymentAmount"/>
+                    <include name="testMaximumPaymentAmount"/>
+                    <include name="testInputFieldLengthLimits"/>
+                </methods>
+            </class>
+            <class name="com.example.tests.PayTRUIElementsTest">
+                <methods>
+                    <include name="testFormFieldBoundaries"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- API Security Tests -->
+    <test name="API Security Tests" preserve-order="true">
+        <groups>
+            <run>
+                <include name="security"/>
+                <include name="api"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRAPITests">
+                <methods>
+                    <include name="testAuthenticationAPI"/>
+                    <include name="testAPIRateLimit"/>
+                    <include name="testAPIErrorHandling"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- Negative Security Tests -->
+    <test name="Negative Security Tests" preserve-order="true">
+        <groups>
+            <run>
+                <include name="security"/>
+                <include name="negative"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRUIElementsTest">
+                <methods>
+                    <include name="testErrorScenarios"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+</suite>

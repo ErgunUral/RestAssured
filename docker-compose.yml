@@ -1,0 +1,206 @@
+version: '3.8'
+
+services:
+  # PayTR Test Automation Service
+  paytr-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: paytr-test-automation
+    environment:
+      - TEST_SUITE=${TEST_SUITE:-comprehensive}
+      - BROWSER=${BROWSER:-chrome}
+      - ENVIRONMENT=${ENVIRONMENT:-staging}
+      - HEADLESS=${HEADLESS:-true}
+      - PARALLEL_EXECUTION=${PARALLEL_EXECUTION:-true}
+      - DISPLAY=:99
+    volumes:
+      # Test results ve reports için volume mount
+      - ./test-results:/app/test-results
+      - ./reports:/app/reports
+      - ./screenshots:/app/screenshots
+      - ./logs:/app/logs
+      # Test configuration dosyaları için
+      - ./src/test/resources:/app/src/test/resources:ro
+      # Maven cache için
+      - maven-cache:/home/testuser/.m2
+    networks:
+      - paytr-test-network
+    depends_on:
+      - selenium-hub
+    command: ["comprehensive", "chrome", "staging", "true"]
+
+  # Selenium Grid Hub
+  selenium-hub:
+    image: selenium/hub:4.15.0
+    container_name: selenium-hub
+    ports:
+      - "4444:4444"
+      - "4442:4442"
+      - "4443:4443"
+    environment:
+      - GRID_MAX_SESSION=16
+      - GRID_BROWSER_TIMEOUT=300
+      - GRID_TIMEOUT=300
+    networks:
+      - paytr-test-network
+
+  # Chrome Node
+  chrome-node:
+    image: selenium/node-chrome:4.15.0
+    container_name: chrome-node
+    shm_size: 2gb
+    depends_on:
+      - selenium-hub
+    environment:
+      - HUB_HOST=selenium-hub
+      - HUB_PORT=4444
+      - NODE_MAX_INSTANCES=4
+      - NODE_MAX_SESSION=4
+    volumes:
+      - /dev/shm:/dev/shm
+    networks:
+      - paytr-test-network
+    scale: 2
+
+  # Firefox Node
+  firefox-node:
+    image: selenium/node-firefox:4.15.0
+    container_name: firefox-node
+    shm_size: 2gb
+    depends_on:
+      - selenium-hub
+    environment:
+      - HUB_HOST=selenium-hub
+      - HUB_PORT=4444
+      - NODE_MAX_INSTANCES=4
+      - NODE_MAX_SESSION=4
+    volumes:
+      - /dev/shm:/dev/shm
+    networks:
+      - paytr-test-network
+    scale: 1
+
+  # Edge Node
+  edge-node:
+    image: selenium/node-edge:4.15.0
+    container_name: edge-node
+    shm_size: 2gb
+    depends_on:
+      - selenium-hub
+    environment:
+      - HUB_HOST=selenium-hub
+      - HUB_PORT=4444
+      - NODE_MAX_INSTANCES=2
+      - NODE_MAX_SESSION=2
+    volumes:
+      - /dev/shm:/dev/shm
+    networks:
+      - paytr-test-network
+    scale: 1
+
+  # Allure Report Server
+  allure-server:
+    image: frankescobar/allure-docker-service:2.20.1
+    container_name: allure-server
+    ports:
+      - "5050:5050"
+    environment:
+      - CHECK_RESULTS_EVERY_SECONDS=3
+      - KEEP_HISTORY=20
+    volumes:
+      - ./test-results/allure-results:/app/allure-results
+      - ./reports/allure-report:/app/default-reports
+    networks:
+      - paytr-test-network
+
+  # Test Results Web Server
+  test-results-server:
+    image: nginx:alpine
+    container_name: test-results-server
+    ports:
+      - "8080:80"
+    volumes:
+      - ./reports:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - paytr-test-network
+    depends_on:
+      - paytr-tests
+
+  # Database for test data (optional)
+  test-database:
+    image: postgres:13
+    container_name: test-database
+    environment:
+      - POSTGRES_DB=paytr_test
+      - POSTGRES_USER=testuser
+      - POSTGRES_PASSWORD=testpass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - paytr-test-network
+
+  # Redis for caching test data
+  redis-cache:
+    image: redis:7-alpine
+    container_name: redis-cache
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    networks:
+      - paytr-test-network
+
+  # Test monitoring with Grafana
+  grafana:
+    image: grafana/grafana:latest
+    container_name: test-monitoring
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    networks:
+      - paytr-test-network
+
+  # InfluxDB for metrics storage
+  influxdb:
+    image: influxdb:2.0
+    container_name: test-metrics-db
+    ports:
+      - "8086:8086"
+    environment:
+      - INFLUXDB_DB=paytr_metrics
+      - INFLUXDB_ADMIN_USER=admin
+      - INFLUXDB_ADMIN_PASSWORD=admin123
+    volumes:
+      - influxdb-data:/var/lib/influxdb2
+    networks:
+      - paytr-test-network
+
+networks:
+  paytr-test-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  maven-cache:
+    driver: local
+  postgres-data:
+    driver: local
+  redis-data:
+    driver: local
+  grafana-data:
+    driver: local
+  influxdb-data:
+    driver: local
