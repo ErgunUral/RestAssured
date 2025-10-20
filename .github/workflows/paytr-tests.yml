@@ -9,7 +9,7 @@ on:
 
 env:
   JAVA_VERSION: '17'
-  MAVEN_OPTS: '-Xmx2048m -Djava.awt.headless=true'
+  MAVEN_OPTS: '-Xmx2048m -Djava.awt.headless=true --add-opens jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED'
 
 jobs:
   # Step 1: Basic Maven Setup and Compilation

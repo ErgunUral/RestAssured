@@ -142,6 +142,19 @@
                 <configuration>
                     <source>17</source>
                     <target>17</target>
+                    <compilerArgs>
+                        <arg>--add-opens</arg>
+                        <arg>jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED</arg>
+                        <arg>--add-opens</arg>
+                        <arg>jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED</arg>
+                        <arg>--add-opens</arg>
+                        <arg>jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED</arg>
+                        <arg>--add-opens</arg>
+                        <arg>jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED</arg>
+                    </compilerArgs>
+                    <fork>true</fork>
+                    <meminitial>256m</meminitial>
+                    <maxmem>2048m</maxmem>
                 </configuration>
             </plugin>
 
@@ -187,7 +200,7 @@
                             <value>${allure.results.directory}</value>
                         </property>
                     </systemProperties>
-                    <argLine>-Xmx2048m -Djava.awt.headless=true</argLine>
+                    <argLine>-Xmx2048m -Djava.awt.headless=true --add-opens jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED</argLine>
                     <properties>
                         <property>
                             <name>usedefaultlisteners</name>
