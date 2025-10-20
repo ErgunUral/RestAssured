@@ -1,0 +1,14 @@
+PayTR Test Automation Results
+=============================
+Timestamp: 20251020_162627
+Test Suite: comprehensive
+Browser: chrome
+Environment: staging
+
+Results:
+--------
+Passed: 37
+Failed: 29
+Skipped: 0
+Total: 66
+Success Rate: 56%

@@ -1,0 +1,5 @@
+"DESCRİPTİON","DURATİON İN MS","NAME","PARENT SUİTE","START TİME","STATUS","STOP TİME","SUB SUİTE","SUİTE","TEST CLASS","TEST METHOD"
+"","116","testSecurityFeatures","PayTR Smoke Test Suite","2025-10-20","passed","2025-10-20","com.example.tests.PayTRUIElementsTest","Critical Smoke Tests","com.example.tests.PayTRUIElementsTest","testSecurityFeatures"
+"","4286","testUATLoginPageAccess","PayTR Smoke Test Suite","2025-10-20","failed","2025-10-20","com.example.tests.PayTRUIElementsTest","Critical Smoke Tests","com.example.tests.PayTRUIElementsTest","testUATLoginPageAccess"
+"","4220","testFormValidation","PayTR Smoke Test Suite","2025-10-20","passed","2025-10-20","com.example.tests.PayTRUIElementsTest","Critical Smoke Tests","com.example.tests.PayTRUIElementsTest","testFormValidation"
+"","19177","testSuccessfulLoginWithRealCredentials","PayTR Smoke Test Suite","2025-10-20","passed","2025-10-20","com.example.tests.PayTRUIElementsTest","Critical Smoke Tests","com.example.tests.PayTRUIElementsTest","testSuccessfulLoginWithRealCredentials"

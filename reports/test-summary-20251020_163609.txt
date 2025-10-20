@@ -1,0 +1,14 @@
+PayTR Test Automation Results
+=============================
+Timestamp: 20251020_163609
+Test Suite: smoke
+Browser: chrome
+Environment: staging
+
+Results:
+--------
+Passed: 3
+Failed: 1
+Skipped: 0
+Total: 4
+Success Rate: 75%

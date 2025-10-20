@@ -14,26 +14,26 @@ public class WebDriverSetup {
     private static ThreadLocal<WebDriver> driver = new ThreadLocal<>();
     
     public static synchronized void setupDriver(String browserName) {
-        // Eğer driver zaten varsa, önce temizle
+        System.out.println("🔧 WebDriverSetup.setupDriver çağrıldı: " + browserName);
+        
         if (driver.get() != null) {
+            System.out.println("⚠️ Driver zaten mevcut, kapatılıyor...");
             quitDriver();
         }
         
         switch (browserName.toLowerCase()) {
             case "chrome":
+                System.out.println("🚀 Chrome driver kuruluyor...");
                 WebDriverManager.chromedriver().setup();
                 ChromeOptions chromeOptions = new ChromeOptions();
-                chromeOptions.addArguments("--no-sandbox");
-                chromeOptions.addArguments("--disable-dev-shm-usage");
-                chromeOptions.addArguments("--disable-gpu");
                 chromeOptions.addArguments("--headless");
                 chromeOptions.addArguments("--window-size=1920,1080");
-                chromeOptions.addArguments("--disable-extensions");
-                chromeOptions.addArguments("--disable-web-security");
-                chromeOptions.addArguments("--allow-running-insecure-content");
-                // JavaScript'i aktif bırak (PayTR için gerekli)
-                // chromeOptions.addArguments("--disable-javascript"); // Kaldırıldı
-                driver.set(new ChromeDriver(chromeOptions));
+                chromeOptions.addArguments("--disable-gpu");
+                chromeOptions.addArguments("--no-sandbox");
+                chromeOptions.addArguments("--disable-dev-shm-usage");
+                WebDriver chromeDriver = new ChromeDriver(chromeOptions);
+                driver.set(chromeDriver);
+                System.out.println("✅ Chrome driver başarıyla kuruldu");
                 break;
                 
             case "firefox":
@@ -64,10 +64,14 @@ public class WebDriverSetup {
     
     public static synchronized WebDriver getDriver() {
         WebDriver currentDriver = driver.get();
+        System.out.println("🔍 WebDriverSetup.getDriver çağrıldı, driver: " + (currentDriver != null ? "MEVCUT" : "NULL"));
+        
         if (currentDriver == null) {
+            System.out.println("⚠️ Driver null, yeni driver oluşturuluyor...");
             // Eğer driver null ise, yeni bir driver oluştur
             setupDriver("chrome");
             currentDriver = driver.get();
+            System.out.println("🔄 Yeni driver oluşturuldu: " + (currentDriver != null ? "BAŞARILI" : "BAŞARISIZ"));
         }
         return currentDriver;
     }
