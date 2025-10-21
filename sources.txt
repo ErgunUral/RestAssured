@@ -1,0 +1,7 @@
+src/main/java/com/example/web/WebController.java
+src/main/java/com/example/integration/TestStep.java
+src/main/java/com/example/integration/TestScenarioExecutor.java
+src/main/java/com/example/integration/TestScenario.java
+src/main/java/com/example/integration/TestResult.java
+src/main/java/com/example/TestScenarioApplication.java
+src/main/java/com/example/api/TestScenarioController.java

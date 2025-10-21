@@ -1,9 +1,21 @@
 package com.example.tests;
 
+import com.example.config.BaseTest;
+import com.example.config.PayTRTestConfig;
 import io.qameta.allure.*;
-import org.testng.annotations.*;
-import org.openqa.selenium.WebDriver;
+import io.restassured.response.Response;
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.testng.annotations.*;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import static io.restassured.RestAssured.given;
+import static org.testng.Assert.*;
+
+import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -203,155 +215,342 @@ public class PayTRPerformanceTests extends BaseTest {
     
     /**
      * Test ID: PT-003
-     * Test Adı: Concurrent User Load Testi
-     * Kategori: Performance - Load
-     * Öncelik: Orta
+     * Enhanced Performance - Load Testing with Concurrent Users
+     * Tests system performance under concurrent user load
      */
-    @Test(priority = 3, groups = {"performance", "medium", "load"})
+    @Test(priority = 10, groups = {"performance", "enhanced", "load-testing"})
     @Story("Concurrent Load Performance")
-    @Severity(SeverityLevel.NORMAL)
-    @Description("Eşzamanlı kullanıcı yükü simülasyonu")
-    public void testConcurrentUserLoad() {
-        logTestInfo("Test ID: PT-003 - Concurrent User Load Testi");
+    @Severity(SeverityLevel.HIGH)
+    @Description("Eşzamanlı kullanıcı yükü altında sistem performansı")
+    public void testConcurrentUserLoadPerformance() {
+        logTestInfo("Test ID: PT-003 - Concurrent User Load Performance");
         
         try {
-            // Basit concurrent load testi
-            int concurrentUsers = 3; // Test ortamı için düşük sayı
-            long[] loadTimes = new long[concurrentUsers];
+            int numberOfThreads = 10;
+            int requestsPerThread = 5;
+            long[] responseTimes = new long[numberOfThreads * requestsPerThread];
+            Thread[] threads = new Thread[numberOfThreads];
             
-            // Eşzamanlı sayfa yüklemeleri simüle et
-            for (int i = 0; i < concurrentUsers; i++) {
-                long startTime = System.currentTimeMillis();
-                
-                // Farklı sayfaları yükle
-                String[] testPages = {
-                    baseURI,
-                    baseURI + "/magaza",
-                    baseURI + "/magaza/kullanici-girisi"
-                };
-                
-                String pageUrl = testPages[i % testPages.length];
-                driver.get(pageUrl);
-                
-                wait.until(ExpectedConditions.presenceOfElementLocated(By.tagName("body")));
-                wait.until(webDriver -> js.executeScript("return document.readyState").equals("complete"));
-                
-                long endTime = System.currentTimeMillis();
-                loadTimes[i] = endTime - startTime;
-                
-                logTestInfo("Kullanıcı " + (i + 1) + " yükleme süresi: " + loadTimes[i] + " ms");
-                
-                // Kısa bekleme
-                Thread.sleep(500);
+            long testStartTime = System.currentTimeMillis();
+            
+            for (int i = 0; i < numberOfThreads; i++) {
+                final int threadIndex = i;
+                threads[i] = new Thread(() -> {
+                    try {
+                        for (int j = 0; j < requestsPerThread; j++) {
+                            long requestStart = System.currentTimeMillis();
+                            
+                            Map<String, Object> paymentData = new HashMap<>();
+                            paymentData.put("merchant_id", PayTRTestConfig.MERCHANT_ID);
+                            paymentData.put("user_ip", "127.0.0.1");
+                            paymentData.put("merchant_oid", "PT003_LOAD_" + threadIndex + "_" + j + "_" + System.currentTimeMillis());
+                            paymentData.put("email", "load.test" + threadIndex + "." + j + "@example.com");
+                            paymentData.put("payment_amount", "10000");
+                            paymentData.put("currency", "TL");
+                            paymentData.put("test_mode", "1");
+                            
+                            Response response = given()
+                                .spec(requestSpec)
+                                .body(paymentData)
+                                .when()
+                                .post("/odeme/api/get-token")
+                                .then()
+                                .extract().response();
+                            
+                            long requestEnd = System.currentTimeMillis();
+                            responseTimes[threadIndex * requestsPerThread + j] = requestEnd - requestStart;
+                            
+                            // Small delay between requests
+                            Thread.sleep(100);
+                        }
+                    } catch (Exception e) {
+                        System.err.println("Thread " + threadIndex + " error: " + e.getMessage());
+                    }
+                });
             }
             
-            // Ortalama yükleme süresini hesapla
-            long totalTime = 0;
-            for (long time : loadTimes) {
-                totalTime += time;
+            // Start all threads
+            for (Thread thread : threads) {
+                thread.start();
             }
-            long averageTime = totalTime / concurrentUsers;
             
-            logTestInfo("Ortalama yükleme süresi: " + averageTime + " ms");
-            
-            // Ortalama yükleme süresi 5 saniyeden az olmalı
-            assertTrue(averageTime < 5000,
-                "Concurrent load altında ortalama yükleme süresi çok yavaş: " + averageTime + " ms");
-            
-            // Hiçbir yükleme 10 saniyeyi geçmemeli
-            for (int i = 0; i < loadTimes.length; i++) {
-                assertTrue(loadTimes[i] < 10000,
-                    "Kullanıcı " + (i + 1) + " için yükleme süresi çok yavaş: " + loadTimes[i] + " ms");
+            // Wait for all threads to complete
+            for (Thread thread : threads) {
+                thread.join(30000); // 30 second timeout
             }
+            
+            long testEndTime = System.currentTimeMillis();
+            long totalTestTime = testEndTime - testStartTime;
+            
+            // Calculate performance metrics
+            long totalRequests = numberOfThreads * requestsPerThread;
+            double averageResponseTime = 0;
+            long maxResponseTime = 0;
+            long minResponseTime = Long.MAX_VALUE;
+            
+            for (long responseTime : responseTimes) {
+                if (responseTime > 0) {
+                    averageResponseTime += responseTime;
+                    maxResponseTime = Math.max(maxResponseTime, responseTime);
+                    minResponseTime = Math.min(minResponseTime, responseTime);
+                }
+            }
+            
+            averageResponseTime = averageResponseTime / totalRequests;
+            double throughput = (double) totalRequests / (totalTestTime / 1000.0);
+            
+            logTestInfo("Load Test Results:");
+            logTestInfo("  Total Requests: " + totalRequests);
+            logTestInfo("  Total Time: " + totalTestTime + " ms");
+            logTestInfo("  Average Response Time: " + String.format("%.2f", averageResponseTime) + " ms");
+            logTestInfo("  Max Response Time: " + maxResponseTime + " ms");
+            logTestInfo("  Min Response Time: " + minResponseTime + " ms");
+            logTestInfo("  Throughput: " + String.format("%.2f", throughput) + " requests/second");
+            
+            // Performance assertions
+            assertTrue(averageResponseTime < 5000, 
+                "Average response time too high: " + averageResponseTime + " ms");
+            assertTrue(maxResponseTime < 10000, 
+                "Max response time too high: " + maxResponseTime + " ms");
+            assertTrue(throughput > 1.0, 
+                "Throughput too low: " + throughput + " requests/second");
             
             logTestResult("PT-003", "BAŞARILI", 
-                "Concurrent load testi başarılı, ortalama süre: " + averageTime + " ms");
+                "Load test completed - Throughput: " + String.format("%.2f", throughput) + " req/sec");
             
         } catch (Exception e) {
-            logTestResult("PT-003", "BAŞARISIZ", 
-                "Concurrent load testi hatası: " + e.getMessage());
-            fail("Concurrent load testi başarısız: " + e.getMessage());
+            logTestResult("PT-003", "BAŞARISIZ", "Load test hatası: " + e.getMessage());
+            fail("Load test başarısız: " + e.getMessage());
         }
     }
-    
+
     /**
      * Test ID: PT-004
-     * Test Adı: Memory Usage Testi
-     * Kategori: Performance - Memory
-     * Öncelik: Düşük
+     * Enhanced Performance - Memory and Resource Usage Testing
+     * Tests system resource consumption during operations
      */
-    @Test(priority = 4, groups = {"performance", "low", "memory"})
-    @Story("Memory Usage Performance")
-    @Severity(SeverityLevel.MINOR)
-    @Description("Tarayıcı bellek kullanımı kontrolü")
-    public void testMemoryUsage() {
-        logTestInfo("Test ID: PT-004 - Memory Usage Testi");
+    @Test(priority = 11, groups = {"performance", "enhanced", "resource-usage"})
+    @Story("Resource Usage Performance")
+    @Severity(SeverityLevel.MEDIUM)
+    @Description("İşlemler sırasında sistem kaynak kullanımı")
+    public void testMemoryAndResourceUsage() {
+        logTestInfo("Test ID: PT-004 - Memory and Resource Usage Testing");
         
         try {
-            // Ana sayfaya git
-            driver.get(baseURI);
-            wait.until(ExpectedConditions.presenceOfElementLocated(By.tagName("body")));
+            // Get initial memory usage
+            Runtime runtime = Runtime.getRuntime();
+            long initialMemory = runtime.totalMemory() - runtime.freeMemory();
             
-            // JavaScript ile bellek bilgisi al (Chrome'da desteklenir)
-            String memoryScript = 
-                "if (performance.memory) {" +
-                "  return {" +
-                "    'usedJSHeapSize': performance.memory.usedJSHeapSize," +
-                "    'totalJSHeapSize': performance.memory.totalJSHeapSize," +
-                "    'jsHeapSizeLimit': performance.memory.jsHeapSizeLimit" +
-                "  };" +
-                "} else {" +
-                "  return null;" +
-                "}";
+            logTestInfo("Initial memory usage: " + (initialMemory / 1024 / 1024) + " MB");
             
-            Object memoryResult = js.executeScript(memoryScript);
+            // Perform memory-intensive operations
+            int numberOfOperations = 100;
+            long[] operationTimes = new long[numberOfOperations];
             
-            if (memoryResult != null) {
-                logTestInfo("Bellek kullanımı: " + memoryResult.toString());
+            for (int i = 0; i < numberOfOperations; i++) {
+                long operationStart = System.currentTimeMillis();
                 
-                // Bellek kullanımını kontrol et (basit kontrol)
-                String memoryStr = memoryResult.toString();
-                if (memoryStr.contains("usedJSHeapSize")) {
-                    logTestInfo("JavaScript heap bellek kullanımı normal aralıkta");
+                // Create payment request with large data
+                Map<String, Object> paymentData = new HashMap<>();
+                paymentData.put("merchant_id", PayTRTestConfig.MERCHANT_ID);
+                paymentData.put("user_ip", "127.0.0.1");
+                paymentData.put("merchant_oid", "PT004_MEMORY_" + i + "_" + System.currentTimeMillis());
+                paymentData.put("email", "memory.test" + i + "@example.com");
+                paymentData.put("payment_amount", "10000");
+                paymentData.put("currency", "TL");
+                paymentData.put("test_mode", "1");
+                
+                // Add some large data to test memory usage
+                StringBuilder largeData = new StringBuilder();
+                for (int j = 0; j < 100; j++) {
+                    largeData.append("Large test data chunk ").append(j).append(" ");
                 }
-            } else {
-                logTestInfo("Bellek bilgisi alınamadı (tarayıcı desteklemiyor)");
-            }
-            
-            // DOM element sayısını kontrol et
-            String domCountScript = "return document.getElementsByTagName('*').length;";
-            Object domCount = js.executeScript(domCountScript);
-            
-            if (domCount != null) {
-                int elementCount = Integer.parseInt(domCount.toString());
-                logTestInfo("DOM element sayısı: " + elementCount);
+                paymentData.put("user_name", largeData.toString());
                 
-                // Çok fazla DOM elementi performansı etkileyebilir
-                assertTrue(elementCount < 5000,
-                    "DOM element sayısı çok fazla: " + elementCount + " (Önerilen: < 5000)");
+                try {
+                    Response response = given()
+                        .spec(requestSpec)
+                        .body(paymentData)
+                        .when()
+                        .post("/odeme/api/get-token")
+                        .then()
+                        .extract().response();
+                        
+                    long operationEnd = System.currentTimeMillis();
+                    operationTimes[i] = operationEnd - operationStart;
+                    
+                } catch (Exception e) {
+                    // Continue with other operations even if one fails
+                    operationTimes[i] = -1;
+                }
+                
+                // Check memory usage periodically
+                if (i % 20 == 0) {
+                    long currentMemory = runtime.totalMemory() - runtime.freeMemory();
+                    logTestInfo("Memory usage at operation " + i + ": " + (currentMemory / 1024 / 1024) + " MB");
+                    
+                    // Force garbage collection to test memory cleanup
+                    System.gc();
+                    Thread.sleep(100);
+                }
+                
+                Thread.sleep(50); // Small delay between operations
             }
             
-            // CSS ve JavaScript dosya sayısını kontrol et
-            String resourceCountScript = 
-                "var resources = performance.getEntriesByType('resource');" +
-                "var css = resources.filter(r => r.name.endsWith('.css')).length;" +
-                "var js = resources.filter(r => r.name.endsWith('.js')).length;" +
-                "return {'css': css, 'js': js, 'total': resources.length};";
+            // Final memory check
+            System.gc(); // Force garbage collection
+            Thread.sleep(500);
+            long finalMemory = runtime.totalMemory() - runtime.freeMemory();
+            long memoryIncrease = finalMemory - initialMemory;
             
-            Object resourceResult = js.executeScript(resourceCountScript);
-            if (resourceResult != null) {
-                logTestInfo("Kaynak dosya sayıları: " + resourceResult.toString());
+            // Calculate operation performance
+            double averageOperationTime = 0;
+            int successfulOperations = 0;
+            
+            for (long operationTime : operationTimes) {
+                if (operationTime > 0) {
+                    averageOperationTime += operationTime;
+                    successfulOperations++;
+                }
             }
             
-            logTestResult("PT-004", "BAŞARILI", "Bellek kullanımı kontrolleri tamamlandı");
+            if (successfulOperations > 0) {
+                averageOperationTime = averageOperationTime / successfulOperations;
+            }
+            
+            logTestInfo("Resource Usage Test Results:");
+            logTestInfo("  Initial Memory: " + (initialMemory / 1024 / 1024) + " MB");
+            logTestInfo("  Final Memory: " + (finalMemory / 1024 / 1024) + " MB");
+            logTestInfo("  Memory Increase: " + (memoryIncrease / 1024 / 1024) + " MB");
+            logTestInfo("  Successful Operations: " + successfulOperations + "/" + numberOfOperations);
+            logTestInfo("  Average Operation Time: " + String.format("%.2f", averageOperationTime) + " ms");
+            
+            // Resource usage assertions
+            assertTrue(memoryIncrease < 100 * 1024 * 1024, // Less than 100MB increase
+                "Memory usage increased too much: " + (memoryIncrease / 1024 / 1024) + " MB");
+            assertTrue(averageOperationTime < 3000, 
+                "Average operation time too high: " + averageOperationTime + " ms");
+            assertTrue(successfulOperations >= numberOfOperations * 0.9, 
+                "Too many failed operations: " + (numberOfOperations - successfulOperations));
+            
+            logTestResult("PT-004", "BAŞARILI", 
+                "Resource usage within acceptable limits - Memory increase: " + 
+                (memoryIncrease / 1024 / 1024) + " MB");
             
         } catch (Exception e) {
-            logTestResult("PT-004", "BAŞARISIZ", 
-                "Memory usage testi hatası: " + e.getMessage());
-            fail("Memory usage testi başarısız: " + e.getMessage());
+            logTestResult("PT-004", "BAŞARISIZ", "Resource usage test hatası: " + e.getMessage());
+            fail("Resource usage test başarısız: " + e.getMessage());
         }
     }
-    
+
+    /**
+     * Test ID: PT-005
+     * Enhanced Performance - Database Connection Pool Testing
+     * Tests database connection efficiency and pool management
+     */
+    @Test(priority = 12, groups = {"performance", "enhanced", "database"})
+    @Story("Database Performance")
+    @Severity(SeverityLevel.MEDIUM)
+    @Description("Veritabanı bağlantı havuzu ve performans testleri")
+    public void testDatabaseConnectionPoolPerformance() {
+        logTestInfo("Test ID: PT-005 - Database Connection Pool Performance");
+        
+        try {
+            int numberOfConnections = 20;
+            long[] connectionTimes = new long[numberOfConnections];
+            Thread[] connectionThreads = new Thread[numberOfConnections];
+            
+            for (int i = 0; i < numberOfConnections; i++) {
+                final int threadIndex = i;
+                connectionThreads[i] = new Thread(() -> {
+                    try {
+                        long connectionStart = System.currentTimeMillis();
+                        
+                        // Simulate database-heavy operation
+                        Map<String, Object> paymentData = new HashMap<>();
+                        paymentData.put("merchant_id", PayTRTestConfig.MERCHANT_ID);
+                        paymentData.put("user_ip", "127.0.0.1");
+                        paymentData.put("merchant_oid", "PT005_DB_" + threadIndex + "_" + System.currentTimeMillis());
+                        paymentData.put("email", "db.test" + threadIndex + "@example.com");
+                        paymentData.put("payment_amount", "10000");
+                        paymentData.put("currency", "TL");
+                        paymentData.put("test_mode", "1");
+                        
+                        Response response = given()
+                            .spec(requestSpec)
+                            .body(paymentData)
+                            .when()
+                            .post("/odeme/api/get-token")
+                            .then()
+                            .extract().response();
+                        
+                        long connectionEnd = System.currentTimeMillis();
+                        connectionTimes[threadIndex] = connectionEnd - connectionStart;
+                        
+                    } catch (Exception e) {
+                        connectionTimes[threadIndex] = -1;
+                        System.err.println("Connection thread " + threadIndex + " error: " + e.getMessage());
+                    }
+                });
+            }
+            
+            // Start all connection threads simultaneously
+            long testStart = System.currentTimeMillis();
+            for (Thread thread : connectionThreads) {
+                thread.start();
+            }
+            
+            // Wait for all threads to complete
+            for (Thread thread : connectionThreads) {
+                thread.join(15000); // 15 second timeout per thread
+            }
+            long testEnd = System.currentTimeMillis();
+            
+            // Analyze connection performance
+            double averageConnectionTime = 0;
+            long maxConnectionTime = 0;
+            int successfulConnections = 0;
+            
+            for (long connectionTime : connectionTimes) {
+                if (connectionTime > 0) {
+                    averageConnectionTime += connectionTime;
+                    maxConnectionTime = Math.max(maxConnectionTime, connectionTime);
+                    successfulConnections++;
+                }
+            }
+            
+            if (successfulConnections > 0) {
+                averageConnectionTime = averageConnectionTime / successfulConnections;
+            }
+            
+            double connectionSuccessRate = (double) successfulConnections / numberOfConnections * 100;
+            
+            logTestInfo("Database Connection Pool Results:");
+            logTestInfo("  Total Connections: " + numberOfConnections);
+            logTestInfo("  Successful Connections: " + successfulConnections);
+            logTestInfo("  Success Rate: " + String.format("%.2f", connectionSuccessRate) + "%");
+            logTestInfo("  Average Connection Time: " + String.format("%.2f", averageConnectionTime) + " ms");
+            logTestInfo("  Max Connection Time: " + maxConnectionTime + " ms");
+            logTestInfo("  Total Test Time: " + (testEnd - testStart) + " ms");
+            
+            // Database performance assertions
+            assertTrue(connectionSuccessRate >= 90.0, 
+                "Connection success rate too low: " + connectionSuccessRate + "%");
+            assertTrue(averageConnectionTime < 5000, 
+                "Average connection time too high: " + averageConnectionTime + " ms");
+            assertTrue(maxConnectionTime < 10000, 
+                "Max connection time too high: " + maxConnectionTime + " ms");
+            
+            logTestResult("PT-005", "BAŞARILI", 
+                "Database connection pool performance acceptable - Success rate: " + 
+                String.format("%.2f", connectionSuccessRate) + "%");
+            
+        } catch (Exception e) {
+            logTestResult("PT-005", "BAŞARISIZ", "Database connection test hatası: " + e.getMessage());
+            fail("Database connection test başarısız: " + e.getMessage());
+        }
+    }
+
     /**
      * Test sonucu raporlama metodu
      */

@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+
+<suite name="PayTR Parallel Execution Suite" parallel="methods" thread-count="8" verbose="2">
+    
+    <!-- Global Parameters -->
+    <parameter name="browser" value="chrome"/>
+    <parameter name="environment" value="test"/>
+    <parameter name="baseUrl" value="https://www.paytr.com"/>
+    <parameter name="apiUrl" value="https://www.paytr.com/odeme/api"/>
+    <parameter name="timeout" value="30"/>
+    <parameter name="retryCount" value="2"/>
+    <parameter name="screenshotOnFailure" value="true"/>
+    <parameter name="allureReporting" value="true"/>
+    <parameter name="parallelExecution" value="true"/>
+    
+    <!-- Test Groups Definition -->
+    <groups>
+        <define name="parallel-safe">
+            <include name="api"/>
+            <include name="security"/>
+            <include name="3dsecure"/>
+            <include name="fraud"/>
+            <include name="webhook"/>
+            <include name="edgecase"/>
+            <include name="business"/>
+        </define>
+        
+        <define name="api">
+            <include name="payment-api"/>
+            <include name="security-api"/>
+            <include name="webhook-api"/>
+            <include name="fraud-api"/>
+        </define>
+        
+        <define name="integration">
+            <include name="api-integration"/>
+            <include name="security-integration"/>
+        </define>
+    </groups>
+    
+    <!-- Listeners for Enhanced Reporting -->
+    <listeners>
+        <listener class-name="io.qameta.allure.testng.AllureTestNg"/>
+        <listener class-name="com.example.listeners.TestExecutionListener"/>
+        <listener class-name="com.example.listeners.ParallelTestExecutionListener"/>
+        <listener class-name="com.example.listeners.ScreenshotListener"/>
+        <listener class-name="com.example.listeners.RetryListener"/>
+        <listener class-name="com.example.listeners.TestDataListener"/>
+    </listeners>
+    
+    <!-- API Tests - Parallel Safe -->
+    <test name="API Tests Parallel" parallel="methods" thread-count="4">
+        <groups>
+            <include name="parallel-safe"/>
+            <include name="api"/>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRAPITests"/>
+            <class name="com.example.tests.ApiTest"/>
+            <class name="com.example.tests.UserApiTest"/>
+        </classes>
+    </test>
+    
+    <!-- Security Tests - Parallel Safe -->
+    <test name="Security Tests Parallel" parallel="methods" thread-count="3">
+        <groups>
+            <include name="parallel-safe"/>
+            <include name="security"/>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRSecurityTests"/>
+        </classes>
+    </test>
+    
+    <!-- 3D Secure Tests - Parallel Safe -->
+    <test name="3D Secure Tests Parallel" parallel="methods" thread-count="2">
+        <groups>
+            <include name="parallel-safe"/>
+            <include name="3dsecure"/>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTR3DSecureTests"/>
+        </classes>
+    </test>
+    
+    <!-- Fraud Detection Tests - Parallel Safe -->
+    <test name="Fraud Detection Tests Parallel" parallel="methods" thread-count="2">
+        <groups>
+            <include name="parallel-safe"/>
+            <include name="fraud"/>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRFraudDetectionTests"/>
+        </classes>
+    </test>
+    
+    <!-- Webhook Tests - Parallel Safe -->
+    <test name="Webhook Tests Parallel" parallel="methods" thread-count="2">
+        <groups>
+            <include name="parallel-safe"/>
+            <include name="webhook"/>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRWebhookTests"/>
+        </classes>
+    </test>
+    
+    <!-- Edge Case Tests - Parallel Safe -->
+    <test name="Edge Case Tests Parallel" parallel="methods" thread-count="2">
+        <groups>
+            <include name="parallel-safe"/>
+            <include name="edgecase"/>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTREdgeCaseTests"/>
+        </classes>
+    </test>
+    
+    <!-- Business Logic Tests - Parallel Safe -->
+    <test name="Business Logic Tests Parallel" parallel="methods" thread-count="2">
+        <groups>
+            <include name="parallel-safe"/>
+            <include name="business"/>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRBusinessLogicTests"/>
+        </classes>
+    </test>
+    
+</suite>

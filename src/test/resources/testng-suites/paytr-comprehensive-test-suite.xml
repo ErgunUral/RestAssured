@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+
+<suite name="PayTR-Comprehensive-Test-Suite" verbose="1" parallel="methods" thread-count="5" data-provider-thread-count="3">
+    
+    <!-- Global Test Parameters -->
+    <parameter name="browser" value="chrome"/>
+    <parameter name="baseUrl" value="https://www.paytr.com"/>
+    <parameter name="apiBaseUrl" value="https://www.paytr.com/odeme/api"/>
+    <parameter name="timeout" value="30"/>
+    <parameter name="retryCount" value="2"/>
+    <parameter name="environment" value="test"/>
+    
+    <!-- Test Groups Definition -->
+    <groups>
+        <run>
+            <include name="smoke"/>
+            <include name="regression"/>
+            <include name="security"/>
+            <include name="performance"/>
+            <include name="accessibility"/>
+            <include name="integration"/>
+            <include name="api"/>
+            <include name="ui"/>
+            <include name="multi-currency"/>
+            <include name="3d-secure"/>
+            <include name="fraud-detection"/>
+            <include name="webhook"/>
+            <include name="edge-case"/>
+            <include name="chaos-engineering"/>
+            <include name="business-logic"/>
+            <include name="data-migration"/>
+        </run>
+    </groups>
+    
+    <!-- Listeners for Enhanced Reporting -->
+    <listeners>
+        <listener class-name="io.qameta.allure.testng.AllureTestNg"/>
+        <listener class-name="com.example.listeners.TestExecutionListener"/>
+        <listener class-name="com.example.listeners.ScreenshotListener"/>
+        <listener class-name="com.example.listeners.RetryListener"/>
+    </listeners>
+    
+    <!-- Core Payment Tests -->
+    <test name="Core-Payment-Tests" preserve-order="true">
+        <parameter name="testCategory" value="core"/>
+        <classes>
+            <class name="com.example.tests.PayTRPaymentTests">
+                <methods>
+                    <include name="testSuccessfulPayment"/>
+                    <include name="testFailedPayment"/>
+                    <include name="testPaymentWithInstallments"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- Security Tests -->
+    <test name="Security-Tests" preserve-order="true">
+        <parameter name="testCategory" value="security"/>
+        <groups>
+            <run>
+                <include name="security"/>
+                <include name="smoke"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRSecurityTests">
+                <methods>
+                    <include name="testLoginFormSQLInjection"/>
+                    <include name="testSearchFormSQLInjection"/>
+                    <include name="testAdvancedRateLimitingProtection"/>
+                    <include name="testJWTTokenSecurity"/>
+                    <include name="testCSRFProtection"/>
+                    <include name="testAdvancedInputSanitization"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- Performance Tests -->
+    <test name="Performance-Tests" preserve-order="true">
+        <parameter name="testCategory" value="performance"/>
+        <groups>
+            <run>
+                <include name="performance"/>
+                <include name="regression"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRPerformanceTests">
+                <methods>
+                    <include name="testPageLoadTime"/>
+                    <include name="testAPIResponseTime"/>
+                    <include name="testConcurrentUserLoadPerformance"/>
+                    <include name="testMemoryAndResourceUsage"/>
+                    <include name="testDatabaseConnectionPoolPerformance"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- Multi-Currency Tests -->
+    <test name="Multi-Currency-Tests" preserve-order="true">
+        <parameter name="testCategory" value="multi-currency"/>
+        <groups>
+            <run>
+                <include name="multi-currency"/>
+                <include name="integration"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRMultiCurrencyTests">
+                <methods>
+                    <include name="testMultipleCurrencySupport"/>
+                    <include name="testCurrencyConversionAccuracy"/>
+                    <include name="testCurrencyDisplayFormatting"/>
+                    <include name="testCrossRegionPaymentProcessing"/>
+                    <include name="testCurrencySpecificValidation"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- 3D Secure Tests -->
+    <test name="3D-Secure-Tests" preserve-order="true">
+        <parameter name="testCategory" value="3d-secure"/>
+        <groups>
+            <run>
+                <include name="3d-secure"/>
+                <include name="security"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTR3DSecureTests">
+                <methods>
+                    <include name="test3DSecureAuthenticationFlow"/>
+                    <include name="test3DSecureFailureHandling"/>
+                    <include name="test3DSecureBypassScenarios"/>
+                    <include name="test3DSecureVersionCompatibility"/>
+                    <include name="test3DSecureFraudPrevention"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- Fraud Detection Tests -->
+    <test name="Fraud-Detection-Tests" preserve-order="true">
+        <parameter name="testCategory" value="fraud-detection"/>
+        <groups>
+            <run>
+                <include name="fraud-detection"/>
+                <include name="security"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRFraudDetectionTests">
+                <methods>
+                    <include name="testRealTimeFraudDetection"/>
+                    <include name="testVelocityCheckAndRateLimiting"/>
+                    <include name="testGeolocationAnomalyDetection"/>
+                    <include name="testDeviceFingerprintingAnomalyDetection"/>
+                    <include name="testBehavioralAnalysisPatternRecognition"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- Webhook Tests -->
+    <test name="Webhook-Tests" preserve-order="true">
+        <parameter name="testCategory" value="webhook"/>
+        <groups>
+            <run>
+                <include name="webhook"/>
+                <include name="integration"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRWebhookTests">
+                <methods>
+                    <include name="testWebhookDeliveryAndRetryMechanism"/>
+                    <include name="testWebhookSecurityAndSignatureVerification"/>
+                    <include name="testWebhookEventTypesAndFiltering"/>
+                    <include name="testWebhookMonitoringAndAnalytics"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- Accessibility Tests -->
+    <test name="Accessibility-Tests" preserve-order="true">
+        <parameter name="testCategory" value="accessibility"/>
+        <groups>
+            <run>
+                <include name="accessibility"/>
+                <include name="ui"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRAccessibilityTests">
+                <methods>
+                    <include name="testWCAG21AACompliance"/>
+                    <include name="testScreenReaderCompatibility"/>
+                    <include name="testKeyboardNavigationAndFocusManagement"/>
+                    <include name="testMobileAccessibilityAndTouchSupport"/>
+                    <include name="testMultiLanguageAndRTLSupport"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- Edge Case Tests -->
+    <test name="Edge-Case-Tests" preserve-order="true">
+        <parameter name="testCategory" value="edge-case"/>
+        <groups>
+            <run>
+                <include name="edge-case"/>
+                <include name="regression"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTREdgeCaseTests">
+                <methods>
+                    <include name="testBoundaryValuePayments"/>
+                    <include name="testExtremeValueHandling"/>
+                    <include name="testNullAndEmptyValues"/>
+                    <include name="testSpecialCharacterHandling"/>
+                    <include name="testConcurrentTransactions"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- Chaos Engineering Tests -->
+    <test name="Chaos-Engineering-Tests" preserve-order="true">
+        <parameter name="testCategory" value="chaos-engineering"/>
+        <groups>
+            <run>
+                <include name="chaos-engineering"/>
+                <include name="performance"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRChaosEngineeringTests">
+                <methods>
+                    <include name="testNetworkLatencyResilience"/>
+                    <include name="testServiceDegradationHandling"/>
+                    <include name="testResourceExhaustionResilience"/>
+                    <include name="testRandomFailureInjection"/>
+                    <include name="testCircuitBreakerPattern"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- Business Logic Tests -->
+    <test name="Business-Logic-Tests" preserve-order="true">
+        <parameter name="testCategory" value="business-logic"/>
+        <groups>
+            <run>
+                <include name="business-logic"/>
+                <include name="integration"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRBusinessLogicTests">
+                <methods>
+                    <include name="testPaymentFlowBusinessRules"/>
+                    <include name="testMerchantConfigurationValidation"/>
+                    <include name="testTransactionStateManagement"/>
+                    <include name="testCommissionAndFeeCalculation"/>
+                    <include name="testRefundBusinessLogic"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- Data Migration Tests -->
+    <test name="Data-Migration-Tests" preserve-order="true">
+        <parameter name="testCategory" value="data-migration"/>
+        <groups>
+            <run>
+                <include name="data-migration"/>
+                <include name="integration"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRDataMigrationTests">
+                <methods>
+                    <include name="testLegacyDataMigration"/>
+                    <include name="testDataIntegrityValidation"/>
+                    <include name="testMigrationRollbackTesting"/>
+                    <include name="testPerformanceDuringMigration"/>
+                    <include name="testCrossSystemDataSynchronization"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+</suite>

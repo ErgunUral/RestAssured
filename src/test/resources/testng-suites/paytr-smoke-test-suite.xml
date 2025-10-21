@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+
+<suite name="PayTR-Smoke-Test-Suite" verbose="1" parallel="methods" thread-count="3">
+    
+    <!-- Global Test Parameters -->
+    <parameter name="browser" value="chrome"/>
+    <parameter name="baseUrl" value="https://www.paytr.com"/>
+    <parameter name="apiBaseUrl" value="https://www.paytr.com/odeme/api"/>
+    <parameter name="timeout" value="15"/>
+    <parameter name="environment" value="test"/>
+    
+    <!-- Test Groups Definition -->
+    <groups>
+        <run>
+            <include name="smoke"/>
+            <include name="critical"/>
+        </run>
+    </groups>
+    
+    <!-- Listeners for Enhanced Reporting -->
+    <listeners>
+        <listener class-name="io.qameta.allure.testng.AllureTestNg"/>
+        <listener class-name="com.example.listeners.TestExecutionListener"/>
+        <listener class-name="com.example.listeners.ScreenshotListener"/>
+    </listeners>
+    
+    <!-- Critical Payment Flow Tests -->
+    <test name="Critical-Payment-Flow" preserve-order="true">
+        <parameter name="testCategory" value="smoke"/>
+        <groups>
+            <run>
+                <include name="smoke"/>
+                <include name="critical"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRPaymentTests">
+                <methods>
+                    <include name="testSuccessfulPayment"/>
+                    <include name="testFailedPayment"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- Critical Security Tests -->
+    <test name="Critical-Security-Tests" preserve-order="true">
+        <parameter name="testCategory" value="security-smoke"/>
+        <groups>
+            <run>
+                <include name="smoke"/>
+                <include name="security"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRSecurityTests">
+                <methods>
+                    <include name="testLoginFormSQLInjection"/>
+                    <include name="testAdvancedRateLimitingProtection"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- Critical Performance Tests -->
+    <test name="Critical-Performance-Tests" preserve-order="true">
+        <parameter name="testCategory" value="performance-smoke"/>
+        <groups>
+            <run>
+                <include name="smoke"/>
+                <include name="performance"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRPerformanceTests">
+                <methods>
+                    <include name="testPageLoadTime"/>
+                    <include name="testAPIResponseTime"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- Critical Multi-Currency Tests -->
+    <test name="Critical-Multi-Currency-Tests" preserve-order="true">
+        <parameter name="testCategory" value="multi-currency-smoke"/>
+        <groups>
+            <run>
+                <include name="smoke"/>
+                <include name="multi-currency"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRMultiCurrencyTests">
+                <methods>
+                    <include name="testMultipleCurrencySupport"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- Critical 3D Secure Tests -->
+    <test name="Critical-3D-Secure-Tests" preserve-order="true">
+        <parameter name="testCategory" value="3d-secure-smoke"/>
+        <groups>
+            <run>
+                <include name="smoke"/>
+                <include name="3d-secure"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTR3DSecureTests">
+                <methods>
+                    <include name="test3DSecureAuthenticationFlow"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+</suite>

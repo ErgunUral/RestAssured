@@ -423,6 +423,72 @@
                 <allure.results.directory>target/allure-results</allure.results.directory>
             </properties>
         </profile>
+
+        <!-- New Enhanced Test Suites Profiles -->
+        
+        <!-- Comprehensive Enhanced Test Suite -->
+        <profile>
+            <id>comprehensive-enhanced</id>
+            <properties>
+                <suiteXmlFile>paytr-comprehensive-test-suite.xml</suiteXmlFile>
+                <browser>chrome</browser>
+                <environment>test</environment>
+                <headless>true</headless>
+                <parallel>methods</parallel>
+                <threadCount>4</threadCount>
+                <selenium.grid.url></selenium.grid.url>
+                <use.grid>false</use.grid>
+                <allure.results.directory>target/allure-results</allure.results.directory>
+            </properties>
+        </profile>
+
+        <!-- Smoke Enhanced Test Suite -->
+        <profile>
+            <id>smoke-enhanced</id>
+            <properties>
+                <suiteXmlFile>paytr-smoke-test-suite.xml</suiteXmlFile>
+                <browser>chrome</browser>
+                <environment>test</environment>
+                <headless>true</headless>
+                <parallel>methods</parallel>
+                <threadCount>2</threadCount>
+                <selenium.grid.url></selenium.grid.url>
+                <use.grid>false</use.grid>
+                <allure.results.directory>target/allure-results</allure.results.directory>
+            </properties>
+        </profile>
+
+        <!-- Regression Enhanced Test Suite -->
+        <profile>
+            <id>regression-enhanced</id>
+            <properties>
+                <suiteXmlFile>paytr-regression-test-suite.xml</suiteXmlFile>
+                <browser>chrome</browser>
+                <environment>test</environment>
+                <headless>true</headless>
+                <parallel>methods</parallel>
+                <threadCount>6</threadCount>
+                <selenium.grid.url></selenium.grid.url>
+                <use.grid>false</use.grid>
+                <allure.results.directory>target/allure-results</allure.results.directory>
+            </properties>
+        </profile>
+
+        <!-- Parallel Enhanced Test Suite -->
+        <profile>
+            <id>parallel-enhanced</id>
+            <properties>
+                <suiteXmlFile>paytr-parallel-execution-suite.xml</suiteXmlFile>
+                <browser>chrome</browser>
+                <environment>test</environment>
+                <headless>true</headless>
+                <parallel>methods</parallel>
+                <threadCount>8</threadCount>
+                <selenium.grid.url></selenium.grid.url>
+                <use.grid>false</use.grid>
+                <allure.results.directory>target/allure-results</allure.results.directory>
+            </properties>
+        </profile>
     </profiles>
 
     <!-- Reporting -->

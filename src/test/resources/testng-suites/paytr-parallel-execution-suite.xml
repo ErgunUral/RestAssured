@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+
+<suite name="PayTR-Parallel-Execution-Suite" verbose="1" parallel="tests" thread-count="8" data-provider-thread-count="4">
+    
+    <!-- Global Test Parameters -->
+    <parameter name="browser" value="chrome"/>
+    <parameter name="baseUrl" value="https://www.paytr.com"/>
+    <parameter name="apiBaseUrl" value="https://www.paytr.com/odeme/api"/>
+    <parameter name="timeout" value="60"/>
+    <parameter name="retryCount" value="2"/>
+    <parameter name="environment" value="test"/>
+    <parameter name="parallelExecution" value="true"/>
+    
+    <!-- Test Groups Definition -->
+    <groups>
+        <run>
+            <include name="parallel-safe"/>
+            <include name="api"/>
+            <include name="integration"/>
+            <exclude name="sequential"/>
+            <exclude name="database-dependent"/>
+        </run>
+    </groups>
+    
+    <!-- Listeners for Enhanced Reporting -->
+    <listeners>
+        <listener class-name="io.qameta.allure.testng.AllureTestNg"/>
+        <listener class-name="com.example.listeners.ParallelTestExecutionListener"/>
+        <listener class-name="com.example.listeners.ThreadSafeScreenshotListener"/>
+        <listener class-name="com.example.listeners.RetryListener"/>
+    </listeners>
+    
+    <!-- API Tests - Thread Safe -->
+    <test name="API-Tests-Parallel" preserve-order="false" parallel="methods" thread-count="3">
+        <parameter name="testCategory" value="api-parallel"/>
+        <groups>
+            <run>
+                <include name="parallel-safe"/>
+                <include name="api"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRPaymentTests">
+                <methods>
+                    <include name="testSuccessfulPayment"/>
+                    <include name="testFailedPayment"/>
+                    <include name="testPaymentWithInstallments"/>
+                </methods>
+            </class>
+            <class name="com.example.tests.PayTRMultiCurrencyTests">
+                <methods>
+                    <include name="testMultipleCurrencySupport"/>
+                    <include name="testCurrencyConversionAccuracy"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- Security Tests - Thread Safe -->
+    <test name="Security-Tests-Parallel" preserve-order="false" parallel="methods" thread-count="2">
+        <parameter name="testCategory" value="security-parallel"/>
+        <groups>
+            <run>
+                <include name="parallel-safe"/>
+                <include name="security"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRSecurityTests">
+                <methods>
+                    <include name="testLoginFormSQLInjection"/>
+                    <include name="testSearchFormSQLInjection"/>
+                    <include name="testJWTTokenSecurity"/>
+                    <include name="testCSRFProtection"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- 3D Secure Tests - Thread Safe -->
+    <test name="3D-Secure-Tests-Parallel" preserve-order="false" parallel="methods" thread-count="2">
+        <parameter name="testCategory" value="3d-secure-parallel"/>
+        <groups>
+            <run>
+                <include name="parallel-safe"/>
+                <include name="3d-secure"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTR3DSecureTests">
+                <methods>
+                    <include name="test3DSecureAuthenticationFlow"/>
+                    <include name="test3DSecureFailureHandling"/>
+                    <include name="test3DSecureVersionCompatibility"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- Fraud Detection Tests - Thread Safe -->
+    <test name="Fraud-Detection-Tests-Parallel" preserve-order="false" parallel="methods" thread-count="2">
+        <parameter name="testCategory" value="fraud-detection-parallel"/>
+        <groups>
+            <run>
+                <include name="parallel-safe"/>
+                <include name="fraud-detection"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRFraudDetectionTests">
+                <methods>
+                    <include name="testRealTimeFraudDetection"/>
+                    <include name="testVelocityCheckAndRateLimiting"/>
+                    <include name="testGeolocationAnomalyDetection"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- Webhook Tests - Thread Safe -->
+    <test name="Webhook-Tests-Parallel" preserve-order="false" parallel="methods" thread-count="2">
+        <parameter name="testCategory" value="webhook-parallel"/>
+        <groups>
+            <run>
+                <include name="parallel-safe"/>
+                <include name="webhook"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRWebhookTests">
+                <methods>
+                    <include name="testWebhookDeliveryAndRetryMechanism"/>
+                    <include name="testWebhookSecurityAndSignatureVerification"/>
+                    <include name="testWebhookEventTypesAndFiltering"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- Edge Case Tests - Thread Safe -->
+    <test name="Edge-Case-Tests-Parallel" preserve-order="false" parallel="methods" thread-count="2">
+        <parameter name="testCategory" value="edge-case-parallel"/>
+        <groups>
+            <run>
+                <include name="parallel-safe"/>
+                <include name="edge-case"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTREdgeCaseTests">
+                <methods>
+                    <include name="testBoundaryValuePayments"/>
+                    <include name="testExtremeValueHandling"/>
+                    <include name="testSpecialCharacterHandling"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- Business Logic Tests - Thread Safe -->
+    <test name="Business-Logic-Tests-Parallel" preserve-order="false" parallel="methods" thread-count="2">
+        <parameter name="testCategory" value="business-logic-parallel"/>
+        <groups>
+            <run>
+                <include name="parallel-safe"/>
+                <include name="business-logic"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRBusinessLogicTests">
+                <methods>
+                    <include name="testPaymentFlowBusinessRules"/>
+                    <include name="testMerchantConfigurationValidation"/>
+                    <include name="testCommissionAndFeeCalculation"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+</suite>

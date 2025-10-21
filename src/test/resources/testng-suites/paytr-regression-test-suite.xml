@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+
+<suite name="PayTR-Regression-Test-Suite" verbose="1" parallel="classes" thread-count="4" data-provider-thread-count="2">
+    
+    <!-- Global Test Parameters -->
+    <parameter name="browser" value="chrome"/>
+    <parameter name="baseUrl" value="https://www.paytr.com"/>
+    <parameter name="apiBaseUrl" value="https://www.paytr.com/odeme/api"/>
+    <parameter name="timeout" value="45"/>
+    <parameter name="retryCount" value="1"/>
+    <parameter name="environment" value="test"/>
+    
+    <!-- Test Groups Definition -->
+    <groups>
+        <run>
+            <include name="regression"/>
+            <include name="integration"/>
+            <include name="api"/>
+            <include name="ui"/>
+            <exclude name="manual"/>
+            <exclude name="wip"/>
+        </run>
+    </groups>
+    
+    <!-- Listeners for Enhanced Reporting -->
+    <listeners>
+        <listener class-name="io.qameta.allure.testng.AllureTestNg"/>
+        <listener class-name="com.example.listeners.TestExecutionListener"/>
+        <listener class-name="com.example.listeners.ScreenshotListener"/>
+        <listener class-name="com.example.listeners.RetryListener"/>
+        <listener class-name="com.example.listeners.TestDataListener"/>
+    </listeners>
+    
+    <!-- Core Payment Regression Tests -->
+    <test name="Payment-Regression-Tests" preserve-order="false">
+        <parameter name="testCategory" value="payment-regression"/>
+        <groups>
+            <run>
+                <include name="regression"/>
+                <include name="payment"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRPaymentTests"/>
+        </classes>
+    </test>
+    
+    <!-- Security Regression Tests -->
+    <test name="Security-Regression-Tests" preserve-order="false">
+        <parameter name="testCategory" value="security-regression"/>
+        <groups>
+            <run>
+                <include name="regression"/>
+                <include name="security"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRSecurityTests"/>
+        </classes>
+    </test>
+    
+    <!-- Performance Regression Tests -->
+    <test name="Performance-Regression-Tests" preserve-order="false">
+        <parameter name="testCategory" value="performance-regression"/>
+        <groups>
+            <run>
+                <include name="regression"/>
+                <include name="performance"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRPerformanceTests"/>
+        </classes>
+    </test>
+    
+    <!-- Multi-Currency Regression Tests -->
+    <test name="Multi-Currency-Regression-Tests" preserve-order="false">
+        <parameter name="testCategory" value="multi-currency-regression"/>
+        <groups>
+            <run>
+                <include name="regression"/>
+                <include name="multi-currency"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRMultiCurrencyTests"/>
+        </classes>
+    </test>
+    
+    <!-- 3D Secure Regression Tests -->
+    <test name="3D-Secure-Regression-Tests" preserve-order="false">
+        <parameter name="testCategory" value="3d-secure-regression"/>
+        <groups>
+            <run>
+                <include name="regression"/>
+                <include name="3d-secure"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTR3DSecureTests"/>
+        </classes>
+    </test>
+    
+    <!-- Fraud Detection Regression Tests -->
+    <test name="Fraud-Detection-Regression-Tests" preserve-order="false">
+        <parameter name="testCategory" value="fraud-detection-regression"/>
+        <groups>
+            <run>
+                <include name="regression"/>
+                <include name="fraud-detection"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRFraudDetectionTests"/>
+        </classes>
+    </test>
+    
+    <!-- Webhook Regression Tests -->
+    <test name="Webhook-Regression-Tests" preserve-order="false">
+        <parameter name="testCategory" value="webhook-regression"/>
+        <groups>
+            <run>
+                <include name="regression"/>
+                <include name="webhook"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRWebhookTests"/>
+        </classes>
+    </test>
+    
+    <!-- Edge Case Regression Tests -->
+    <test name="Edge-Case-Regression-Tests" preserve-order="false">
+        <parameter name="testCategory" value="edge-case-regression"/>
+        <groups>
+            <run>
+                <include name="regression"/>
+                <include name="edge-case"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTREdgeCaseTests"/>
+        </classes>
+    </test>
+    
+    <!-- Business Logic Regression Tests -->
+    <test name="Business-Logic-Regression-Tests" preserve-order="false">
+        <parameter name="testCategory" value="business-logic-regression"/>
+        <groups>
+            <run>
+                <include name="regression"/>
+                <include name="business-logic"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRBusinessLogicTests"/>
+        </classes>
+    </test>
+    
+    <!-- Data Migration Regression Tests -->
+    <test name="Data-Migration-Regression-Tests" preserve-order="false">
+        <parameter name="testCategory" value="data-migration-regression"/>
+        <groups>
+            <run>
+                <include name="regression"/>
+                <include name="data-migration"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRDataMigrationTests"/>
+        </classes>
+    </test>
+    
+</suite>

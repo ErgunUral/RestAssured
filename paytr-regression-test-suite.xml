@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+
+<suite name="PayTR Regression Test Suite" parallel="methods" thread-count="6" verbose="2">
+    
+    <!-- Global Parameters -->
+    <parameter name="browser" value="chrome"/>
+    <parameter name="environment" value="test"/>
+    <parameter name="baseUrl" value="https://www.paytr.com"/>
+    <parameter name="apiUrl" value="https://www.paytr.com/odeme/api"/>
+    <parameter name="timeout" value="30"/>
+    <parameter name="retryCount" value="2"/>
+    <parameter name="screenshotOnFailure" value="true"/>
+    <parameter name="allureReporting" value="true"/>
+    
+    <!-- Test Groups Definition -->
+    <groups>
+        <define name="regression">
+            <include name="payment"/>
+            <include name="security"/>
+            <include name="performance"/>
+            <include name="multicurrency"/>
+            <include name="3dsecure"/>
+            <include name="fraud"/>
+            <include name="webhook"/>
+            <include name="edgecase"/>
+            <include name="business"/>
+            <include name="migration"/>
+        </define>
+        
+        <define name="integration">
+            <include name="payment-integration"/>
+            <include name="security-integration"/>
+            <include name="api-integration"/>
+        </define>
+        
+        <define name="api">
+            <include name="payment-api"/>
+            <include name="security-api"/>
+            <include name="webhook-api"/>
+            <include name="fraud-api"/>
+        </define>
+        
+        <define name="ui">
+            <include name="payment-ui"/>
+            <include name="security-ui"/>
+            <include name="accessibility-ui"/>
+            <include name="usability"/>
+        </define>
+    </groups>
+    
+    <!-- Listeners for Enhanced Reporting -->
+    <listeners>
+        <listener class-name="io.qameta.allure.testng.AllureTestNg"/>
+        <listener class-name="com.example.listeners.TestExecutionListener"/>
+        <listener class-name="com.example.listeners.ScreenshotListener"/>
+        <listener class-name="com.example.listeners.RetryListener"/>
+        <listener class-name="com.example.listeners.TestDataListener"/>
+    </listeners>
+    
+    <!-- Core Payment Regression Tests -->
+    <test name="Core Payment Regression" preserve-order="false">
+        <groups>
+            <include name="regression"/>
+            <include name="payment"/>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRPaymentProcessTest"/>
+            <class name="com.example.tests.PayTRAPITests"/>
+            <class name="com.example.tests.PayTRCardValidationTest"/>
+            <class name="com.example.tests.PayTRInstallmentTest"/>
+        </classes>
+    </test>
+    
+    <!-- Security Regression Tests -->
+    <test name="Security Regression" preserve-order="false">
+        <groups>
+            <include name="regression"/>
+            <include name="security"/>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRSecurityTests"/>
+            <class name="com.example.tests.PayTRLoginScenariosTest"/>
+        </classes>
+    </test>
+    
+    <!-- Performance Regression Tests -->
+    <test name="Performance Regression" preserve-order="false">
+        <groups>
+            <include name="regression"/>
+            <include name="performance"/>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRPerformanceTests"/>
+        </classes>
+    </test>
+    
+    <!-- Multi-Currency Regression Tests -->
+    <test name="Multi-Currency Regression" preserve-order="false">
+        <groups>
+            <include name="regression"/>
+            <include name="multicurrency"/>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRMultiCurrencyTests"/>
+        </classes>
+    </test>
+    
+    <!-- 3D Secure Regression Tests -->
+    <test name="3D Secure Regression" preserve-order="false">
+        <groups>
+            <include name="regression"/>
+            <include name="3dsecure"/>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTR3DSecureTests"/>
+        </classes>
+    </test>
+    
+    <!-- Fraud Detection Regression Tests -->
+    <test name="Fraud Detection Regression" preserve-order="false">
+        <groups>
+            <include name="regression"/>
+            <include name="fraud"/>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRFraudDetectionTests"/>
+        </classes>
+    </test>
+    
+    <!-- Webhook Regression Tests -->
+    <test name="Webhook Regression" preserve-order="false">
+        <groups>
+            <include name="regression"/>
+            <include name="webhook"/>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRWebhookTests"/>
+        </classes>
+    </test>
+    
+    <!-- Edge Case Regression Tests -->
+    <test name="Edge Case Regression" preserve-order="false">
+        <groups>
+            <include name="regression"/>
+            <include name="edgecase"/>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTREdgeCaseTests"/>
+            <class name="com.example.tests.PayTRBoundaryTests"/>
+        </classes>
+    </test>
+    
+    <!-- Business Logic Regression Tests -->
+    <test name="Business Logic Regression" preserve-order="false">
+        <groups>
+            <include name="regression"/>
+            <include name="business"/>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRBusinessLogicTests"/>
+        </classes>
+    </test>
+    
+    <!-- Data Migration Regression Tests -->
+    <test name="Data Migration Regression" preserve-order="false">
+        <groups>
+            <include name="regression"/>
+            <include name="migration"/>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRDataMigrationTests"/>
+        </classes>
+    </test>
+    
+</suite>

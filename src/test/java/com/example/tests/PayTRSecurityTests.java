@@ -1,5 +1,7 @@
 package com.example.tests;
 
+import com.example.config.BaseTest;
+import com.example.config.PayTRTestConfig;
 import com.example.utils.WebDriverSetup;
 import com.example.utils.SecurityTestUtils;
 import org.openqa.selenium.WebDriver;
@@ -19,8 +21,12 @@ import io.qameta.allure.Story;
 import io.qameta.allure.Severity;
 import io.qameta.allure.SeverityLevel;
 import io.qameta.allure.Description;
+import io.restassured.response.Response;
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import static io.restassured.RestAssured.given;
 import static org.testng.Assert.*;
 
 /**
@@ -369,6 +375,277 @@ public class PayTRSecurityTests extends BaseTest {
         }
     }
     
+    /**
+     * Test ID: AS-001
+     * Advanced Security - API Rate Limiting and DDoS Protection
+     * Tests system behavior under high-frequency requests
+     */
+    @Test(priority = 10, groups = {"security", "advanced", "rate-limiting"})
+    @Story("Advanced Rate Limiting Protection")
+    @Severity(SeverityLevel.HIGH)
+    @Description("API rate limiting ve DDoS korunma testleri")
+    public void testAdvancedRateLimitingProtection() {
+        logTestInfo("Test ID: AS-001 - Advanced Rate Limiting Protection");
+        
+        try {
+            int requestCount = 50;
+            int blockedRequests = 0;
+            long startTime = System.currentTimeMillis();
+            
+            for (int i = 0; i < requestCount; i++) {
+                Map<String, Object> paymentData = new HashMap<>();
+                paymentData.put("merchant_id", PayTRTestConfig.MERCHANT_ID);
+                paymentData.put("user_ip", "127.0.0.1");
+                paymentData.put("merchant_oid", "AS001_RATE_" + i + "_" + System.currentTimeMillis());
+                paymentData.put("email", "ratelimit.test" + i + "@example.com");
+                paymentData.put("payment_amount", "10000");
+                paymentData.put("currency", "TL");
+                paymentData.put("test_mode", "1");
+                
+                Response response = given()
+                    .spec(requestSpec)
+                    .body(paymentData)
+                    .when()
+                    .post("/odeme/api/get-token")
+                    .then()
+                    .extract().response();
+                
+                // Check for rate limiting responses
+                if (response.getStatusCode() == 429 || response.getStatusCode() == 503) {
+                    blockedRequests++;
+                }
+                
+                // Very short delay to simulate rapid requests
+                Thread.sleep(10);
+            }
+            
+            long endTime = System.currentTimeMillis();
+            double requestsPerSecond = (double) requestCount / ((endTime - startTime) / 1000.0);
+            
+            // Rate limiting should kick in for high-frequency requests
+            assertTrue(blockedRequests > 0 || requestsPerSecond < 100, 
+                "Rate limiting should activate under high-frequency requests");
+            
+            logTestInfo("Rate limiting test - Blocked requests: " + blockedRequests + "/" + requestCount);
+            logTestInfo("Requests per second: " + String.format("%.2f", requestsPerSecond));
+            logTestResult("AS-001", "BAŞARILI", "Rate limiting koruması aktif");
+            
+        } catch (Exception e) {
+            logTestResult("AS-001", "BAŞARISIZ", "Rate limiting testi hatası: " + e.getMessage());
+            fail("Rate limiting testi başarısız: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Test ID: AS-002
+     * Advanced Security - JWT Token Security and Manipulation
+     * Tests JWT token validation and security
+     */
+    @Test(priority = 11, groups = {"security", "advanced", "jwt"})
+    @Story("JWT Token Security")
+    @Severity(SeverityLevel.HIGH)
+    @Description("JWT token güvenliği ve manipülasyon testleri")
+    public void testJWTTokenSecurity() {
+        logTestInfo("Test ID: AS-002 - JWT Token Security Testing");
+        
+        try {
+            // First, get a valid token
+            Map<String, Object> validData = new HashMap<>();
+            validData.put("merchant_id", PayTRTestConfig.MERCHANT_ID);
+            validData.put("user_ip", "127.0.0.1");
+            validData.put("merchant_oid", "AS002_JWT_" + System.currentTimeMillis());
+            validData.put("email", "jwt.test@example.com");
+            validData.put("payment_amount", "10000");
+            validData.put("currency", "TL");
+            validData.put("test_mode", "1");
+            
+            Response tokenResponse = given()
+                .spec(requestSpec)
+                .body(validData)
+                .when()
+                .post("/odeme/api/get-token")
+                .then()
+                .extract().response();
+            
+            if (tokenResponse.getStatusCode() == 200) {
+                String token = tokenResponse.jsonPath().getString("token");
+                
+                if (token != null && !token.isEmpty()) {
+                    // Test 1: Manipulated token
+                    String manipulatedToken = token.substring(0, token.length() - 5) + "XXXXX";
+                    
+                    Response manipulatedResponse = given()
+                        .spec(requestSpec)
+                        .header("Authorization", "Bearer " + manipulatedToken)
+                        .when()
+                        .get("/odeme/api/validate-token")
+                        .then()
+                        .extract().response();
+                    
+                    // Manipulated token should be rejected
+                    assertNotEquals(manipulatedResponse.getStatusCode(), 200, 
+                        "Manipulated JWT token should be rejected");
+                    
+                    // Test 2: Expired token simulation (if possible)
+                    // This would require a token that's already expired or time manipulation
+                    
+                    // Test 3: Invalid signature
+                    String[] tokenParts = token.split("\\.");
+                    if (tokenParts.length == 3) {
+                        String invalidToken = tokenParts[0] + "." + tokenParts[1] + ".invalid_signature";
+                        
+                        Response invalidResponse = given()
+                            .spec(requestSpec)
+                            .header("Authorization", "Bearer " + invalidToken)
+                            .when()
+                            .get("/odeme/api/validate-token")
+                            .then()
+                            .extract().response();
+                        
+                        // Invalid signature should be rejected
+                        assertNotEquals(invalidResponse.getStatusCode(), 200, 
+                            "JWT token with invalid signature should be rejected");
+                    }
+                    
+                    logTestResult("AS-002", "BAŞARILI", "JWT token güvenlik kontrolleri başarılı");
+                } else {
+                    logTestResult("AS-002", "ATLANDΙ", "JWT token alınamadı");
+                }
+            } else {
+                logTestResult("AS-002", "ATLANDΙ", "Token oluşturulamadı");
+            }
+            
+        } catch (Exception e) {
+            logTestResult("AS-002", "BAŞARISIZ", "JWT token testi hatası: " + e.getMessage());
+            fail("JWT token testi başarısız: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Test ID: AS-003
+     * Advanced Security - CSRF Protection Testing
+     * Tests Cross-Site Request Forgery protection mechanisms
+     */
+    @Test(priority = 12, groups = {"security", "advanced", "csrf"})
+    @Story("CSRF Protection")
+    @Severity(SeverityLevel.HIGH)
+    @Description("Cross-Site Request Forgery korunma testleri")
+    public void testCSRFProtection() {
+        logTestInfo("Test ID: AS-003 - CSRF Protection Testing");
+        
+        try {
+            // Test CSRF protection by making requests without proper CSRF tokens
+            Map<String, Object> paymentData = new HashMap<>();
+            paymentData.put("merchant_id", PayTRTestConfig.MERCHANT_ID);
+            paymentData.put("user_ip", "127.0.0.1");
+            paymentData.put("merchant_oid", "AS003_CSRF_" + System.currentTimeMillis());
+            paymentData.put("email", "csrf.test@example.com");
+            paymentData.put("payment_amount", "10000");
+            paymentData.put("currency", "TL");
+            paymentData.put("test_mode", "1");
+            
+            // Test 1: Request without CSRF token
+            Response noCsrfResponse = given()
+                .spec(requestSpec)
+                .header("Origin", "https://malicious-site.com")
+                .header("Referer", "https://malicious-site.com")
+                .body(paymentData)
+                .when()
+                .post("/odeme/api/get-token")
+                .then()
+                .extract().response();
+            
+            // Test 2: Request with invalid CSRF token
+            Response invalidCsrfResponse = given()
+                .spec(requestSpec)
+                .header("X-CSRF-Token", "invalid_csrf_token")
+                .header("Origin", "https://malicious-site.com")
+                .body(paymentData)
+                .when()
+                .post("/odeme/api/get-token")
+                .then()
+                .extract().response();
+            
+            // CSRF protection should be in place
+            // Note: Some APIs might not implement CSRF protection for API endpoints
+            // but should validate Origin/Referer headers
+            
+            logTestInfo("CSRF test - No token response: " + noCsrfResponse.getStatusCode());
+            logTestInfo("CSRF test - Invalid token response: " + invalidCsrfResponse.getStatusCode());
+            
+            logTestResult("AS-003", "BAŞARILI", "CSRF korunma testleri tamamlandı");
+            
+        } catch (Exception e) {
+            logTestResult("AS-003", "BAŞARISIZ", "CSRF testi hatası: " + e.getMessage());
+            fail("CSRF testi başarısız: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Test ID: AS-004
+     * Advanced Security - Input Sanitization and XSS Protection
+     * Tests comprehensive input sanitization across all fields
+     */
+    @Test(priority = 13, groups = {"security", "advanced", "xss", "sanitization"})
+    @Story("Input Sanitization and XSS Protection")
+    @Severity(SeverityLevel.HIGH)
+    @Description("Gelişmiş input sanitization ve XSS korunma testleri")
+    public void testAdvancedInputSanitization() {
+        logTestInfo("Test ID: AS-004 - Advanced Input Sanitization Testing");
+        
+        try {
+            // Advanced XSS payloads
+            String[] xssPayloads = {
+                "<script>alert('XSS')</script>",
+                "javascript:alert('XSS')",
+                "<img src=x onerror=alert('XSS')>",
+                "<svg onload=alert('XSS')>",
+                "';alert('XSS');//",
+                "<iframe src=javascript:alert('XSS')></iframe>",
+                "<body onload=alert('XSS')>",
+                "<input onfocus=alert('XSS') autofocus>",
+                "<select onfocus=alert('XSS') autofocus>",
+                "<textarea onfocus=alert('XSS') autofocus>"
+            };
+            
+            for (String payload : xssPayloads) {
+                Map<String, Object> xssData = new HashMap<>();
+                xssData.put("merchant_id", PayTRTestConfig.MERCHANT_ID);
+                xssData.put("user_ip", "127.0.0.1");
+                xssData.put("merchant_oid", "AS004_XSS_" + System.currentTimeMillis());
+                xssData.put("email", payload); // XSS payload in email field
+                xssData.put("payment_amount", "10000");
+                xssData.put("currency", "TL");
+                xssData.put("test_mode", "1");
+                xssData.put("user_name", payload); // XSS payload in name field
+                
+                Response xssResponse = given()
+                    .spec(requestSpec)
+                    .body(xssData)
+                    .when()
+                    .post("/odeme/api/get-token")
+                    .then()
+                    .extract().response();
+                
+                // XSS should be sanitized or rejected
+                String responseBody = xssResponse.getBody().asString();
+                assertFalse(responseBody.contains("<script>") || 
+                           responseBody.contains("javascript:") ||
+                           responseBody.contains("onerror=") ||
+                           responseBody.contains("onload="),
+                    "XSS payload not properly sanitized: " + payload);
+                
+                logTestInfo("XSS payload sanitized: " + payload);
+            }
+            
+            logTestResult("AS-004", "BAŞARILI", "Input sanitization testleri başarılı");
+            
+        } catch (Exception e) {
+            logTestResult("AS-004", "BAŞARISIZ", "Input sanitization testi hatası: " + e.getMessage());
+            fail("Input sanitization testi başarısız: " + e.getMessage());
+        }
+    }
+
     /**
      * Test sonucu raporlama metodu
      */

@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+
+<suite name="PayTR Comprehensive Test Suite" parallel="methods" thread-count="4" verbose="2">
+    
+    <!-- Global Parameters -->
+    <parameter name="browser" value="chrome"/>
+    <parameter name="environment" value="test"/>
+    <parameter name="baseUrl" value="https://www.paytr.com"/>
+    <parameter name="apiUrl" value="https://www.paytr.com/odeme/api"/>
+    <parameter name="timeout" value="30"/>
+    <parameter name="retryCount" value="2"/>
+    <parameter name="screenshotOnFailure" value="true"/>
+    <parameter name="allureReporting" value="true"/>
+    
+    <!-- Test Groups Definition -->
+    <groups>
+        <define name="smoke">
+            <include name="critical"/>
+            <include name="payment"/>
+            <include name="security"/>
+        </define>
+        
+        <define name="regression">
+            <include name="payment"/>
+            <include name="security"/>
+            <include name="performance"/>
+            <include name="multicurrency"/>
+            <include name="3dsecure"/>
+            <include name="fraud"/>
+            <include name="webhook"/>
+            <include name="accessibility"/>
+            <include name="edgecase"/>
+            <include name="chaos"/>
+            <include name="business"/>
+            <include name="migration"/>
+        </define>
+        
+        <define name="api">
+            <include name="payment-api"/>
+            <include name="security-api"/>
+            <include name="webhook-api"/>
+            <include name="fraud-api"/>
+        </define>
+        
+        <define name="ui">
+            <include name="payment-ui"/>
+            <include name="security-ui"/>
+            <include name="accessibility-ui"/>
+            <include name="usability"/>
+        </define>
+    </groups>
+    
+    <!-- Listeners for Enhanced Reporting -->
+    <listeners>
+        <listener class-name="io.qameta.allure.testng.AllureTestNg"/>
+        <listener class-name="com.example.listeners.TestExecutionListener"/>
+        <listener class-name="com.example.listeners.ScreenshotListener"/>
+        <listener class-name="com.example.listeners.RetryListener"/>
+        <listener class-name="com.example.listeners.TestDataListener"/>
+    </listeners>
+    
+    <!-- Core Payment Tests -->
+    <test name="Core Payment Tests" preserve-order="true">
+        <groups>
+            <include name="payment"/>
+            <include name="critical"/>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRPaymentProcessTest">
+                <methods>
+                    <include name="testSuccessfulPayment"/>
+                    <include name="testFailedPayment"/>
+                    <include name="testPaymentWithInvalidCard"/>
+                    <include name="testPaymentTimeout"/>
+                </methods>
+            </class>
+            <class name="com.example.tests.PayTRAPITests">
+                <methods>
+                    <include name="testPaymentAPIEndpoint"/>
+                    <include name="testPaymentValidation"/>
+                    <include name="testAPIResponseTime"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- Security Tests -->
+    <test name="Security Tests" preserve-order="true">
+        <groups>
+            <include name="security"/>
+            <include name="critical"/>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRSecurityTests">
+                <methods>
+                    <include name="testLoginFormSQLInjection"/>
+                    <include name="testAdvancedRateLimitingProtection"/>
+                    <include name="testSessionManagementSecurity"/>
+                    <include name="testDataEncryptionValidation"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- Performance Tests -->
+    <test name="Performance Tests" preserve-order="true">
+        <groups>
+            <include name="performance"/>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRPerformanceTests">
+                <methods>
+                    <include name="testPageLoadTime"/>
+                    <include name="testAPIResponseTime"/>
+                    <include name="testConcurrentUserLoad"/>
+                    <include name="testMemoryUsageOptimization"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- Multi-Currency Tests -->
+    <test name="Multi-Currency Tests" preserve-order="true">
+        <groups>
+            <include name="multicurrency"/>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRMultiCurrencyTests">
+                <methods>
+                    <include name="testMultipleCurrencySupport"/>
+                    <include name="testCurrencyConversionAccuracy"/>
+                    <include name="testExchangeRateValidation"/>
+                    <include name="testCurrencyDisplayFormatting"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- 3D Secure Tests -->
+    <test name="3D Secure Tests" preserve-order="true">
+        <groups>
+            <include name="3dsecure"/>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTR3DSecureTests">
+                <methods>
+                    <include name="test3DSecureAuthenticationFlow"/>
+                    <include name="test3DSecureFailureHandling"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- Fraud Detection Tests -->
+    <test name="Fraud Detection Tests" preserve-order="true">
+        <groups>
+            <include name="fraud"/>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRFraudDetectionTests">
+                <methods>
+                    <include name="testRiskScoreCalculation"/>
+                    <include name="testVelocityControlMechanism"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- Webhook Tests -->
+    <test name="Webhook Tests" preserve-order="true">
+        <groups>
+            <include name="webhook"/>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRWebhookTests">
+                <methods>
+                    <include name="testWebhookDeliveryMechanism"/>
+                    <include name="testWebhookRetryLogic"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- Accessibility Tests -->
+    <test name="Accessibility Tests" preserve-order="true">
+        <groups>
+            <include name="accessibility"/>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRAccessibilityTests">
+                <methods>
+                    <include name="testWCAGComplianceValidation"/>
+                    <include name="testScreenReaderCompatibility"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- Edge Case Tests -->
+    <test name="Edge Case Tests" preserve-order="true">
+        <groups>
+            <include name="edgecase"/>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTREdgeCaseTests">
+                <methods>
+                    <include name="testBoundaryValueAnalysis"/>
+                    <include name="testExtremeDataInputHandling"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- Chaos Engineering Tests -->
+    <test name="Chaos Engineering Tests" preserve-order="true">
+        <groups>
+            <include name="chaos"/>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRChaosEngineeringTests">
+                <methods>
+                    <include name="testNetworkLatencyResilience"/>
+                    <include name="testServiceDegradationHandling"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- Business Logic Tests -->
+    <test name="Business Logic Tests" preserve-order="true">
+        <groups>
+            <include name="business"/>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRBusinessLogicTests">
+                <methods>
+                    <include name="testComplexBusinessRuleValidation"/>
+                    <include name="testWorkflowIntegrationTesting"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+    <!-- Data Migration Tests -->
+    <test name="Data Migration Tests" preserve-order="true">
+        <groups>
+            <include name="migration"/>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRDataMigrationTests">
+                <methods>
+                    <include name="testLegacyDataMigration"/>
+                    <include name="testDataIntegrityValidation"/>
+                    <include name="testMigrationRollbackTesting"/>
+                    <include name="testPerformanceDuringMigration"/>
+                    <include name="testCrossSystemDataSynchronization"/>
+                </methods>
+            </class>
+        </classes>
+    </test>
+    
+</suite>

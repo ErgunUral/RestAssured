@@ -1,36 +1,135 @@
 version: '3.8'
 
 services:
-  # PayTR Test Automation Service
-  paytr-tests:
+  # PayTR Test Suite - Smoke Tests
+  paytr-smoke-tests:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: paytr-test-automation
+      target: runtime
+    container_name: paytr-smoke-tests
     environment:
-      - TEST_SUITE=${TEST_SUITE:-comprehensive}
-      - BROWSER=${BROWSER:-chrome}
-      - ENVIRONMENT=${ENVIRONMENT:-staging}
-      - HEADLESS=${HEADLESS:-true}
-      - PARALLEL_EXECUTION=${PARALLEL_EXECUTION:-true}
-      - DISPLAY=:99
+      - TEST_SUITE=smoke-enhanced
+      - BROWSER=chrome
+      - ENVIRONMENT=test
+      - HEADLESS=true
+      - PARALLEL=false
+      - THREAD_COUNT=1
+      - GENERATE_REPORTS=true
+      - MAVEN_OPTS=-Xmx2048m
     volumes:
-      # Test results ve reports için volume mount
-      - ./test-results:/app/test-results
-      - ./reports:/app/reports
-      - ./screenshots:/app/screenshots
-      - ./logs:/app/logs
-      # Test configuration dosyaları için
-      - ./src/test/resources:/app/src/test/resources:ro
-      # Maven cache için
-      - maven-cache:/home/testuser/.m2
+      - ./target/enhanced-reports:/app/target/enhanced-reports
+      - ./target/logs:/app/target/logs
+      - ./target/screenshots:/app/target/screenshots
+      - ./target/allure-results:/app/target/allure-results
+    command: ["./scripts/run-enhanced-tests.sh", "--suite", "smoke-enhanced", "--browser", "chrome", "--headless", "--reports"]
     networks:
       - paytr-test-network
-    depends_on:
-      - selenium-hub
-    command: ["comprehensive", "chrome", "staging", "true"]
+    profiles:
+      - smoke
 
-  # Selenium Grid Hub
+  # PayTR Test Suite - Comprehensive Tests
+  paytr-comprehensive-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: paytr-comprehensive-tests
+    environment:
+      - TEST_SUITE=comprehensive-enhanced
+      - BROWSER=chrome
+      - ENVIRONMENT=test
+      - HEADLESS=true
+      - PARALLEL=false
+      - THREAD_COUNT=1
+      - GENERATE_REPORTS=true
+      - MAVEN_OPTS=-Xmx4096m
+    volumes:
+      - ./target/enhanced-reports:/app/target/enhanced-reports
+      - ./target/logs:/app/target/logs
+      - ./target/screenshots:/app/target/screenshots
+      - ./target/allure-results:/app/target/allure-results
+    command: ["./scripts/run-enhanced-tests.sh", "--suite", "comprehensive-enhanced", "--browser", "chrome", "--headless", "--reports"]
+    networks:
+      - paytr-test-network
+    profiles:
+      - comprehensive
+
+  # PayTR Test Suite - Parallel Execution
+  paytr-parallel-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: paytr-parallel-tests
+    environment:
+      - TEST_SUITE=parallel-enhanced
+      - BROWSER=chrome
+      - ENVIRONMENT=test
+      - HEADLESS=true
+      - PARALLEL=true
+      - THREAD_COUNT=4
+      - GENERATE_REPORTS=true
+      - MAVEN_OPTS=-Xmx4096m
+    volumes:
+      - ./target/enhanced-reports:/app/target/enhanced-reports
+      - ./target/logs:/app/target/logs
+      - ./target/screenshots:/app/target/screenshots
+      - ./target/allure-results:/app/target/allure-results
+    command: ["./scripts/run-enhanced-tests.sh", "--suite", "parallel-enhanced", "--browser", "chrome", "--headless", "--parallel", "--threads", "4", "--reports"]
+    networks:
+      - paytr-test-network
+    profiles:
+      - parallel
+
+  # PayTR Test Suite - Cross-Browser Testing
+  paytr-chrome-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: paytr-chrome-tests
+    environment:
+      - TEST_SUITE=regression-enhanced
+      - BROWSER=chrome
+      - ENVIRONMENT=test
+      - HEADLESS=true
+      - MAVEN_OPTS=-Xmx2048m
+    volumes:
+      - ./target/enhanced-reports:/app/target/enhanced-reports
+      - ./target/logs:/app/target/logs
+      - ./target/screenshots:/app/target/screenshots
+      - ./target/allure-results:/app/target/allure-results
+    command: ["./scripts/run-enhanced-tests.sh", "--suite", "regression-enhanced", "--browser", "chrome", "--headless", "--reports"]
+    networks:
+      - paytr-test-network
+    profiles:
+      - cross-browser
+
+  paytr-firefox-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: paytr-firefox-tests
+    environment:
+      - TEST_SUITE=regression-enhanced
+      - BROWSER=firefox
+      - ENVIRONMENT=test
+      - HEADLESS=true
+      - MAVEN_OPTS=-Xmx2048m
+    volumes:
+      - ./target/enhanced-reports:/app/target/enhanced-reports
+      - ./target/logs:/app/target/logs
+      - ./target/screenshots:/app/target/screenshots
+      - ./target/allure-results:/app/target/allure-results
+    command: ["./scripts/run-enhanced-tests.sh", "--suite", "regression-enhanced", "--browser", "firefox", "--headless", "--reports"]
+    networks:
+      - paytr-test-network
+    profiles:
+      - cross-browser
+
+  # Selenium Grid Hub (for distributed testing)
   selenium-hub:
     image: selenium/hub:4.15.0
     container_name: selenium-hub
@@ -44,12 +143,13 @@ services:
       - GRID_TIMEOUT=300
     networks:
       - paytr-test-network
+    profiles:
+      - grid
 
-  # Chrome Node
-  chrome-node:
+  # Selenium Chrome Node
+  selenium-chrome:
     image: selenium/node-chrome:4.15.0
-    container_name: chrome-node
-    shm_size: 2gb
+    container_name: selenium-chrome
     depends_on:
       - selenium-hub
     environment:
@@ -61,13 +161,13 @@ services:
       - /dev/shm:/dev/shm
     networks:
       - paytr-test-network
-    scale: 2
+    profiles:
+      - grid
 
-  # Firefox Node
-  firefox-node:
+  # Selenium Firefox Node
+  selenium-firefox:
     image: selenium/node-firefox:4.15.0
-    container_name: firefox-node
-    shm_size: 2gb
+    container_name: selenium-firefox
     depends_on:
       - selenium-hub
     environment:
@@ -79,58 +179,27 @@ services:
       - /dev/shm:/dev/shm
     networks:
       - paytr-test-network
-    scale: 1
+    profiles:
+      - grid
 
-  # Edge Node
-  edge-node:
-    image: selenium/node-edge:4.15.0
-    container_name: edge-node
-    shm_size: 2gb
-    depends_on:
-      - selenium-hub
-    environment:
-      - HUB_HOST=selenium-hub
-      - HUB_PORT=4444
-      - NODE_MAX_INSTANCES=2
-      - NODE_MAX_SESSION=2
-    volumes:
-      - /dev/shm:/dev/shm
-    networks:
-      - paytr-test-network
-    scale: 1
-
-  # Allure Report Server
-  allure-server:
-    image: frankescobar/allure-docker-service:2.20.1
-    container_name: allure-server
-    ports:
-      - "5050:5050"
-    environment:
-      - CHECK_RESULTS_EVERY_SECONDS=3
-      - KEEP_HISTORY=20
-    volumes:
-      - ./test-results/allure-results:/app/allure-results
-      - ./reports/allure-report:/app/default-reports
-    networks:
-      - paytr-test-network
-
-  # Test Results Web Server
-  test-results-server:
+  # Test Report Server (Nginx for serving reports)
+  test-report-server:
     image: nginx:alpine
-    container_name: test-results-server
+    container_name: test-report-server
     ports:
       - "8080:80"
     volumes:
-      - ./reports:/usr/share/nginx/html:ro
+      - ./target/enhanced-reports:/usr/share/nginx/html/reports
+      - ./target/allure-report:/usr/share/nginx/html/allure
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
     networks:
       - paytr-test-network
-    depends_on:
-      - paytr-tests
+    profiles:
+      - reports
 
-  # Database for test data (optional)
+  # Test Database (PostgreSQL for test data)
   test-database:
-    image: postgres:13
+    image: postgres:15-alpine
     container_name: test-database
     environment:
       - POSTGRES_DB=paytr_test
@@ -139,52 +208,42 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres-data:/var/lib/postgresql/data
-      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-test-db.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - paytr-test-network
+    profiles:
+      - database
 
-  # Redis for caching test data
-  redis-cache:
-    image: redis:7-alpine
-    container_name: redis-cache
+  # Test Monitoring (Prometheus for metrics)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: test-prometheus
     ports:
-      - "6379:6379"
-    command: redis-server --appendonly yes
+      - "9090:9090"
     volumes:
-      - redis-data:/data
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
     networks:
       - paytr-test-network
+    profiles:
+      - monitoring
 
-  # Test monitoring with Grafana
+  # Test Visualization (Grafana for dashboards)
   grafana:
     image: grafana/grafana:latest
-    container_name: test-monitoring
+    container_name: test-grafana
     ports:
       - "3000:3000"
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
     volumes:
-      - grafana-data:/var/lib/grafana
-      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
-      - ./grafana/datasources:/etc/grafana/provisioning/datasources:ro
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
     networks:
       - paytr-test-network
-
-  # InfluxDB for metrics storage
-  influxdb:
-    image: influxdb:2.0
-    container_name: test-metrics-db
-    ports:
-      - "8086:8086"
-    environment:
-      - INFLUXDB_DB=paytr_metrics
-      - INFLUXDB_ADMIN_USER=admin
-      - INFLUXDB_ADMIN_PASSWORD=admin123
-    volumes:
-      - influxdb-data:/var/lib/influxdb2
-    networks:
-      - paytr-test-network
+    profiles:
+      - monitoring
 
 networks:
   paytr-test-network:
@@ -194,13 +253,18 @@ networks:
         - subnet: 172.20.0.0/16
 
 volumes:
-  maven-cache:
+  postgres_data:
     driver: local
-  postgres-data:
+  grafana_data:
     driver: local
-  redis-data:
-    driver: local
-  grafana-data:
-    driver: local
-  influxdb-data:
-    driver: local
+
+# Docker Compose Profiles Usage:
+# docker-compose --profile smoke up          # Run smoke tests only
+# docker-compose --profile comprehensive up  # Run comprehensive tests
+# docker-compose --profile parallel up       # Run parallel tests
+# docker-compose --profile cross-browser up  # Run cross-browser tests
+# docker-compose --profile grid up           # Start Selenium Grid
+# docker-compose --profile reports up        # Start report server
+# docker-compose --profile database up       # Start test database
+# docker-compose --profile monitoring up     # Start monitoring stack
+# docker-compose --profile smoke --profile reports up  # Multiple profiles

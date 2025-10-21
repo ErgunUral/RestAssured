@@ -27,6 +27,7 @@ cd "$LIB_DIR"
 
 # Core dependencies
 DEPS=(
+    # Test dependencies (primary focus)
     "https://repo1.maven.org/maven2/io/rest-assured/rest-assured/5.3.2/rest-assured-5.3.2.jar"
     "https://repo1.maven.org/maven2/org/testng/testng/7.8.0/testng-7.8.0.jar"
     "https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-core/2.15.2/jackson-core-2.15.2.jar"
@@ -39,6 +40,15 @@ DEPS=(
     "https://repo1.maven.org/maven2/org/apache/groovy/groovy/4.0.15/groovy-4.0.15.jar"
     "https://repo1.maven.org/maven2/org/apache/groovy/groovy-xml/4.0.15/groovy-xml-4.0.15.jar"
     "https://repo1.maven.org/maven2/org/apache/groovy/groovy-json/4.0.15/groovy-json-4.0.15.jar"
+    # Spring Boot dependencies (for main sources)
+    "https://repo1.maven.org/maven2/org/springframework/spring-web/6.0.13/spring-web-6.0.13.jar"
+    "https://repo1.maven.org/maven2/org/springframework/spring-webmvc/6.0.13/spring-webmvc-6.0.13.jar"
+    "https://repo1.maven.org/maven2/org/springframework/spring-context/6.0.13/spring-context-6.0.13.jar"
+    "https://repo1.maven.org/maven2/org/springframework/spring-core/6.0.13/spring-core-6.0.13.jar"
+    "https://repo1.maven.org/maven2/org/springframework/spring-beans/6.0.13/spring-beans-6.0.13.jar"
+    "https://repo1.maven.org/maven2/org/springframework/boot/spring-boot/3.1.5/spring-boot-3.1.5.jar"
+    "https://repo1.maven.org/maven2/org/springframework/boot/spring-boot-autoconfigure/3.1.5/spring-boot-autoconfigure-3.1.5.jar"
+    "https://repo1.maven.org/maven2/jakarta/servlet/jakarta.servlet-api/6.0.0/jakarta.servlet-api-6.0.0.jar"
 )
 
 for dep in "${DEPS[@]}"; do
