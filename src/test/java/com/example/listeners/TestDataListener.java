@@ -103,8 +103,13 @@ public class TestDataListener implements ITestListener {
                 dataInfo.setSuiteName(result.getTestContext().getSuite().getName());
                 dataInfo.setTestContextName(result.getTestContext().getName());
                 
-                // Suite parameters
-                dataInfo.setSuiteParameters(result.getTestContext().getSuite().getParameters());
+                // Suite parameters - TestNG compatibility fix
+                try {
+                    dataInfo.setSuiteParameters(result.getTestContext().getSuite().getXmlSuite().getParameters());
+                } catch (Exception e) {
+                    // Fallback for older TestNG versions
+                    dataInfo.setSuiteParameters(new java.util.HashMap<>());
+                }
                 
                 // Test context attributes
                 dataInfo.setContextAttributes(result.getTestContext().getAttributeNames());
@@ -129,20 +134,27 @@ public class TestDataListener implements ITestListener {
      */
     private void captureDataProviderInfo(ITestResult result, TestDataInfo dataInfo) {
         try {
-            // Check if test uses data provider
-            if (result.getMethod().getDataProvider() != null) {
-                dataInfo.setDataProviderName(result.getMethod().getDataProvider());
-                dataInfo.setUsesDataProvider(true);
-                
-                // Capture data provider class
-                Class<?> dataProviderClass = result.getMethod().getDataProviderClass();
-                if (dataProviderClass != null) {
-                    dataInfo.setDataProviderClass(dataProviderClass.getName());
+            // Check if test uses data provider - TestNG compatibility fix
+            try {
+                String dataProviderName = result.getMethod().getXmlTest().getParameter("dataProvider");
+                if (dataProviderName != null && !dataProviderName.isEmpty()) {
+                    dataInfo.setDataProviderName(dataProviderName);
+                    dataInfo.setUsesDataProvider(true);
+                    
+                    // Try to get data provider class from test class
+                    dataInfo.setDataProviderClass(result.getTestClass().getRealClass().getName());
                 }
-                
-                // Analyze parameters for data provider patterns
-                analyzeDataProviderParameters(result, dataInfo);
+            } catch (Exception e) {
+                // Fallback - check if method has parameters indicating data provider usage
+                if (result.getParameters() != null && result.getParameters().length > 0) {
+                    dataInfo.setUsesDataProvider(true);
+                    dataInfo.setDataProviderName("Unknown");
+                    dataInfo.setDataProviderClass(result.getTestClass().getRealClass().getName());
+                }
             }
+            
+            // Analyze parameters for data provider patterns
+            analyzeDataProviderParameters(result, dataInfo);
         } catch (Exception e) {
             System.err.println("❌ Data provider info capture hatası: " + e.getMessage());
         }

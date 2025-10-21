@@ -1,8 +1,9 @@
 package com.example.tests;
 
-import com.example.config.BaseTest;
+import com.example.tests.BaseTest;
 import com.example.config.PayTRTestConfig;
 import io.qameta.allure.*;
+import io.qameta.allure.SeverityLevel;
 import io.restassured.response.Response;
 import org.testng.annotations.*;
 
@@ -153,7 +154,7 @@ public class PayTRDataMigrationTests extends BaseTest {
      */
     @Test(priority = 2, groups = {"data-migration", "integrity", "high"})
     @Story("Data Integrity Validation")
-    @Severity(SeverityLevel.HIGH)
+    @Severity(SeverityLevel.CRITICAL)
     @Description("Migrasyon sırasında ve sonrasında veri bütünlüğü kontrolü")
     public void testDataIntegrityValidation() {
         logTestInfo("Test ID: DM-002 - Data Integrity Validation");
@@ -292,7 +293,7 @@ public class PayTRDataMigrationTests extends BaseTest {
      */
     @Test(priority = 3, groups = {"data-migration", "rollback", "medium"})
     @Story("Migration Rollback Testing")
-    @Severity(SeverityLevel.MEDIUM)
+    @Severity(SeverityLevel.NORMAL)
     @Description("Başarısız migrasyonlarda geri alma işlemleri")
     public void testMigrationRollbackTesting() {
         logTestInfo("Test ID: DM-003 - Migration Rollback Testing");
@@ -436,7 +437,7 @@ public class PayTRDataMigrationTests extends BaseTest {
      */
     @Test(priority = 4, groups = {"data-migration", "performance", "medium"})
     @Story("Performance During Migration")
-    @Severity(SeverityLevel.MEDIUM)
+    @Severity(SeverityLevel.NORMAL)
     @Description("Büyük veri migrasyonları sırasında sistem performansı")
     public void testPerformanceDuringMigration() {
         logTestInfo("Test ID: DM-004 - Performance During Migration");
@@ -573,7 +574,7 @@ public class PayTRDataMigrationTests extends BaseTest {
      */
     @Test(priority = 5, groups = {"data-migration", "synchronization", "medium"})
     @Story("Cross-System Data Synchronization")
-    @Severity(SeverityLevel.MEDIUM)
+    @Severity(SeverityLevel.NORMAL)
     @Description("Farklı sistemler arası veri senkronizasyonu")
     public void testCrossSystemDataSynchronization() {
         logTestInfo("Test ID: DM-005 - Cross-System Data Synchronization");

@@ -1,6 +1,6 @@
 package com.example.tests;
 
-import com.example.config.BaseTest;
+import com.example.tests.BaseTest;
 import com.example.config.PayTRTestConfig;
 import io.restassured.response.Response;
 import org.testng.Assert;

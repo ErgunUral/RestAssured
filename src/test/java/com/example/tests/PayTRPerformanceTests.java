@@ -1,6 +1,6 @@
 package com.example.tests;
 
-import com.example.config.BaseTest;
+import com.example.tests.BaseTest;
 import com.example.config.PayTRTestConfig;
 import io.qameta.allure.*;
 import io.restassured.response.Response;
@@ -220,7 +220,7 @@ public class PayTRPerformanceTests extends BaseTest {
      */
     @Test(priority = 10, groups = {"performance", "enhanced", "load-testing"})
     @Story("Concurrent Load Performance")
-    @Severity(SeverityLevel.HIGH)
+    @Severity(SeverityLevel.CRITICAL)
     @Description("Eşzamanlı kullanıcı yükü altında sistem performansı")
     public void testConcurrentUserLoadPerformance() {
         logTestInfo("Test ID: PT-003 - Concurrent User Load Performance");
@@ -331,7 +331,7 @@ public class PayTRPerformanceTests extends BaseTest {
      */
     @Test(priority = 11, groups = {"performance", "enhanced", "resource-usage"})
     @Story("Resource Usage Performance")
-    @Severity(SeverityLevel.MEDIUM)
+    @Severity(SeverityLevel.NORMAL)
     @Description("İşlemler sırasında sistem kaynak kullanımı")
     public void testMemoryAndResourceUsage() {
         logTestInfo("Test ID: PT-004 - Memory and Resource Usage Testing");
@@ -450,7 +450,7 @@ public class PayTRPerformanceTests extends BaseTest {
      */
     @Test(priority = 12, groups = {"performance", "enhanced", "database"})
     @Story("Database Performance")
-    @Severity(SeverityLevel.MEDIUM)
+    @Severity(SeverityLevel.NORMAL)
     @Description("Veritabanı bağlantı havuzu ve performans testleri")
     public void testDatabaseConnectionPoolPerformance() {
         logTestInfo("Test ID: PT-005 - Database Connection Pool Performance");

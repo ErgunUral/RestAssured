@@ -4,6 +4,7 @@ import com.example.utils.TestUtils;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -381,7 +382,7 @@ public class PayTRAccessibilityTests extends BaseTest {
         Assert.assertNotNull(responsiveScore, "Responsive score should be provided");
         
         // Step 6: Check text scaling
-        driver.executeScript("document.body.style.fontSize = '150%';");
+        ((JavascriptExecutor) driver).executeScript("document.body.style.fontSize = '150%';");
         
         // Wait for reflow
         try {

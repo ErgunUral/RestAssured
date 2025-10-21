@@ -1,8 +1,9 @@
 package com.example.tests;
 
-import com.example.config.BaseTest;
+import com.example.tests.BaseTest;
 import com.example.config.PayTRTestConfig;
 import io.qameta.allure.*;
+import io.qameta.allure.SeverityLevel;
 import io.restassured.response.Response;
 import org.testng.annotations.*;
 
@@ -148,7 +149,7 @@ public class PayTRBusinessLogicTests extends BaseTest {
      */
     @Test(priority = 2, groups = {"business-logic", "merchant-config", "high"})
     @Story("Merchant Configuration")
-    @Severity(SeverityLevel.HIGH)
+    @Severity(SeverityLevel.CRITICAL)
     @Description("Merchant konfigürasyonu ve iş kuralları validasyonu")
     public void testMerchantConfigurationValidation() {
         logTestInfo("Test ID: BL-002 - Merchant Configuration Validation");
@@ -265,7 +266,7 @@ public class PayTRBusinessLogicTests extends BaseTest {
      */
     @Test(priority = 3, groups = {"business-logic", "transaction-state", "medium"})
     @Story("Transaction State Management")
-    @Severity(SeverityLevel.MEDIUM)
+    @Severity(SeverityLevel.NORMAL)
     @Description("İşlem durumu yönetimi ve durum geçişleri")
     public void testTransactionStateManagement() {
         logTestInfo("Test ID: BL-003 - Transaction State Management");
@@ -383,7 +384,7 @@ public class PayTRBusinessLogicTests extends BaseTest {
      */
     @Test(priority = 4, groups = {"business-logic", "commission", "medium"})
     @Story("Commission and Fee Calculation")
-    @Severity(SeverityLevel.MEDIUM)
+    @Severity(SeverityLevel.NORMAL)
     @Description("Komisyon hesaplama ve ücret yapıları")
     public void testCommissionAndFeeCalculation() {
         logTestInfo("Test ID: BL-004 - Commission and Fee Calculation");
@@ -487,7 +488,7 @@ public class PayTRBusinessLogicTests extends BaseTest {
      */
     @Test(priority = 5, groups = {"business-logic", "refund", "medium"})
     @Story("Refund Business Logic")
-    @Severity(SeverityLevel.MEDIUM)
+    @Severity(SeverityLevel.NORMAL)
     @Description("İade işlemi iş mantığı ve kuralları")
     public void testRefundBusinessLogic() {
         logTestInfo("Test ID: BL-005 - Refund Business Logic");

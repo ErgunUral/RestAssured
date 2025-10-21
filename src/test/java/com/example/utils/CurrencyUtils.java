@@ -172,10 +172,17 @@ public class CurrencyUtils {
     }
 
     /**
-     * Gets exchange rate for currency (relative to TL)
+     * Gets exchange rate for a specific currency (base: TL)
      */
     public static BigDecimal getExchangeRate(String currency) {
-        return EXCHANGE_RATES.get(currency);
+        return EXCHANGE_RATES.getOrDefault(currency.toUpperCase(), BigDecimal.ONE);
+    }
+    
+    /**
+     * Gets current exchange rate between two currencies
+     */
+    public static BigDecimal getCurrentExchangeRate(String fromCurrency, String toCurrency) {
+        return getExchangeRate(fromCurrency, toCurrency);
     }
 
     /**

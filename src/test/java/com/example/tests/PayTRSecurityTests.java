@@ -1,6 +1,6 @@
 package com.example.tests;
 
-import com.example.config.BaseTest;
+import com.example.tests.BaseTest;
 import com.example.config.PayTRTestConfig;
 import com.example.utils.WebDriverSetup;
 import com.example.utils.SecurityTestUtils;
@@ -382,7 +382,7 @@ public class PayTRSecurityTests extends BaseTest {
      */
     @Test(priority = 10, groups = {"security", "advanced", "rate-limiting"})
     @Story("Advanced Rate Limiting Protection")
-    @Severity(SeverityLevel.HIGH)
+    @Severity(SeverityLevel.CRITICAL)
     @Description("API rate limiting ve DDoS korunma testleri")
     public void testAdvancedRateLimitingProtection() {
         logTestInfo("Test ID: AS-001 - Advanced Rate Limiting Protection");
@@ -443,7 +443,7 @@ public class PayTRSecurityTests extends BaseTest {
      */
     @Test(priority = 11, groups = {"security", "advanced", "jwt"})
     @Story("JWT Token Security")
-    @Severity(SeverityLevel.HIGH)
+    @Severity(SeverityLevel.CRITICAL)
     @Description("JWT token güvenliği ve manipülasyon testleri")
     public void testJWTTokenSecurity() {
         logTestInfo("Test ID: AS-002 - JWT Token Security Testing");
@@ -528,7 +528,7 @@ public class PayTRSecurityTests extends BaseTest {
      */
     @Test(priority = 12, groups = {"security", "advanced", "csrf"})
     @Story("CSRF Protection")
-    @Severity(SeverityLevel.HIGH)
+    @Severity(SeverityLevel.CRITICAL)
     @Description("Cross-Site Request Forgery korunma testleri")
     public void testCSRFProtection() {
         logTestInfo("Test ID: AS-003 - CSRF Protection Testing");
@@ -588,7 +588,7 @@ public class PayTRSecurityTests extends BaseTest {
      */
     @Test(priority = 13, groups = {"security", "advanced", "xss", "sanitization"})
     @Story("Input Sanitization and XSS Protection")
-    @Severity(SeverityLevel.HIGH)
+    @Severity(SeverityLevel.CRITICAL)
     @Description("Gelişmiş input sanitization ve XSS korunma testleri")
     public void testAdvancedInputSanitization() {
         logTestInfo("Test ID: AS-004 - Advanced Input Sanitization Testing");
