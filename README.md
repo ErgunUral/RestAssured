@@ -2,6 +2,8 @@
 
 PayTR için kapsamlı test otomasyon framework'ü. Bu proje UI, API, güvenlik, performans ve entegrasyon testlerini içerir.
 
+> **🚀 Yeni CI/CD Çözümü**: Multi-strategy GitHub Actions workflow ile güvenilir test otomasyonu!
+
 ## 📋 İçindekiler
 
 - [Özellikler](#özellikler)
