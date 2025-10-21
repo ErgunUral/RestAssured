@@ -3,6 +3,7 @@ package com.example.tests;
 import com.example.tests.BaseTest;
 import com.example.config.PayTRTestConfig;
 import com.example.utils.WebDriverSetup;
+import com.example.utils.SafeWebDriverUtils;
 import com.example.utils.SecurityTestUtils;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -48,9 +49,8 @@ public class PayTRSecurityTests extends BaseTest {
         basePath = "";
         
         try {
-            // WebDriver setup with validation
-            WebDriverSetup.setupDriver("chrome");
-            driver = WebDriverSetup.getDriver();
+            // Use SafeWebDriverUtils for robust WebDriver initialization
+            driver = SafeWebDriverUtils.getSafeWebDriver();
             
             if (driver == null) {
                 throw new RuntimeException("WebDriver başlatılamadı - driver null döndü");
@@ -71,28 +71,21 @@ public class PayTRSecurityTests extends BaseTest {
     
     @BeforeMethod
     public void validateDriverBeforeTest() {
-        if (driver == null) {
-            System.out.println("⚠️ Driver null, yeniden başlatılıyor...");
-            try {
-                WebDriverSetup.setupDriver("chrome");
-                driver = WebDriverSetup.getDriver();
+        try {
+            // Use SafeWebDriverUtils for robust driver validation and recovery
+            driver = SafeWebDriverUtils.getSafeWebDriver();
+            
+            if (driver != null) {
                 wait = new WebDriverWait(driver, Duration.ofSeconds(15));
                 securityUtils = new SecurityTestUtils(driver);
-            } catch (Exception e) {
-                throw new RuntimeException("Driver yeniden başlatılamadı: " + e.getMessage(), e);
+                System.out.println("✅ Driver validation successful");
+            } else {
+                throw new RuntimeException("Driver validation failed - null driver");
             }
-        }
-        
-        // Driver responsiveness check
-        try {
-            driver.getCurrentUrl();
+            
         } catch (Exception e) {
-            System.out.println("⚠️ Driver unresponsive, yeniden başlatılıyor...");
-            WebDriverSetup.quitDriver();
-            WebDriverSetup.setupDriver("chrome");
-            driver = WebDriverSetup.getDriver();
-            wait = new WebDriverWait(driver, Duration.ofSeconds(15));
-            securityUtils = new SecurityTestUtils(driver);
+            System.out.println("❌ Driver validation error: " + e.getMessage());
+            throw new RuntimeException("Driver validation failed", e);
         }
     }
     

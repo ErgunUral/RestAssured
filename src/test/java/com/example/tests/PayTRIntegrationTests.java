@@ -9,6 +9,7 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.JavascriptExecutor;
 import com.example.utils.WebDriverSetup;
+import com.example.utils.SafeWebDriverUtils;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import java.time.Duration;
@@ -36,9 +37,8 @@ public class PayTRIntegrationTests extends BaseTest {
         baseURI = "https://zeus-uat.paytr.com";
         basePath = "";
         
-        // WebDriver setup
-        WebDriverSetup.setupDriver("chrome");
-        driver = WebDriverSetup.getDriver();
+        // WebDriver setup with SafeWebDriverUtils
+        driver = SafeWebDriverUtils.getSafeWebDriver();
         wait = new WebDriverWait(driver, Duration.ofSeconds(15));
         js = (JavascriptExecutor) driver;
         

@@ -11,12 +11,24 @@ import java.util.Arrays;
  */
 public class PayTRTestConfig {
     
-    // PayTR Zeus UAT Environment URLs
+    // PayTR Zeus UAT Environment URLs with fallback support
     public static final String BASE_URL = "https://zeus-uat.paytr.com";
     public static final String LOGIN_URL = BASE_URL + "/magaza/kullanici-girisi";
     public static final String PAYMENT_URL = BASE_URL;
     public static final String VIRTUAL_POS_URL = BASE_URL;
     public static final String API_BASE_URL = BASE_URL + "/api";
+    
+    // Fallback URLs for connectivity issues
+    public static final String[] FALLBACK_URLS = {
+        "https://zeus-uat.paytr.com",
+        "https://www.paytr.com",
+        "https://demo.paytr.com",
+        "http://localhost:8080"
+    };
+    
+    // Mock/Demo URLs for testing when live services are unavailable
+    public static final String MOCK_BASE_URL = "https://httpbin.org"; // For API testing
+    public static final String DEMO_BASE_URL = "https://demo.paytr.com";
     
     // PayTR Test Merchant Bilgileri
     public static final String TEST_MERCHANT_ID = "123456";
@@ -119,14 +131,18 @@ public class PayTRTestConfig {
         }});
     }};
     
-    // PayTR Test Timeout Değerleri
+    // PayTR Test Timeout Konfigürasyonları - Enhanced for connectivity issues
     public static final Map<String, Integer> TIMEOUTS = new HashMap<String, Integer>() {{
-        put("PAGE_LOAD", 30);
-        put("ELEMENT_WAIT", 10);
-        put("PAYMENT_PROCESS", 60);
-        put("API_RESPONSE", 30);
-        put("IMPLICIT_WAIT", 10);
-        put("SCRIPT_TIMEOUT", 30);
+        put("PAGE_LOAD", 120);        // Increased from 30 to 120 seconds
+        put("ELEMENT_WAIT", 20);      // Increased from 10 to 20 seconds
+        put("PAYMENT_PROCESS", 180);  // Increased from 60 to 180 seconds
+        put("API_RESPONSE", 60);      // Increased from 30 to 60 seconds
+        put("IMPLICIT_WAIT", 15);     // Increased from 10 to 15 seconds
+        put("SCRIPT_TIMEOUT", 60);    // Increased from 30 to 60 seconds
+        put("CONNECTION_TIMEOUT", 30); // New: Connection timeout
+        put("SOCKET_TIMEOUT", 60);    // New: Socket timeout
+        put("RETRY_ATTEMPTS", 3);     // New: Retry attempts
+        put("RETRY_DELAY", 2);        // New: Delay between retries (seconds)
     }};
     
     // PayTR Test Browser Konfigürasyonları

@@ -7,6 +7,7 @@ import com.example.pages.PayTRVirtualPOSPage;
 import com.example.config.PayTRTestConfig;
 import com.example.utils.PayTRTestDataProvider;
 import com.example.utils.WebDriverSetup;
+import com.example.utils.SafeWebDriverUtils;
 import org.testng.annotations.*;
 import org.testng.Assert;
 import org.openqa.selenium.WebDriver;
@@ -39,10 +40,9 @@ public class PayTRSmokeTest {
         System.out.println("PayTR Test Environment: " + PayTRTestConfig.BASE_URL);
         System.out.println("Test Suite: Smoke Tests (Kritik İşlevler)");
         
-        // WebDriver setup using WebDriverSetup utility
+        // WebDriver setup using SafeWebDriverUtils
         try {
-            WebDriverSetup.setupDriver("chrome");
-            driver = WebDriverSetup.getDriver();
+            driver = SafeWebDriverUtils.getSafeWebDriver();
             
             if (driver != null) {
                 driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
@@ -88,16 +88,16 @@ public class PayTRSmokeTest {
             // PayTRTestConfig'ten URL kullan
             String testUrl = PayTRTestConfig.BASE_URL;
             System.out.println("Test URL: " + testUrl);
-            driver.get(testUrl);
+            SafeWebDriverUtils.safeNavigate(testUrl);
             
-            // Sayfa yüklenme kontrolü - daha esnek
-            Thread.sleep(3000); // Sayfa yüklenmesi için bekle
+            // Sayfa yüklenme kontrolü
+            SafeWebDriverUtils.waitForPageReady();
             
             String pageSource = driver.getPageSource();
             Assert.assertTrue(pageSource.length() > 1000, "Sayfa içeriği yüklenmeli");
             
             // URL kontrolü - debug için gerçek URL'yi yazdır
-            String currentUrl = driver.getCurrentUrl();
+            String currentUrl = SafeWebDriverUtils.getSafeCurrentUrl();
             System.out.println("Gerçek URL: " + currentUrl);
             System.out.println("Beklenen: zeus-uat.paytr.com içermeli");
             

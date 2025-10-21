@@ -74,9 +74,11 @@ public class WebDriverSetup {
                         chromeOptions.addArguments("--remote-debugging-port=0"); // Use random port
                         
                         WebDriver chromeDriver = new ChromeDriver(chromeOptions);
-                        chromeDriver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
-                        chromeDriver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(60));
-                        chromeDriver.manage().timeouts().scriptTimeout(Duration.ofSeconds(30));
+                        
+                        // Enhanced timeout configuration for API connectivity issues
+                        chromeDriver.manage().timeouts().implicitlyWait(Duration.ofSeconds(15));
+                        chromeDriver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(120)); // Increased for slow connections
+                        chromeDriver.manage().timeouts().scriptTimeout(Duration.ofSeconds(60));    // Increased for complex operations
                         
                         driver.set(chromeDriver);
                         System.out.println("✅ Chrome driver başarıyla kuruldu");
@@ -145,14 +147,41 @@ public class WebDriverSetup {
             System.out.println("🔄 Yeni driver oluşturuldu: " + (currentDriver != null ? "BAŞARILI" : "BAŞARISIZ"));
         }
         
-        // Verify driver is still responsive
-        try {
-            currentDriver.getCurrentUrl();
-        } catch (Exception e) {
-            System.out.println("⚠️ Driver unresponsive, recreating...");
-            quitDriver();
-            setupDriver("chrome");
-            currentDriver = driver.get();
+        // Enhanced driver validation with multiple checks
+        if (currentDriver != null) {
+            try {
+                // Test 1: Check if driver session is valid
+                currentDriver.getCurrentUrl();
+                
+                // Test 2: Check if driver can execute basic commands
+                currentDriver.getTitle();
+                
+                // Test 3: Verify driver window handles
+                if (currentDriver.getWindowHandles().isEmpty()) {
+                    throw new RuntimeException("No window handles available");
+                }
+                
+                System.out.println("✅ Driver validation successful");
+                
+            } catch (Exception e) {
+                System.out.println("⚠️ Driver validation failed: " + e.getMessage());
+                System.out.println("🔄 Recreating driver...");
+                
+                try {
+                    quitDriver();
+                } catch (Exception quitError) {
+                    System.out.println("⚠️ Error during driver quit: " + quitError.getMessage());
+                }
+                
+                setupDriver("chrome");
+                currentDriver = driver.get();
+                
+                if (currentDriver == null) {
+                    throw new RuntimeException("Critical: Unable to create valid WebDriver after recovery attempt");
+                }
+                
+                System.out.println("✅ Driver recreation successful");
+            }
         }
         
         return currentDriver;

@@ -12,6 +12,7 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.JavascriptExecutor;
 import com.example.utils.WebDriverSetup;
+import com.example.utils.SafeWebDriverUtils;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -30,9 +31,8 @@ public class PayTRPaymentProcessTest extends BaseTest {
         baseURI = "https://zeus-uat.paytr.com";
         basePath = "/magaza"; // PayTR test ortamı için doğru path
         
-        // WebDriver setup
-        WebDriverSetup.setupDriver("chrome");
-        driver = WebDriverSetup.getDriver();
+        // Use SafeWebDriverUtils for robust WebDriver initialization
+        driver = SafeWebDriverUtils.getSafeWebDriver();
         wait = new WebDriverWait(driver, Duration.ofSeconds(20)); // Timeout artırıldı
         jsExecutor = (JavascriptExecutor) driver;
         
@@ -44,7 +44,7 @@ public class PayTRPaymentProcessTest extends BaseTest {
         logTestInfo("Test Payment Page Initialization");
         
         try {
-            driver.get(baseURI + basePath);
+            SafeWebDriverUtils.safeNavigate(baseURI + basePath);
             
             // Sayfa yüklenene kadar bekle
             wait.until(ExpectedConditions.presenceOfElementLocated(By.tagName("body")));

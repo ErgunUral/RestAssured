@@ -41,10 +41,24 @@ public class ThreadSafeScreenshotUtils {
     }
     
     /**
-     * Get WebDriver for current thread
+     * Get WebDriver for current thread with null safety
      */
     public static WebDriver getDriver() {
-        return driverThreadLocal.get();
+        WebDriver driver = driverThreadLocal.get();
+        if (driver == null) {
+            System.out.println("⚠️ ThreadSafeScreenshotUtils: WebDriver is null for thread: " + Thread.currentThread().getName());
+            // Try to get driver from WebDriverSetup as fallback
+            try {
+                driver = WebDriverSetup.getDriver();
+                if (driver != null) {
+                    setDriver(driver);
+                    System.out.println("✅ ThreadSafeScreenshotUtils: Recovered WebDriver from WebDriverSetup");
+                }
+            } catch (Exception e) {
+                System.out.println("❌ ThreadSafeScreenshotUtils: Failed to recover WebDriver: " + e.getMessage());
+            }
+        }
+        return driver;
     }
     
     /**
@@ -60,7 +74,19 @@ public class ThreadSafeScreenshotUtils {
     public static String takeScreenshot(String testName) {
         WebDriver driver = getDriver();
         if (driver == null) {
-            Reporter.log("❌ No WebDriver found for current thread: " + Thread.currentThread().getName());
+            String errorMsg = "❌ No WebDriver found for current thread: " + Thread.currentThread().getName();
+            Reporter.log(errorMsg);
+            System.out.println(errorMsg);
+            return null;
+        }
+        
+        // Additional validation: Check if driver is responsive
+        try {
+            driver.getCurrentUrl(); // Test if driver is responsive
+        } catch (Exception e) {
+            String errorMsg = "❌ WebDriver is not responsive: " + e.getMessage();
+            Reporter.log(errorMsg);
+            System.out.println(errorMsg);
             return null;
         }
         
