@@ -9,6 +9,14 @@ variables:
   TEST_ENVIRONMENT: "test"
   HEADLESS_MODE: "true"
   MAVEN_CLI_OPTS: "--batch-mode --errors --fail-at-end --show-version"
+  # Disable Auto DevOps and Code Quality
+  AUTO_DEVOPS_ENABLED: "false"
+  CODE_QUALITY_DISABLED: "true"
+  SAST_DISABLED: "true"
+  DEPENDENCY_SCANNING_DISABLED: "true"
+  SECRET_DETECTION_DISABLED: "true"
+  CONTAINER_SCANNING_DISABLED: "true"
+  LICENSE_MANAGEMENT_DISABLED: "true"
   # Cache configuration
   MAVEN_CACHE_DIR: "$CI_PROJECT_DIR/.m2/repository"
   ALLURE_RESULTS_DIR: "$CI_PROJECT_DIR/target/allure-results"
