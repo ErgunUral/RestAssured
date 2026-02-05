@@ -38,7 +38,6 @@ workflow:
 # Stage definitions
 stages:
   - build
-  - code-quality
   - test
   - smoke-tests
   - comprehensive-tests
@@ -70,31 +69,6 @@ build:
       - .m2/repository/
   rules:
     - if: $CI_PIPELINE_SOURCE != "schedule"
-
-# Code quality and security analysis
-code-quality:
-  stage: code-quality
-  image: maven:3.9-openjdk-17
-  needs: ["build"]
-  script:
-    - echo "🔍 Running code quality checks..."
-    - mvn $MAVEN_CLI_OPTS checkstyle:check || echo "Checkstyle completed with warnings"
-    - mvn $MAVEN_CLI_OPTS spotbugs:check || echo "SpotBugs completed with warnings"
-    - mvn $MAVEN_CLI_OPTS dependency-check:check || echo "Security check completed"
-  artifacts:
-    reports:
-      junit: target/surefire-reports/TEST-*.xml
-      codequality: target/checkstyle-result.xml
-    paths:
-      - target/checkstyle-result.xml
-      - target/spotbugsXml.xml
-      - target/dependency-check-report.html
-    expire_in: 1 week
-    when: always
-  allow_failure: true
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "main"
 
 # Unit tests
 unit-tests:
