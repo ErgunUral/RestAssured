@@ -1,446 +1,61 @@
-# PayTR Test Suite - GitLab CI/CD Pipeline
-# Comprehensive test automation with multiple strategies and environments
+# Minimal GitLab CI configuration to avoid Auto DevOps conflicts
+stages:
+  - build
+  - test
+  - smoke-tests
 
 variables:
-  MAVEN_OPTS: "-Xmx2048m -XX:MaxPermSize=512m"
-  JAVA_VERSION: "17"
-  MAVEN_VERSION: "3.9"
-  TEST_BROWSER: "chrome"
-  TEST_ENVIRONMENT: "test"
-  HEADLESS_MODE: "true"
-  MAVEN_CLI_OPTS: "--batch-mode --errors --fail-at-end --show-version"
-  # Disable Auto DevOps and Code Quality
+  # Explicitly disable all Auto DevOps features
   AUTO_DEVOPS_ENABLED: "false"
   CODE_QUALITY_DISABLED: "true"
   SAST_DISABLED: "true"
   DEPENDENCY_SCANNING_DISABLED: "true"
   SECRET_DETECTION_DISABLED: "true"
   CONTAINER_SCANNING_DISABLED: "true"
-  LICENSE_MANAGEMENT_DISABLED: "true"
-  # Cache configuration
-  MAVEN_CACHE_DIR: "$CI_PROJECT_DIR/.m2/repository"
-  ALLURE_RESULTS_DIR: "$CI_PROJECT_DIR/target/allure-results"
+  
+  # Maven settings
+  MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
+  MAVEN_CLI_OPTS: "--batch-mode --errors --fail-at-end --show-version"
 
-# Ensure PATH is correct for macOS shell runner
-before_script:
-  - export PATH=/opt/homebrew/bin:$PATH
-  - java -version
-  - mvn -version
-
-# Cache configuration for Maven dependencies and Allure results
+# Global cache settings
 cache:
   paths:
     - .m2/repository/
-    - target/allure-results/
-  key: "$CI_COMMIT_REF_SLUG-maven-cache"
 
-# Workflow rules for different scenarios
-workflow:
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    - if: $CI_PIPELINE_SOURCE == "push"  # Allow all push events to trigger pipeline
-    - if: $CI_PIPELINE_SOURCE == "schedule"
-    - if: $CI_PIPELINE_SOURCE == "web"  # Manual triggers
-    - if: $CI_PIPELINE_SOURCE == "api"   # API triggers
-
-# Stage definitions
-stages:
-  - build
-  - test
-  - smoke-tests
-  - comprehensive-tests
-  - performance-tests
-  - security-tests
-  - report-generation
-  - deploy-reports
-  - notification
-
-# Build stage - Compile and prepare
-build:
+# Build Stage
+build_job:
   stage: build
-  image: maven:3.9-openjdk-17
   script:
-    - echo "🔨 Building PayTR Test Suite..."
-    - java -version
-    - mvn --version
+    - echo "🔨 Building Project..."
+    - export PATH=/opt/homebrew/bin:$PATH
     - mvn $MAVEN_CLI_OPTS clean compile test-compile
   artifacts:
     paths:
-      - target/classes/
-      - target/test-classes/
-      - target/*.jar
+      - target/
     expire_in: 1 hour
-    when: always
-  cache:
-    key: "$CI_COMMIT_REF_SLUG-build-cache"
-    paths:
-      - .m2/repository/
-  rules:
-    - if: $CI_PIPELINE_SOURCE != "schedule"
 
-# Unit tests
-unit-tests:
+# Test Stage - Unit Tests
+test_job:
   stage: test
-  image: maven:3.9-openjdk-17
-  needs: ["build"]
   script:
-    - echo "🧪 Running unit tests..."
-    - mvn $MAVEN_CLI_OPTS test -Dtest="*UnitTest" -Dmaven.test.failure.ignore=true
+    - echo "🧪 Running Unit Tests..."
+    - export PATH=/opt/homebrew/bin:$PATH
+    - mvn $MAVEN_CLI_OPTS test -Dsurefire.suiteXmlFiles=testng-paytr-smoke.xml
+  needs: ["build_job"]
   artifacts:
-    reports:
-      junit: target/surefire-reports/TEST-*.xml
     paths:
       - target/surefire-reports/
-      - target/allure-results/
     expire_in: 1 week
-    when: always
-  allow_failure: true
 
-# Smoke tests with multiple browsers
-smoke-tests-chrome:
+# Smoke Tests Stage
+smoke_tests_job:
   stage: smoke-tests
-  image: maven:3.9-openjdk-17
-  services:
-    - selenium/standalone-chrome:latest
-  needs: ["unit-tests"]
-  variables:
-    TEST_BROWSER: "chrome"
-    SELENIUM_HUB_URL: "http://selenium__standalone-chrome:4444/wd/hub"
   script:
-    - echo "🚀 Running smoke tests with Chrome..."
-    - echo "Browser: $TEST_BROWSER"
-    - echo "Environment: $TEST_ENVIRONMENT"
-    - echo "Headless: $HEADLESS_MODE"
-    - mvn $MAVEN_CLI_OPTS clean test 
-      -Dsurefire.suiteXmlFiles=testng-paytr-smoke.xml
-      -Dtest.browser=$TEST_BROWSER
-      -Dtest.environment=$TEST_ENVIRONMENT
-      -Dheadless=$HEADLESS_MODE
-      -Dmaven.test.failure.ignore=true
+    - echo "🚀 Running Smoke Tests..."
+    - export PATH=/opt/homebrew/bin:$PATH
+    - mvn $MAVEN_CLI_OPTS test -Dsurefire.suiteXmlFiles=testng-paytr-smoke.xml -Dtest.environment=test
+  needs: ["build_job"]
   artifacts:
-    reports:
-      junit: target/surefire-reports/TEST-*.xml
     paths:
       - target/surefire-reports/
-      - target/allure-results/
-      - target/screenshots/
     expire_in: 1 week
-    when: always
-  allow_failure: true
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "main"
-    - if: $CI_PIPELINE_SOURCE == "schedule"
-    - if: $CI_PIPELINE_SOURCE == "web"
-
-smoke-tests-firefox:
-  stage: smoke-tests
-  image: maven:3.9-openjdk-17
-  services:
-    - selenium/standalone-firefox:latest
-  needs: ["unit-tests"]
-  variables:
-    TEST_BROWSER: "firefox"
-    SELENIUM_HUB_URL: "http://selenium__standalone-firefox:4444/wd/hub"
-  script:
-    - echo "🦊 Running smoke tests with Firefox..."
-    - mvn $MAVEN_CLI_OPTS clean test 
-      -Dsurefire.suiteXmlFiles=testng-paytr-smoke.xml
-      -Dtest.browser=$TEST_BROWSER
-      -Dtest.environment=$TEST_ENVIRONMENT
-      -Dheadless=$HEADLESS_MODE
-      -Dmaven.test.failure.ignore=true
-  artifacts:
-    reports:
-      junit: target/surefire-reports/TEST-*.xml
-    paths:
-      - target/surefire-reports/
-      - target/allure-results/
-    expire_in: 1 week
-    when: always
-  allow_failure: true
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "main"
-    - if: $CI_PIPELINE_SOURCE == "schedule"
-
-# Comprehensive test suite
-comprehensive-tests:
-  stage: comprehensive-tests
-  image: maven:3.9-openjdk-17
-  services:
-    - selenium/standalone-chrome:latest
-  needs: ["smoke-tests-chrome"]
-  variables:
-    TEST_BROWSER: "chrome"
-    SELENIUM_HUB_URL: "http://selenium__standalone-chrome:4444/wd/hub"
-  script:
-    - echo "🔬 Running comprehensive test suite..."
-    - echo "Total test suites available: smoke, comprehensive, regression, parallel"
-    - mvn $MAVEN_CLI_OPTS clean test 
-      -Dsurefire.suiteXmlFiles=testng-comprehensive.xml
-      -Dtest.browser=$TEST_BROWSER
-      -Dtest.environment=$TEST_ENVIRONMENT
-      -Dheadless=$HEADLESS_MODE
-      -Dmaven.test.failure.ignore=true
-  artifacts:
-    reports:
-      junit: target/surefire-reports/TEST-*.xml
-    paths:
-      - target/surefire-reports/
-      - target/allure-results/
-      - target/screenshots/
-    expire_in: 1 week
-    when: always
-  allow_failure: true
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "main"
-    - if: $CI_PIPELINE_SOURCE == "schedule"
-    - if: $CI_PIPELINE_SOURCE == "web" && $TEST_SUITE == "comprehensive"
-  timeout: 45 minutes
-
-# Performance tests
-performance-tests:
-  stage: performance-tests
-  image: maven:3.9-openjdk-17
-  services:
-    - selenium/standalone-chrome:latest
-  needs: ["smoke-tests-chrome"]
-  variables:
-    TEST_BROWSER: "chrome"
-    PERFORMANCE_TEST_MODE: "true"
-  script:
-    - echo "⚡ Running performance tests..."
-    - mvn $MAVEN_CLI_OPTS clean test 
-      -Dsurefire.suiteXmlFiles=testng-performance.xml
-      -Dtest.browser=$TEST_BROWSER
-      -Dtest.environment=$TEST_ENVIRONMENT
-      -Dheadless=$HEADLESS_MODE
-      -Dmaven.test.failure.ignore=true
-  artifacts:
-    reports:
-      junit: target/surefire-reports/TEST-*.xml
-    paths:
-      - target/surefire-reports/
-      - target/allure-results/
-      - target/performance-reports/
-    expire_in: 1 week
-    when: always
-  allow_failure: true
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "schedule"
-    - if: $CI_PIPELINE_SOURCE == "web" && $TEST_SUITE == "performance"
-  timeout: 30 minutes
-
-# Security tests
-security-tests:
-  stage: security-tests
-  image: maven:3.9-openjdk-17
-  services:
-    - selenium/standalone-chrome:latest
-  needs: ["smoke-tests-chrome"]
-  variables:
-    TEST_BROWSER: "chrome"
-    SECURITY_TEST_MODE: "true"
-  script:
-    - echo "🔒 Running security tests..."
-    - mvn $MAVEN_CLI_OPTS clean test 
-      -Dsurefire.suiteXmlFiles=testng-security.xml
-      -Dtest.browser=$TEST_BROWSER
-      -Dtest.environment=$TEST_ENVIRONMENT
-      -Dheadless=$HEADLESS_MODE
-      -Dmaven.test.failure.ignore=true
-  artifacts:
-    reports:
-      junit: target/surefire-reports/TEST-*.xml
-    paths:
-      - target/surefire-reports/
-      - target/allure-results/
-      - target/security-reports/
-    expire_in: 1 week
-    when: always
-  allow_failure: true
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "main"
-    - if: $CI_PIPELINE_SOURCE == "schedule"
-    - if: $CI_PIPELINE_SOURCE == "web" && $TEST_SUITE == "security"
-
-# Allure report generation
-allure-report:
-  stage: report-generation
-  image: maven:3.9-openjdk-17
-  needs: ["comprehensive-tests", "performance-tests", "security-tests"]
-  when: always
-  script:
-    - echo "📊 Generating Allure test report..."
-    - mvn $MAVEN_CLI_OPTS allure:report
-    - echo "✅ Allure report generated successfully"
-    - ls -la target/allure-report/
-  artifacts:
-    paths:
-      - target/allure-report/
-    expire_in: 1 month
-    when: always
-  allow_failure: true
-
-# Deploy test reports to GitLab Pages
-deploy-reports:
-  stage: deploy-reports
-  image: alpine:latest
-  needs: ["allure-report"]
-  when: always
-  script:
-    - echo "🚀 Deploying test reports to GitLab Pages..."
-    - mkdir -p public
-    - cp -r target/allure-report/* public/ 2>/dev/null || echo "Allure report not found, creating placeholder"
-    - echo "<html><body><h1>PayTR Test Reports</h1><p>Generated on: $(date)</p><p><a href='allure-report/index.html'>Allure Report</a></p></body></html>" > public/index.html
-  artifacts:
-    paths:
-      - public
-    expire_in: 1 month
-    when: always
-  only:
-    - main
-    - develop
-    - schedules
-
-# Manual test execution pipeline
-.manual-test:
-  stage: test
-  image: maven:3.9-openjdk-17
-  services:
-    - selenium/standalone-chrome:latest
-  when: manual
-  variables:
-    TEST_BROWSER: "chrome"
-    TEST_SUITE: "smoke"
-    TEST_ENVIRONMENT: "test"
-  script:
-    - echo "🎯 Running manual test execution..."
-    - echo "Test Suite: $TEST_SUITE"
-    - echo "Browser: $TEST_BROWSER"
-    - echo "Environment: $TEST_ENVIRONMENT"
-    - |
-      case $TEST_SUITE in
-        "smoke")
-          SUITE_FILE="testng-paytr-smoke.xml"
-          ;;
-        "comprehensive")
-          SUITE_FILE="testng-comprehensive.xml"
-          ;;
-        "regression")
-          SUITE_FILE="testng-paytr-regression.xml"
-          ;;
-        "performance")
-          SUITE_FILE="testng-performance.xml"
-          ;;
-        "security")
-          SUITE_FILE="testng-security.xml"
-          ;;
-        *)
-          SUITE_FILE="testng-paytr-smoke.xml"
-          ;;
-      esac
-    - mvn $MAVEN_CLI_OPTS clean test 
-      -Dsurefire.suiteXmlFiles=$SUITE_FILE
-      -Dtest.browser=$TEST_BROWSER
-      -Dtest.environment=$TEST_ENVIRONMENT
-      -Dheadless=$HEADLESS_MODE
-      -Dmaven.test.failure.ignore=true
-  artifacts:
-    reports:
-      junit: target/surefire-reports/TEST-*.xml
-    paths:
-      - target/surefire-reports/
-      - target/allure-results/
-      - target/screenshots/
-    expire_in: 1 week
-    when: always
-
-# Scheduled nightly test execution
-nightly-tests:
-  extends: .manual-test
-  stage: comprehensive-tests
-  when: always
-  only:
-    - schedules
-  variables:
-    TEST_SUITE: "comprehensive"
-    TEST_BROWSER: "chrome"
-    TEST_ENVIRONMENT: "test"
-
-# Merge request validation tests
-merge-request-tests:
-  extends: .manual-test
-  stage: smoke-tests
-  variables:
-    TEST_SUITE: "smoke"
-    TEST_BROWSER: "chrome"
-    TEST_ENVIRONMENT: "test"
-  only:
-    - merge_requests
-
-# Production environment tests (manual only)
-production-smoke-tests:
-  extends: .manual-test
-  stage: smoke-tests
-  variables:
-    TEST_SUITE: "smoke"
-    TEST_BROWSER: "chrome"
-    TEST_ENVIRONMENT: "production"
-  when: manual
-  only:
-    - main
-  timeout: 15 minutes
-
-# Notification and summary job
-test-summary:
-  stage: notification
-  image: alpine:latest
-  needs: ["allure-report"]
-  when: always
-  script:
-    - echo "📊 Generating test execution summary..."
-    - echo "Pipeline completed at: $(date)"
-    - echo "Branch: $CI_COMMIT_REF_NAME"
-    - echo "Commit: $CI_COMMIT_SHORT_SHA"
-    - echo "Test Results Summary:"
-    - |
-      if [ -f target/surefire-reports/TEST-*.xml ]; then
-        echo "✅ Test results found"
-        find target/surefire-reports/ -name "*.xml" | wc -l | xargs echo "XML reports count:"
-      else
-        echo "⚠️ No test results found"
-      fi
-    - |
-      if [ -d target/allure-report ]; then
-        echo "✅ Allure report generated"
-        ls -la target/allure-report/
-      else
-        echo "⚠️ Allure report not found"
-      fi
-  allow_failure: true
-
-# Pages configuration for GitLab Pages
-pages:
-  stage: deploy-reports
-  image: alpine:latest
-  needs: ["allure-report"]
-  when: always
-  script:
-    - echo "🌐 Setting up GitLab Pages..."
-    - mkdir -p public
-    - cp -r target/allure-report/* public/ 2>/dev/null || echo "Allure report not found"
-    - echo "<html><head><title>PayTR Test Reports</title></head><body><h1>PayTR Test Reports</h1><p>Generated on: $(date)</p><p><a href='index.html'>Allure Report</a></p></body></html>" > public/index.html
-  artifacts:
-    paths:
-      - public
-    expire_in: 1 month
-  only:
-    - main
-    - develop
-
-# Include additional CI configurations
-#include:
-#  - local: '/ci/docker-gitlab-ci.yml'
-#  - local: '/ci/performance-gitlab-ci.yml'
-#  - local: '/ci/security-gitlab-ci.yml'
