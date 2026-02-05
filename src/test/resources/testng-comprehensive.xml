@@ -199,5 +199,20 @@
             </class>
         </classes>
     </test>
+
+    <!-- Advanced Security and Edge Cases -->
+    <test name="Advanced Security and Edge Cases">
+        <groups>
+            <run>
+                <include name="security"/>
+                <include name="payment"/>
+                <include name="validation"/>
+                <include name="fraud"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="com.example.tests.PayTRAdvancedScenariosTest"/>
+        </classes>
+    </test>
     
 </suite>
