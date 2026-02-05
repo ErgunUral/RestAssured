@@ -11,6 +11,7 @@ import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.interactions.Actions;
 import com.example.utils.WebDriverSetup;
+import com.example.utils.SafeWebDriverUtils;
 import java.time.Duration;
 import java.util.List;
 import java.util.Set;
@@ -24,10 +25,11 @@ import static org.testng.Assert.*;
 @Epic("PayTR Usability Testing")
 @Feature("User Experience")
 public class PayTRUsabilityTests extends BaseTest {
-    private WebDriver driver;
-    private WebDriverWait wait;
-    private JavascriptExecutor js;
-    private Actions actions;
+    // Removed class-level fields to avoid ThreadLocal issues
+    // private WebDriver driver;
+    // private WebDriverWait wait;
+    // private JavascriptExecutor js;
+    // private Actions actions;
     
     @BeforeClass
     @Step("Kullanılabilirlik testleri için test ortamını hazırla")
@@ -36,13 +38,29 @@ public class PayTRUsabilityTests extends BaseTest {
         basePath = "";
         
         // WebDriver setup
-        WebDriverSetup.setupDriver("chrome");
-        driver = WebDriverSetup.getDriver();
-        wait = new WebDriverWait(driver, Duration.ofSeconds(15));
-        js = (JavascriptExecutor) driver;
-        actions = new Actions(driver);
+        SafeWebDriverUtils.getSafeWebDriver();
         
         logTestInfo("PayTR Kullanılabilirlik Test Suite başlatıldı");
+    }
+    
+    // Helper method to get current valid driver
+    private WebDriver getDriver() {
+        return SafeWebDriverUtils.getSafeWebDriver();
+    }
+    
+    // Helper method to get wait instance for current driver
+    private WebDriverWait getWait() {
+        return new WebDriverWait(getDriver(), Duration.ofSeconds(15));
+    }
+    
+    // Helper method to get JavascriptExecutor
+    private JavascriptExecutor getJs() {
+        return (JavascriptExecutor) getDriver();
+    }
+    
+    // Helper method to get Actions
+    private Actions getActions() {
+        return new Actions(getDriver());
     }
     
     @AfterClass
@@ -92,12 +110,12 @@ public class PayTRUsabilityTests extends BaseTest {
                 logTestInfo("Test edilen cihaz: " + deviceName + " (" + size.width + "x" + size.height + ")");
                 
                 // Ekran boyutunu ayarla
-                driver.manage().window().setSize(size);
+                getDriver().manage().window().setSize(size);
                 Thread.sleep(1000); // Resize için bekle
                 
                 // Ana sayfayı yükle
-                driver.get(baseURI);
-                wait.until(ExpectedConditions.presenceOfElementLocated(By.tagName("body")));
+                getDriver().get(baseURI);
+                getWait().until(ExpectedConditions.presenceOfElementLocated(By.tagName("body")));
                 
                 // Responsive kontrolleri
                 checkResponsiveElements(deviceName, size);
@@ -134,11 +152,11 @@ public class PayTRUsabilityTests extends BaseTest {
         logTestInfo("Test ID: UT-002 - Navigation Usability Testi");
         
         try {
-            driver.get(baseURI);
-            wait.until(ExpectedConditions.presenceOfElementLocated(By.tagName("body")));
+            getDriver().get(baseURI);
+            getWait().until(ExpectedConditions.presenceOfElementLocated(By.tagName("body")));
             
             // Ana navigasyon menüsünü bul
-            List<WebElement> navElements = driver.findElements(By.xpath(
+            List<WebElement> navElements = getDriver().findElements(By.xpath(
                 "//nav | //ul[contains(@class,'nav')] | //div[contains(@class,'nav')] | " +
                 "//header//a | //menu | //ul[contains(@class,'menu')]"));
             
@@ -188,11 +206,11 @@ public class PayTRUsabilityTests extends BaseTest {
         
         try {
             // Login sayfasına git
-            driver.get(baseURI + "/magaza/kullanici-girisi");
-            wait.until(ExpectedConditions.presenceOfElementLocated(By.tagName("body")));
+            getDriver().get(baseURI + "/magaza/kullanici-girisi");
+            getWait().until(ExpectedConditions.presenceOfElementLocated(By.tagName("body")));
             
             // Form elementlerini bul
-            List<WebElement> forms = driver.findElements(By.tagName("form"));
+            List<WebElement> forms = getDriver().findElements(By.tagName("form"));
             
             for (WebElement form : forms) {
                 if (form.isDisplayed()) {
@@ -240,8 +258,8 @@ public class PayTRUsabilityTests extends BaseTest {
         logTestInfo("Test ID: UT-004 - Accessibility Standards Testi");
         
         try {
-            driver.get(baseURI);
-            wait.until(ExpectedConditions.presenceOfElementLocated(By.tagName("body")));
+            getDriver().get(baseURI);
+            getWait().until(ExpectedConditions.presenceOfElementLocated(By.tagName("body")));
             
             // Alt text kontrolü
             checkImageAltTexts();
@@ -277,7 +295,7 @@ public class PayTRUsabilityTests extends BaseTest {
     private void checkResponsiveElements(String deviceName, Dimension size) {
         try {
             // Viewport meta tag kontrolü
-            List<WebElement> viewportMeta = driver.findElements(
+            List<WebElement> viewportMeta = getDriver().findElements(
                 By.xpath("//meta[@name='viewport']"));
             
             if (!viewportMeta.isEmpty()) {
@@ -288,8 +306,8 @@ public class PayTRUsabilityTests extends BaseTest {
             }
             
             // Horizontal scroll kontrolü
-            Long scrollWidth = (Long) js.executeScript("return document.body.scrollWidth;");
-            Long clientWidth = (Long) js.executeScript("return document.body.clientWidth;");
+            Long scrollWidth = (Long) getJs().executeScript("return document.body.scrollWidth;");
+            Long clientWidth = (Long) getJs().executeScript("return document.body.clientWidth;");
             
             logTestInfo(deviceName + " - ScrollWidth: " + scrollWidth + ", ClientWidth: " + clientWidth);
             
@@ -308,7 +326,7 @@ public class PayTRUsabilityTests extends BaseTest {
         try {
             // Hamburger menu kontrolü (mobil)
             if (size.width <= 768) {
-                List<WebElement> hamburgerMenus = driver.findElements(By.xpath(
+                List<WebElement> hamburgerMenus = getDriver().findElements(By.xpath(
                     "//*[contains(@class,'hamburger') or contains(@class,'menu-toggle') or " +
                     "contains(@class,'navbar-toggle')]"));
                 
@@ -331,7 +349,7 @@ public class PayTRUsabilityTests extends BaseTest {
     
     private void checkFormElements(String deviceName, Dimension size) {
         try {
-            List<WebElement> inputs = driver.findElements(By.tagName("input"));
+            List<WebElement> inputs = getDriver().findElements(By.tagName("input"));
             
             for (WebElement input : inputs) {
                 if (input.isDisplayed()) {
@@ -356,7 +374,7 @@ public class PayTRUsabilityTests extends BaseTest {
     
     private void checkClickableElements(String deviceName, Dimension size) {
         try {
-            List<WebElement> clickables = driver.findElements(By.xpath(
+            List<WebElement> clickables = getDriver().findElements(By.xpath(
                 "//button | //a | //input[@type='submit'] | //input[@type='button']"));
             
             for (WebElement element : clickables) {
@@ -405,7 +423,7 @@ public class PayTRUsabilityTests extends BaseTest {
     
     private void checkBreadcrumbs() {
         try {
-            List<WebElement> breadcrumbs = driver.findElements(By.xpath(
+            List<WebElement> breadcrumbs = getDriver().findElements(By.xpath(
                 "//*[contains(@class,'breadcrumb')] | //*[contains(@class,'breadcrumbs')]"));
             
             if (!breadcrumbs.isEmpty()) {
@@ -426,7 +444,7 @@ public class PayTRUsabilityTests extends BaseTest {
     
     private void checkFooterNavigation() {
         try {
-            List<WebElement> footers = driver.findElements(By.tagName("footer"));
+            List<WebElement> footers = getDriver().findElements(By.tagName("footer"));
             
             for (WebElement footer : footers) {
                 if (footer.isDisplayed()) {
@@ -451,7 +469,7 @@ public class PayTRUsabilityTests extends BaseTest {
     
     private void checkSearchFunctionality() {
         try {
-            List<WebElement> searchInputs = driver.findElements(By.xpath(
+            List<WebElement> searchInputs = getDriver().findElements(By.xpath(
                 "//input[@type='search'] | //input[contains(@placeholder,'ara') or contains(@placeholder,'search')]"));
             
             if (!searchInputs.isEmpty()) {
@@ -469,7 +487,7 @@ public class PayTRUsabilityTests extends BaseTest {
                         // Search button bul
                         WebElement searchButton = null;
                         try {
-                            searchButton = driver.findElement(By.xpath(
+                            searchButton = getDriver().findElement(By.xpath(
                                 "//button[@type='submit'] | //input[@type='submit'] | " +
                                 "//*[contains(@class,'search-btn')]"));
                         } catch (Exception e) {
@@ -511,7 +529,7 @@ public class PayTRUsabilityTests extends BaseTest {
                     Thread.sleep(500);
                     
                     // Active element kontrolü
-                    WebElement activeElement = (WebElement) js.executeScript("return document.activeElement;");
+                    WebElement activeElement = (WebElement) getJs().executeScript("return document.activeElement;");
                     assertEquals(activeElement, input, "Focus problemi tespit edildi");
                 }
             }
@@ -532,7 +550,7 @@ public class PayTRUsabilityTests extends BaseTest {
                     
                     // Label kontrolü
                     if (id != null && !id.isEmpty()) {
-                        List<WebElement> labels = driver.findElements(
+                        List<WebElement> labels = getDriver().findElements(
                             By.xpath("//label[@for='" + id + "']"));
                         
                         if (!labels.isEmpty()) {
@@ -568,7 +586,7 @@ public class PayTRUsabilityTests extends BaseTest {
                     Thread.sleep(2000);
                     
                     // Validation mesajları ara
-                    List<WebElement> validationMessages = driver.findElements(By.xpath(
+                    List<WebElement> validationMessages = getDriver().findElements(By.xpath(
                         "//*[contains(@class,'error') or contains(@class,'invalid') or " +
                         "contains(@class,'validation')]"));
                     
@@ -636,7 +654,7 @@ public class PayTRUsabilityTests extends BaseTest {
                     Thread.sleep(300);
                     
                     // Tab tuşu simülasyonu
-                    actions.sendKeys(org.openqa.selenium.Keys.TAB).perform();
+                    getActions().sendKeys(org.openqa.selenium.Keys.TAB).perform();
                     Thread.sleep(300);
                 }
             }
@@ -680,7 +698,7 @@ public class PayTRUsabilityTests extends BaseTest {
     
     private void checkImageAltTexts() {
         try {
-            List<WebElement> images = driver.findElements(By.tagName("img"));
+            List<WebElement> images = getDriver().findElements(By.tagName("img"));
             
             for (WebElement img : images) {
                 if (img.isDisplayed()) {
@@ -707,7 +725,7 @@ public class PayTRUsabilityTests extends BaseTest {
             String[] headingTags = {"h1", "h2", "h3", "h4", "h5", "h6"};
             
             for (String tag : headingTags) {
-                List<WebElement> headings = driver.findElements(By.tagName(tag));
+                List<WebElement> headings = getDriver().findElements(By.tagName(tag));
                 
                 if (!headings.isEmpty()) {
                     logTestInfo(tag.toUpperCase() + " sayısı: " + headings.size());
@@ -730,7 +748,7 @@ public class PayTRUsabilityTests extends BaseTest {
     
     private void checkLinkTexts() {
         try {
-            List<WebElement> links = driver.findElements(By.tagName("a"));
+            List<WebElement> links = getDriver().findElements(By.tagName("a"));
             
             for (WebElement link : links) {
                 if (link.isDisplayed()) {
@@ -769,7 +787,7 @@ public class PayTRUsabilityTests extends BaseTest {
                 "}" +
                 "return contrastIssues;";
             
-            Long contrastElements = (Long) js.executeScript(script);
+            Long contrastElements = (Long) getJs().executeScript(script);
             logTestInfo("Renk kontrastı kontrol edilen element sayısı: " + contrastElements);
             
         } catch (Exception e) {
@@ -780,7 +798,7 @@ public class PayTRUsabilityTests extends BaseTest {
     private void checkKeyboardNavigation() {
         try {
             // Tab navigation testi
-            List<WebElement> focusableElements = driver.findElements(By.xpath(
+            List<WebElement> focusableElements = getDriver().findElements(By.xpath(
                 "//a | //button | //input | //textarea | //select"));
             
             int focusableCount = 0;
@@ -794,10 +812,10 @@ public class PayTRUsabilityTests extends BaseTest {
             
             // Basit tab navigation testi
             if (focusableCount > 0) {
-                actions.sendKeys(org.openqa.selenium.Keys.TAB).perform();
+                getActions().sendKeys(org.openqa.selenium.Keys.TAB).perform();
                 Thread.sleep(500);
                 
-                WebElement activeElement = (WebElement) js.executeScript("return document.activeElement;");
+                WebElement activeElement = (WebElement) getJs().executeScript("return document.activeElement;");
                 if (activeElement != null) {
                     logTestInfo("Keyboard navigation çalışıyor");
                 }
@@ -811,7 +829,7 @@ public class PayTRUsabilityTests extends BaseTest {
     private void checkAriaAttributes() {
         try {
             // ARIA attribute kontrolü
-            List<WebElement> ariaElements = driver.findElements(By.xpath(
+            List<WebElement> ariaElements = getDriver().findElements(By.xpath(
                 "//*[@aria-label or @aria-labelledby or @aria-describedby or @role]"));
             
             logTestInfo("ARIA attribute'lu element sayısı: " + ariaElements.size());
@@ -839,7 +857,7 @@ public class PayTRUsabilityTests extends BaseTest {
     private void checkFocusIndicators() {
         try {
             // Focus indicator kontrolü
-            List<WebElement> focusableElements = driver.findElements(By.xpath(
+            List<WebElement> focusableElements = getDriver().findElements(By.xpath(
                 "//a | //button | //input"));
             
             for (int i = 0; i < Math.min(focusableElements.size(), 5); i++) {
@@ -849,10 +867,10 @@ public class PayTRUsabilityTests extends BaseTest {
                     Thread.sleep(300);
                     
                     // Focus style kontrolü (CSS)
-                    String outline = (String) js.executeScript(
+                    String outline = (String) getJs().executeScript(
                         "return window.getComputedStyle(arguments[0]).outline;", element);
                     
-                    String boxShadow = (String) js.executeScript(
+                    String boxShadow = (String) getJs().executeScript(
                         "return window.getComputedStyle(arguments[0]).boxShadow;", element);
                     
                     if ((outline != null && !outline.equals("none")) || 

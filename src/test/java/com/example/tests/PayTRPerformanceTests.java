@@ -36,7 +36,9 @@ import static org.testng.Assert.*;
 @Epic("PayTR Performance Testing")
 @Feature("Performance Metrics")
 public class PayTRPerformanceTests extends BaseTest {
-    private WebDriver driver;
+    // Removed class-level driver field to avoid ThreadLocal issues
+    // private WebDriver driver; 
+    
     private WebDriverWait wait;
     private PerformanceTestUtils performanceUtils;
     private JavascriptExecutor js;
@@ -47,13 +49,20 @@ public class PayTRPerformanceTests extends BaseTest {
         baseURI = "https://zeus-uat.paytr.com";
         basePath = "";
         
-        // WebDriver setup with SafeWebDriverUtils
-        driver = SafeWebDriverUtils.getSafeWebDriver();
-        wait = new WebDriverWait(driver, Duration.ofSeconds(30));
-        performanceUtils = new PerformanceTestUtils(driver);
-        js = (JavascriptExecutor) driver;
+        // Ensure driver is initialized
+        SafeWebDriverUtils.getSafeWebDriver();
         
         logTestInfo("PayTR Performans Test Suite başlatıldı");
+    }
+    
+    // Helper method to get current valid driver
+    private WebDriver getDriver() {
+        return SafeWebDriverUtils.getSafeWebDriver();
+    }
+
+    // Helper method to get wait instance for current driver
+    private WebDriverWait getWait() {
+        return new WebDriverWait(getDriver(), Duration.ofSeconds(30));
     }
     
     @AfterClass
@@ -80,13 +89,14 @@ public class PayTRPerformanceTests extends BaseTest {
             long startTime = System.currentTimeMillis();
             
             // Ana sayfaya git
-            driver.get(baseURI);
+            getDriver().get(baseURI);
             
             // Sayfa tamamen yüklenene kadar bekle
-            wait.until(ExpectedConditions.presenceOfElementLocated(By.tagName("body")));
+            getWait().until(ExpectedConditions.presenceOfElementLocated(By.tagName("body")));
             
             // DOM ready durumunu bekle
-            wait.until(webDriver -> js.executeScript("return document.readyState").equals("complete"));
+            JavascriptExecutor js = (JavascriptExecutor) getDriver();
+            getWait().until(webDriver -> js.executeScript("return document.readyState").equals("complete"));
             
             long endTime = System.currentTimeMillis();
             long loadTime = endTime - startTime;
@@ -134,8 +144,10 @@ public class PayTRPerformanceTests extends BaseTest {
         
         try {
             // Ana sayfaya git
-            driver.get(baseURI);
-            wait.until(ExpectedConditions.presenceOfElementLocated(By.tagName("body")));
+            getDriver().get(baseURI);
+            getWait().until(ExpectedConditions.presenceOfElementLocated(By.tagName("body")));
+            
+            JavascriptExecutor js = (JavascriptExecutor) getDriver();
             
             // Network isteklerini izlemek için Performance API kullan
             String networkScript = 
@@ -167,7 +179,7 @@ public class PayTRPerformanceTests extends BaseTest {
                 logTestInfo("API çağrısı tespit edilmedi, manuel test yapılıyor");
                 
                 // Manuel API testi - form submit ile
-                List<WebElement> forms = driver.findElements(By.tagName("form"));
+                List<WebElement> forms = getDriver().findElements(By.tagName("form"));
                 if (!forms.isEmpty()) {
                     long apiStartTime = System.currentTimeMillis();
                     

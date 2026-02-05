@@ -16,10 +16,10 @@ public class WebDriverSetup {
     private static final int MAX_RETRY_ATTEMPTS = 3;
     
     public static synchronized void setupDriver(String browserName) {
-        System.out.println("🔧 WebDriverSetup.setupDriver çağrıldı: " + browserName);
+        System.out.println("🔧 WebDriverSetup.setupDriver çağrıldı: " + browserName + " [Thread: " + Thread.currentThread().getId() + "]");
         
         if (driver.get() != null) {
-            System.out.println("⚠️ Driver zaten mevcut, kapatılıyor...");
+            System.out.println("⚠️ Driver zaten mevcut, kapatılıyor... [Thread: " + Thread.currentThread().getId() + "]");
             quitDriver();
         }
         
