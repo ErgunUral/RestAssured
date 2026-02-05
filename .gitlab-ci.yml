@@ -67,11 +67,11 @@ smoke_tests_job:
   rules:
     - if: $CI_PIPELINE_SOURCE != "schedule"
 
-# Scheduled Full Regression Test (Runs every 2 hours on the hour)
+# Scheduled Full Regression Test (Runs every 2 hours on the hour OR manually/push)
 scheduled_full_test_job:
   stage: test
   script:
-    - echo "⏰ Running Scheduled Full Regression Suite..."
+    - echo "⏰ Running Full Regression Suite..."
     - export PATH=/opt/homebrew/bin:$PATH
     - mvn $MAVEN_CLI_OPTS test -Dsurefire.suiteXmlFiles=testng-comprehensive.xml -Dtest.environment=test
   needs: ["build_job"]
@@ -83,6 +83,9 @@ scheduled_full_test_job:
     when: always
   rules:
     - if: $CI_PIPELINE_SOURCE == "schedule"
+    - if: $CI_PIPELINE_SOURCE == "web"
+    - if: $CI_COMMIT_BRANCH == "test-results-feb-5-2026"
+
 
 # GitLab Pages Job - Generate and Publish Allure Report
 pages:
