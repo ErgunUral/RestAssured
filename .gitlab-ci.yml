@@ -47,7 +47,7 @@ test_job:
       - target/surefire-reports/
     expire_in: 1 week
 
-# Smoke Tests Stage
+# Smoke Tests Stage (Runs on push)
 smoke_tests_job:
   stage: smoke-tests
   script:
@@ -59,3 +59,20 @@ smoke_tests_job:
     paths:
       - target/surefire-reports/
     expire_in: 1 week
+  rules:
+    - if: $CI_PIPELINE_SOURCE != "schedule"
+
+# Scheduled Full Regression Test (Runs every 2 hours)
+scheduled_full_test_job:
+  stage: test
+  script:
+    - echo "⏰ Running Scheduled Full Regression Suite..."
+    - export PATH=/opt/homebrew/bin:$PATH
+    - mvn $MAVEN_CLI_OPTS test -Dsurefire.suiteXmlFiles=testng-comprehensive.xml -Dtest.environment=test
+  needs: ["build_job"]
+  artifacts:
+    paths:
+      - target/surefire-reports/
+    expire_in: 1 week
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
