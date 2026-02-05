@@ -13,6 +13,12 @@ variables:
   MAVEN_CACHE_DIR: "$CI_PROJECT_DIR/.m2/repository"
   ALLURE_RESULTS_DIR: "$CI_PROJECT_DIR/target/allure-results"
 
+# Ensure PATH is correct for macOS shell runner
+before_script:
+  - export PATH=/opt/homebrew/bin:$PATH
+  - java -version
+  - mvn -version
+
 # Cache configuration for Maven dependencies and Allure results
 cache:
   paths:
