@@ -62,7 +62,7 @@ smoke_tests_job:
   rules:
     - if: $CI_PIPELINE_SOURCE != "schedule"
 
-# Scheduled Full Regression Test (Runs every 2 hours)
+# Scheduled Full Regression Test (Runs every 2 hours on the hour)
 scheduled_full_test_job:
   stage: test
   script:

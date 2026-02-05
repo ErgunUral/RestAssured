@@ -4,8 +4,8 @@
 PROJECT_ID="4" # From your logs: project=4
 GITLAB_URL="https://gitlab-qa.paytr.com"
 BRANCH_NAME="test-results-feb-5-2026"
-SCHEDULE_DESC="2 Saatte Bir Otomatik Test (Automated)"
-CRON_PATTERN="0 */2 * * *" # Every 2 hours
+SCHEDULE_DESC="2 Saatte Bir Otomatik Test (Saat Başlarında)"
+CRON_PATTERN="0 */2 * * *" # Every 2 hours at minute 0 (00:00, 02:00, 04:00...)
 
 # Check for API Token
 if [ -z "$GITLAB_API_TOKEN" ]; then
