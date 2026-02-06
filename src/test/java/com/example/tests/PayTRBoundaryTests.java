@@ -8,6 +8,7 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.JavascriptExecutor;
+import com.example.utils.SafeWebDriverUtils;
 import com.example.utils.WebDriverSetup;
 import java.time.Duration;
 import java.util.List;
@@ -25,22 +26,34 @@ public class PayTRBoundaryTests extends BaseTest {
     private WebDriverWait wait;
     private JavascriptExecutor js;
     
-    @BeforeClass
+    @BeforeClass(alwaysRun = true)
     @Step("Sınır durumu testleri için test ortamını hazırla")
     public void setupBoundaryTests() {
         baseURI = "https://zeus-uat.paytr.com";
         basePath = "";
         
-        // WebDriver setup
-        WebDriverSetup.setupDriver("chrome");
-        driver = WebDriverSetup.getDriver();
-        wait = new WebDriverWait(driver, Duration.ofSeconds(15));
-        js = (JavascriptExecutor) driver;
-        
-        logTestInfo("PayTR Sınır Durumu Test Suite başlatıldı");
+        // WebDriver setup using SafeWebDriverUtils
+        try {
+            driver = SafeWebDriverUtils.getSafeWebDriver();
+            wait = new WebDriverWait(driver, Duration.ofSeconds(15));
+            js = (JavascriptExecutor) driver;
+            logTestInfo("PayTR Sınır Durumu Test Suite başlatıldı ve WebDriver başarıyla alındı");
+        } catch (Exception e) {
+            logTestInfo("WebDriver başlatma hatası: " + e.getMessage());
+            throw new RuntimeException("WebDriver başlatılamadı", e);
+        }
     }
     
-    @AfterClass
+    @BeforeMethod(alwaysRun = true)
+    public void checkDriver() {
+        if (driver == null) {
+            driver = SafeWebDriverUtils.getSafeWebDriver();
+            wait = new WebDriverWait(driver, Duration.ofSeconds(15));
+            js = (JavascriptExecutor) driver;
+        }
+    }
+    
+    @AfterClass(alwaysRun = true)
     @Step("Sınır durumu testleri sonrası temizlik")
     public void tearDown() {
         WebDriverSetup.quitDriver();

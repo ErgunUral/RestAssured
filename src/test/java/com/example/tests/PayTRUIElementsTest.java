@@ -45,7 +45,7 @@ public class PayTRUIElementsTest extends BaseTest {
     private Actions actions;
     private JavascriptExecutor jsExecutor;
     
-    @BeforeClass
+    @BeforeClass(alwaysRun = true)
     public void setupUIElementsTests() {
         baseURI = "https://zeus-uat.paytr.com";
         basePath = "";
@@ -72,7 +72,7 @@ public class PayTRUIElementsTest extends BaseTest {
         }
     }
     
-    @BeforeMethod
+    @BeforeMethod(alwaysRun = true)
     public void validateDriverBeforeTest() {
         try {
             // Use SafeWebDriverUtils for robust driver validation and recovery
@@ -93,7 +93,7 @@ public class PayTRUIElementsTest extends BaseTest {
         }
     }
     
-    @AfterClass
+    @AfterClass(alwaysRun = true)
     public void tearDown() {
         WebDriverSetup.quitDriver();
         logTestInfo("PayTR UI Elements Test Suite tamamlandı");

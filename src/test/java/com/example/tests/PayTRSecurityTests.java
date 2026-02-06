@@ -42,7 +42,7 @@ public class PayTRSecurityTests extends BaseTest {
     private WebDriverWait wait;
     private SecurityTestUtils securityUtils;
     
-    @BeforeClass
+    @BeforeClass(alwaysRun = true)
     @Step("Güvenlik testleri için test ortamını hazırla")
     public void setupSecurityTests() {
         baseURI = "https://zeus-uat.paytr.com";
@@ -69,7 +69,7 @@ public class PayTRSecurityTests extends BaseTest {
         }
     }
     
-    @BeforeMethod
+    @BeforeMethod(alwaysRun = true)
     public void validateDriverBeforeTest() {
         try {
             // Use SafeWebDriverUtils for robust driver validation and recovery
@@ -89,7 +89,7 @@ public class PayTRSecurityTests extends BaseTest {
         }
     }
     
-    @AfterClass
+    @AfterClass(alwaysRun = true)
     @Step("Güvenlik testleri sonrası temizlik")
     public void tearDown() {
         WebDriverSetup.quitDriver();
@@ -183,7 +183,7 @@ public class PayTRSecurityTests extends BaseTest {
             
             // Arama alanını bul
             List<WebElement> searchFields = driver.findElements(By.xpath(
-                "//input[@type='search' or @name='search' or @placeholder*='ara' or @placeholder*='search']"));
+                "//input[@type='search' or @name='search' or contains(@placeholder, 'ara') or contains(@placeholder, 'search')]"));
             
             if (!searchFields.isEmpty()) {
                 WebElement searchField = searchFields.get(0);

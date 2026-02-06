@@ -31,7 +31,7 @@ public class PayTRIntegrationTests extends BaseTest {
     private WebDriverWait wait;
     private JavascriptExecutor js;
     
-    @BeforeClass
+    @BeforeClass(alwaysRun = true)
     @Step("Entegrasyon testleri için test ortamını hazırla")
     public void setupIntegrationTests() {
         baseURI = "https://zeus-uat.paytr.com";
@@ -48,7 +48,7 @@ public class PayTRIntegrationTests extends BaseTest {
         logTestInfo("PayTR Entegrasyon Test Suite başlatıldı");
     }
     
-    @AfterClass
+    @AfterClass(alwaysRun = true)
     @Step("Entegrasyon testleri sonrası temizlik")
     public void tearDown() {
         WebDriverSetup.quitDriver();

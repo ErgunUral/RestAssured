@@ -32,7 +32,7 @@ public class BaseTest {
         "http://localhost:8080" // Local development fallback
     );
     
-    @BeforeClass
+    @BeforeClass(alwaysRun = true)
     public void setUp() {
         // Validate and select working base URI
         baseURI = validateAndSelectWorkingURL();
