@@ -8,6 +8,7 @@
     <parameter name="baseUrl" value="https://zeus-uat.paytr.com"/>
     
     <listeners>
+        <listener class-name="io.qameta.allure.testng.AllureTestNg"/>
         <listener class-name="org.testng.reporters.EmailableReporter"/>
         <listener class-name="org.testng.reporters.JUnitReportReporter"/>
     </listeners>

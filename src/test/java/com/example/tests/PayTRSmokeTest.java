@@ -42,12 +42,12 @@ public class PayTRSmokeTest {
         
         // WebDriver setup using SafeWebDriverUtils
         try {
+            // Explicitly assign driver and validate
             driver = SafeWebDriverUtils.getSafeWebDriver();
             
             if (driver != null) {
-                driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
-                driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(30));
-                driver.manage().timeouts().scriptTimeout(Duration.ofSeconds(10));
+                // Use WebDriverSetup timeouts instead of overriding with shorter ones
+                // driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(5)); // REMOVED: Too short for CI
                 
                 wait = new WebDriverWait(driver, Duration.ofSeconds(15));
                 
@@ -56,15 +56,15 @@ public class PayTRSmokeTest {
                 paymentPage = new PayTRPaymentPage(driver);
                 virtualPOSPage = new PayTRVirtualPOSPage(driver);
                 
-                System.out.println("✅ WebDriver başarıyla başlatıldı");
+                System.out.println("✅ WebDriver başarıyla başlatıldı ve sayfalar initialize edildi");
             } else {
-                throw new RuntimeException("WebDriver null döndü");
+                throw new RuntimeException("WebDriver null döndü - Başlatma başarısız");
             }
             
         } catch (Exception e) {
             System.out.println("⚠️ WebDriver setup hatası: " + e.getMessage());
             e.printStackTrace();
-            throw new RuntimeException("WebDriver başlatılamadı", e);
+            throw new RuntimeException("WebDriver başlatılamadı: " + e.getMessage(), e);
         }
     }
     
@@ -83,6 +83,12 @@ public class PayTRSmokeTest {
     @Test(priority = 1, groups = {"smoke", "critical"})
     public void smokeTest_PayTRWebsiteAccessibility() {
         System.out.println("🔍 Smoke Test: PayTR Website Erişilebilirlik");
+        
+        // Ensure driver is active
+        if (driver == null) {
+             System.out.println("⚠️ Driver is null in Test method, attempting recovery...");
+             driver = SafeWebDriverUtils.getSafeWebDriver();
+        }
         
         try {
             // PayTRTestConfig'ten URL kullan
