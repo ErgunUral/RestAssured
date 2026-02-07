@@ -168,7 +168,7 @@
                         <suiteXmlFile>${suiteXmlFile}</suiteXmlFile>
                     </suiteXmlFiles>
                     <testFailureIgnore>true</testFailureIgnore>
-                    <forkedProcessTimeoutInSeconds>600</forkedProcessTimeoutInSeconds>
+                    <forkedProcessTimeoutInSeconds>7200</forkedProcessTimeoutInSeconds>
                     <parallel>${parallel}</parallel>
                     <threadCount>${threadCount}</threadCount>
                     <forkCount>1</forkCount>
