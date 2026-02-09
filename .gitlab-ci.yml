@@ -26,6 +26,12 @@ cache:
 # Build Stage
 build_job:
   stage: build
+  interruptible: true
+  retry:
+    max: 2
+    when:
+      - api_failure
+      - stuck_or_timeout_failure
   script:
     - echo "🔨 Building Project..."
     - export PATH=/opt/homebrew/bin:$PATH
@@ -38,6 +44,12 @@ build_job:
 # Test Stage - Unit Tests
 test_job:
   stage: test
+  interruptible: true
+  retry:
+    max: 2
+    when:
+      - api_failure
+      - stuck_or_timeout_failure
   script:
     - echo "🧪 Running Unit Tests..."
     - export PATH=/opt/homebrew/bin:$PATH
@@ -47,6 +59,8 @@ test_job:
     paths:
       - target/surefire-reports/
       - target/allure-results/
+    reports:
+      junit: target/surefire-reports/*.xml
     expire_in: 1 week
     when: always
 
@@ -54,6 +68,12 @@ test_job:
 smoke_tests_job:
   stage: smoke-tests
   timeout: 1h
+  interruptible: true
+  retry:
+    max: 2
+    when:
+      - api_failure
+      - stuck_or_timeout_failure
   script:
     - echo "🚀 Running Smoke Tests..."
     - export PATH=/opt/homebrew/bin:$PATH
@@ -75,6 +95,12 @@ smoke_tests_job:
 scheduled_full_test_job:
   stage: test
   timeout: 3h
+  interruptible: true
+  retry:
+    max: 2
+    when:
+      - api_failure
+      - stuck_or_timeout_failure
   script:
     - echo "⏰ Running Full Regression Suite..."
     - export PATH=/opt/homebrew/bin:$PATH
@@ -87,6 +113,8 @@ scheduled_full_test_job:
       - target/surefire-reports/
       - target/allure-results/
       - target/allure-report/
+    reports:
+      junit: target/surefire-reports/*.xml
     expire_in: 1 week
     when: always
   rules:
@@ -98,6 +126,12 @@ scheduled_full_test_job:
 # GitLab Pages Job - Generate and Publish Allure Report
 pages:
   stage: deploy
+  interruptible: true
+  retry:
+    max: 2
+    when:
+      - api_failure
+      - stuck_or_timeout_failure
   script:
     - echo "📊 Generating Allure Report..."
     - export PATH=/opt/homebrew/bin:$PATH
